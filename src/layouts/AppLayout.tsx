@@ -17,10 +17,10 @@ export default function AppLayout() {
     <div className="app" style={style}>
       <Header teamId={team?.id ?? null} />
       <div className="app-body">
+        <PlayerPanel />
         <main className="app-main">
           <Outlet />
         </main>
-        <PlayerPanel />
       </div>
       <Toast />
     </div>

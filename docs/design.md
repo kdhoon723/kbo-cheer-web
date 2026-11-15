@@ -990,6 +990,8 @@ trackBuffering(state):   // tick에서
 
 `endSeconds` 도달 때 플레이어가 PAUSED나 ENDED 중 무엇을 보내든 둘 다 `finish()`로 끝나므로 결과가 같다.
 
+- 구현 중 브라우저에서 확인한 것(2026-11-15): 앞 곡이 끝난(ENDED) 상태에서 `loadVideoById`를 부르면, 새 곡을 불러온 직후(약 30ms, 위치 0초) ENDED가 한 번 더 온다. 그래서 불러오기·이동 직후 1.5초 안에 끝 시각 근처가 아닌 위치에서 오는 ENDED·PAUSED는 이전 로드에서 남은 신호로 보고 무시한다(`lib/playback.ts`의 `isLeftoverStop`). 또 「응원가로」(seekTo) 뒤에도 끝 시각에서 ENDED가 와서, 이번 확인에서는 seekTo 뒤에도 endSeconds가 유지됐다. 앱 감시 타이머는 그대로 두 번째 안전장치로 남긴다.
+
 | 상황 | 감지 | 처리 |
 | --- | --- | --- |
 | `onError` 2 | 잘못된 영상 ID | finish() 후 "이 곡을 재생할 수 없습니다(영상 주소가 잘못됐습니다)" |
