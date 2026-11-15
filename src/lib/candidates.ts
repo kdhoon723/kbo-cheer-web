@@ -90,9 +90,10 @@ export function evaluateCandidates(
     teamSongs.filter((s) => s.kind === 'player').map((s) => normalize(s.title)),
   )
 
+  // 이미 있는 후보도 묶음에 넣는다. 팀에 같은 제목이 있으면 다시 골라 같은 제목으로 두 번 저장할 수 없다(BR-14)
   const groups = new Map<string, number[]>()
   candidates.forEach((c, i) => {
-    if (c.kind !== 'situation' || existing[i]) return
+    if (c.kind !== 'situation') return
     const key = normalize(c.title)
     const group = groups.get(key)
     if (group) group.push(i)

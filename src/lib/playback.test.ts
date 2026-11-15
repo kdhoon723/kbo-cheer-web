@@ -75,14 +75,22 @@ describe('isStalePosition', () => {
 })
 
 describe('isLeftoverStop', () => {
-  it('불러온 직후 끝 시각과 먼 위치의 정지 신호는 이전 로드에서 남은 것이다', () => {
-    expect(isLeftoverStop(0, seg, 34)).toBe(true)
-    expect(isLeftoverStop(1800, { end: 1900 }, 500)).toBe(true)
+  it('불러온 직후, 새 곡을 아직 재생하기 전에 온 정지 신호는 이전 로드에서 남은 것이다', () => {
+    expect(isLeftoverStop(0, seg, 34, false)).toBe(true)
+    expect(isLeftoverStop(1800, { end: 1900 }, 500, false)).toBe(true)
   })
 
-  it('끝 시각 근처이거나 불러온 지 오래됐으면 진짜 정지다', () => {
-    expect(isLeftoverStop(69.5, seg, 300)).toBe(false)
-    expect(isLeftoverStop(30, seg, 1600)).toBe(false)
+  it('앞 챕터로 바꿀 때 이전 위치(구간 뒤)에서 온 정지 신호도 남은 것이다', () => {
+    expect(isLeftoverStop(2000, { end: 200 }, 300, false)).toBe(true)
+  })
+
+  it('새 곡의 끝 시각 근처이거나 불러온 지 오래됐으면 진짜 정지다', () => {
+    expect(isLeftoverStop(69.5, seg, 300, false)).toBe(false)
+    expect(isLeftoverStop(30, seg, 1600, false)).toBe(false)
+  })
+
+  it('새 곡이 한 번 재생된 뒤의 정지는 불러온 직후라도 진짜 정지다(K-02)', () => {
+    expect(isLeftoverStop(60.5, { end: 120 }, 800, true)).toBe(false)
   })
 })
 

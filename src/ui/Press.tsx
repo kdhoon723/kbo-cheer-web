@@ -1,5 +1,6 @@
 //20241476-김도훈-(2026-11-16)
-import { motion, useReducedMotionConfig } from 'motion/react'
+import { useReducedMotionConfig } from 'motion/react'
+import * as m from 'motion/react-m'
 import type { HTMLMotionProps } from 'motion/react'
 import type { ReactNode } from 'react'
 import { pressContent, pressScale, spring, tap } from './motionTokens.ts'
@@ -10,7 +11,7 @@ type ButtonProps = HTMLMotionProps<'button'>
 export function TapButton({ disabled, ...props }: ButtonProps) {
   const reduce = useReducedMotionConfig()
   return (
-    <motion.button
+    <m.button
       {...props}
       disabled={disabled}
       whileTap={disabled || reduce ? undefined : { scale: pressScale, transition: tap }}
@@ -30,14 +31,14 @@ interface CellProps extends Omit<ButtonProps, 'children'> {
 export function PressCell({ children, contentClassName, extra, ...props }: CellProps) {
   const reduce = useReducedMotionConfig()
   return (
-    <motion.button {...props} initial={false} animate="rest" whileTap={reduce ? undefined : 'pressed'}>
-      <motion.span
+    <m.button {...props} initial={false} animate="rest" whileTap={reduce ? undefined : 'pressed'}>
+      <m.span
         className={contentClassName ? `press-content ${contentClassName}` : 'press-content'}
         variants={pressContent}
       >
         {children}
-      </motion.span>
+      </m.span>
       {extra}
-    </motion.button>
+    </m.button>
   )
 }

@@ -2,7 +2,8 @@
 import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { X } from 'lucide-react'
-import { AnimatePresence, motion, useReducedMotionConfig } from 'motion/react'
+import { AnimatePresence, useReducedMotionConfig } from 'motion/react'
+import * as m from 'motion/react-m'
 import { TapButton } from '../ui/Press.tsx'
 import { distance, exit, spring, swap } from '../ui/motionTokens.ts'
 
@@ -47,7 +48,7 @@ export default function Sheet({ open, title, titleId, className, focusSelector, 
     >
       <AnimatePresence onExitComplete={() => ref.current?.close()}>
         {open && (
-          <motion.div
+          <m.div
             className="sheet-body"
             initial={{ opacity: 0, y: distance.sheet }}
             animate={{ opacity: 1, y: 0, transition: { y: spring.sheet, opacity: swap } }}
@@ -60,7 +61,7 @@ export default function Sheet({ open, title, titleId, className, focusSelector, 
               </TapButton>
             </div>
             {children}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </dialog>

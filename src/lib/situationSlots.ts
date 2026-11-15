@@ -52,20 +52,14 @@ export function situationCategory(title: string): SituationCategory {
 }
 
 /**
- * 상황 곡을 4×2 칸에 놓는다. 먼저 모든 곡이 제 칸을 차지하고, 제 칸이 이미 찬 곡은
- * 남은 빈 칸 중 앞쪽부터 들어간다. 8칸이 모두 차면 나머지 곡은 9번째 칸부터 줄을 더해 놓는다
+ * 상황 곡을 4×2 칸에 놓는다. 곡은 order 순서로 제 상황 칸을 차지하고, 제 칸이 이미 찬 곡은
+ * 9번째 칸부터 줄을 더해 놓는다. 다른 상황의 빈 칸에는 넣지 않아 앞 8칸과 단축키 1~8의 뜻이 늘 같다
  */
 export function situationSlots(songs: readonly Song[]): (Song | null)[] {
   const cells: (Song | null)[] = SITUATION_CELLS.map(() => null)
-  const displaced: Song[] = []
   for (const song of [...songs].sort((a, b) => a.order - b.order)) {
     const i = SITUATION_CELLS.indexOf(situationCategory(song.title))
     if (cells[i] === null) cells[i] = song
-    else displaced.push(song)
-  }
-  for (const song of displaced) {
-    const empty = cells.indexOf(null)
-    if (empty >= 0) cells[empty] = song
     else cells.push(song)
   }
   while (cells.length % GRID_COLUMNS !== 0) cells.push(null)

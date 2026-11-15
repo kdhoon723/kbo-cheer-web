@@ -46,7 +46,16 @@ export function isStalePosition(t: number, seg: Pick<NowPlaying, 'start' | 'end'
   return msSinceSeek < SEEK_GUARD_MS && (t < seg.start - 1 || t > seg.end + 1)
 }
 
-/** 불러오기·이동 직후 플레이어가 이전 로드에서 남은 ENDED·PAUSED를 보낸 것인가(이 곡의 끝 근처가 아니면 무시한다) */
-export function isLeftoverStop(t: number, seg: Pick<NowPlaying, 'end'>, msSinceSeek: number): boolean {
-  return msSinceSeek < SEEK_GUARD_MS && t < seg.end - 1
+/**
+ * 불러온 직후 플레이어가 이전 로드에서 남은 ENDED·PAUSED를 보낸 것인가.
+ * 새 곡이 한 번이라도 재생됐으면 그 뒤의 정지는 진짜다. 이 곡의 끝 근처가 아니면(구간 앞이든 뒤든) 남은 신호로 본다
+ */
+export function isLeftoverStop(
+  t: number,
+  seg: Pick<NowPlaying, 'end'>,
+  msSinceLoad: number,
+  playedSinceLoad: boolean,
+): boolean {
+  if (playedSinceLoad || msSinceLoad >= SEEK_GUARD_MS) return false
+  return Math.abs(t - seg.end) > 1
 }

@@ -4,6 +4,7 @@
 - 단계: STEP 2 설계 (최종판, 설계 검토 반영)
 - 기준 문서: `docs/requirements.md` (FR-01~28, NFR-01~13, BR-01~44, EX-01~29)
 - 검토 문서: `docs/reviews/design-review-claude.md`(R-01~28), `docs/reviews/design-review-codex.md`(C-01~18). 본문에서 검토 때문에 바뀐 곳에는 `[R-xx]`, `[C-xx]`를 붙였다. 전체 반영 내역은 15절.
+- 배포: `https://kbocheer.kdhoon.me`(Cloudflare Workers 정적 자산, `wrangler.jsonc`의 `assets.directory: ./dist`, `not_found_handling: single-page-application`으로 모든 경로에 index.html을 돌려준다) [공개 배포]
 - 기술 환경: React, TypeScript, Vite(포트 5173 고정, LAN 접속 허용), React Router(`react-router-dom`), YouTube IFrame Player API, YouTube Data API v3, LocalStorage, CSS
 
 ## 0. 설계 원칙과 폴더 구조
@@ -43,7 +44,7 @@ src/
     hangul.ts                 초성 추출
     search.ts                 곡 검색, 결과 정렬
     id.ts                     곡 ID 만들기
-    env.ts                    접속 주소(localhost/LAN), iOS 판별
+    env.ts                    Data API 허용 출처 목록, iOS 판별
     shortcuts.ts              단축키 → 동작, 입력 중 판별 [STEP 3-7]
     situationSlots.ts         상황 곡 → 4×2 칸 배치 [디자인 개편]
     motion.ts                 팀 전환 방향, 목록 줄 지연 [STEP 3-9]
@@ -60,7 +61,6 @@ src/
     SituationSlotContext.ts   상황 버튼을 그릴 자리(오른쪽 열·하단 묶음) [STEP 3-7]
   hooks/
     useKeyboardShortcuts.ts   단축키
-    useMounted.ts             처음 있던 항목과 나중에 생긴 항목 가르기 [STEP 3-9]
   ui/
     motionTokens.ts           모션 시간·이징·스프링·거리 [STEP 3-9]
     Press.tsx                 누름 모션(TapButton, PressCell) [STEP 3-9]
@@ -299,7 +299,7 @@ loadSongs(seed):
 - `isSongArray`는 배열의 모든 원소가 `isSong`을 통과하고 id가 서로 겹치지 않을 때만 true다. 하나라도 틀리면 전체를 깨진 데이터로 본다(EX-14 그대로).
 - `isSong(x: unknown): x is Song`은 1.2절 규칙을 모두 검사한다: 문자열·정수 타입, teamId·kind 값 범위, title 길이, videoId 형식, `0 ≤ start < end ≤ videoDuration`, cheerStart는 null이거나 선수 곡이고 `start < cheerStart < end`.
 - status별 알림: corrupt → EX-14 문구, unavailable → "이 브라우저에서는 저장할 수 없어 새로고침하면 바뀐 내용이 사라집니다"(EX-15). [R-19]
-- 쓰기는 `try { setItem } catch { return false }`. false면 Provider가 EX-15 알림을 띄운다. 같은 알림이 계속 뜨지 않게, 저장이 다시 성공할 때까지는 한 번만 띄운다. 화면 상태는 그대로 둔다.
+- 쓰기는 `try { setItem } catch { return false }`. false면 Provider가 EX-15 알림을 띄운다. 같은 알림이 계속 뜨지 않게, 저장이 다시 성공할 때까지는 한 번만 띄운다. 화면 상태는 그대로 둔다. [STEP 4-2, K-03] 팀·설정(PrefsProvider)도 같은 규칙으로 "설정을 저장하지 못했습니다. 새로고침하면 팀·볼륨·정렬이 이전 값으로 돌아갈 수 있습니다"를 알린다. 저장소를 아예 못 쓰는(unavailable) 경우는 곡 목록 쪽 알림 하나로 충분해 다시 알리지 않는다.
 
 ### 3.3 React 상태와 LocalStorage의 일관성
 
@@ -307,7 +307,7 @@ loadSongs(seed):
 - 쓰기: `useEffect(() => saveSongs(songs), [songs])`처럼 상태가 바뀔 때마다 저장한다. 상태가 원본, LocalStorage는 사본이다. 컴포넌트는 LocalStorage를 직접 읽거나 쓰지 않는다.
 - 결과: 등록·수정·삭제·팀 전환·설정 변경이 모두 같은 경로로 저장된다(NFR-05).
 - 알려진 한계 1: 한 탭에서 쓰는 것을 전제로 한다. 탭 두 개에서 함께 쓰면 나중에 저장한 탭의 목록이 앞의 변경을 덮어쓴다. 다른 탭의 변경을 받아들이는 처리(`storage` 이벤트)는 만들지 않는다. [R-17, C-18]
-- 알려진 한계 2: LocalStorage는 접속 주소(출처)마다 따로다. `localhost:5173`과 `127.0.0.1:5173`, 그리고 노트북 IP가 바뀐 뒤의 휴대폰 LAN 주소는 모두 다른 저장소다. 설정 화면에 지금 출처를 보여 주고 안내한다(BR-44, 5.2). [R-08]
+- 알려진 한계 2: LocalStorage는 접속 주소(출처)마다 따로다. `https://kbocheer.kdhoon.me`, `localhost:5173`, `127.0.0.1:5173`, 노트북 LAN 주소는 모두 다른 저장소이고, 같은 공개 주소라도 기기·브라우저마다 따로다. 설정 화면에 지금 출처를 보여 주고 안내한다(BR-44, 5.2). [R-08]
 
 ### 3.4 JSON 파일 형식 (FR-20, FR-21, BR-37, BR-38)
 
@@ -330,7 +330,7 @@ function parseSongsFile(input: unknown, options: { allowEmpty: boolean }): Parse
 
 ### 3.5 곡 ID 만들기
 
-`crypto.randomUUID()`는 보안 컨텍스트(HTTPS, localhost)에서만 있다. 휴대폰은 http LAN 주소로 접속하므로 쓸 수 없다. 그래서 `id.ts`에서 `Date.now().toString(36)` + 순번 + `Math.random().toString(36).slice(2, 8)`로 만든다. ID 생성은 리듀서 밖(Context의 액션 함수)에서 한다. 리듀서는 순수 함수로 두기 위해서다.
+`crypto.randomUUID()`는 보안 컨텍스트(HTTPS, localhost)에서만 있다. 개발 중 휴대폰은 http LAN 주소로 접속하므로 쓸 수 없다(공개 주소는 HTTPS지만 LAN 접속도 계속 지원한다). 그래서 `id.ts`에서 `Date.now().toString(36)` + 순번 + `Math.random().toString(36).slice(2, 8)`로 만든다. ID 생성은 리듀서 밖(Context의 액션 함수)에서 한다. 리듀서는 순수 함수로 두기 위해서다.
 
 ## 4. 설명란 파싱과 후보 평가 알고리즘
 
@@ -433,7 +433,7 @@ existing(k) = 경고가 없고, teamSongs에 videoId === video.videoId 이고 st
 // 상황 곡 중복: normalize = 공백 제거 + 소문자
 teamTitles = teamSongs 중 상황 곡 제목들의 normalize 집합
 for 각 normalize 제목 T를 가진 상황 후보 묶음:
-  existing인 후보는 중복 판정에서 뺀다(이미 저장된 그 곡 자신이므로)
+  existing인 후보도 묶음에 넣는다. 팀에 같은 제목이 있으면 existing 후보도 duplicate라 다시 골라 저장할 수 없다   [STEP 4-2, K-05]
   T ∈ teamTitles 이면 → 묶음의 나머지 후보 모두 duplicate                    (팀에 이미 같은 제목 있음)
   아니면 대표 = 경고 없는 첫 후보(없으면 첫 후보) → 나머지 duplicate        [C-17]
 
@@ -561,8 +561,8 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 - [디자인 개편] 메인 화면은 「선수 N | 팀 응원가 N」 탭으로 격자와 목록 중 하나만 보여 준다. 정렬(챕터 순 / 가나다 순)은 선수 탭에서만 보인다. 탭은 팀이 바뀌면 선수로 돌아간다(TeamLayout이 `key`로 화면을 새로 만든다).
 - [디자인 개편] 상황 칸은 `lib/situationSlots.ts`의 `situationSlots(songs)`가 정한다. 칸 순서는 안타, 아웃, 볼넷, 풀카운트 / 라인업, 라인업 소개, 경기 개시, 기타다. 제목을 `normalize`한 뒤 낱말로 칸을 고른다. "라인업"이 있으면 "소개"나 "수비"가 함께 있을 때 라인업 소개, 아니면 라인업이다. 그 밖에는 안타, 아웃, 볼넷, 풀카운트, 개시(경기 개시) 순으로 보고, 아무것도 없으면 기타다.
   - [디자인 개편 후속] 칸 글자는 `situationLabel(title)`이 정한다. 칸에는 곡 제목에서 고른 상황 이름(안타, 아웃, 볼넷, 풀카운트, 라인업, 라인업 소개, 경기 개시)을 17px 굵게 쓰고, 곡 제목은 그 아래 13px 보조 글자색 한 줄(넘치면 말줄임)로 쓴다. 제목에서 빈칸을 빼고 앞의 「공통」, 뒤의 「송·곡·음악·응원가」를 뗀 말이 상황 이름과 같으면 제목 줄은 생략한다. 처음 데이터의 상황 곡 48곡 중 제목 줄이 남는 곡은 롯데의 「수비 라인업송」「공격 라인업송」 둘이다. 기타 칸은 곡 제목을 크게 쓴다. 다른 칸으로 밀려난 곡도 자기 제목에서 고른 이름을 쓴다. 칸의 접근 가능한 이름은 곡 제목 전체다. 「라인업 소개」는 360px 칸(안쪽 폭 약 65px)에 한 줄로 들어가지 않아 낱말 단위로 두 줄이 된다.
-  - 먼저 모든 곡이 `order` 순서로 제 칸을 차지하고, 제 칸이 이미 찬 곡은 남은 빈 칸 중 앞쪽으로 간다. 두 단계로 나눈 이유는 뒤에 오는 곡이 자기 칸을 빼앗기지 않게 하기 위해서다. 그래서 같은 상황은 팀이 바뀌어도 같은 칸에 있다.
-  - 8칸이 모두 찬 뒤에 남는 곡(9곡째부터)은 4칸짜리 줄을 아래에 더해 놓는다. 곡을 버리지 않으면서 앞 8칸의 위치는 바뀌지 않는다. 더한 줄에는 단축키가 없다. 처음 데이터는 팀마다 상황 곡이 4~6곡이라 이 경우는 사용자가 상황 곡을 더 등록했을 때만 생긴다.
+  - 곡은 `order` 순서로 제 칸을 차지하고, 제 칸이 이미 찬 곡(같은 상황의 두 번째 곡)은 9번째 칸부터 줄을 더해 놓는다. 다른 상황의 빈 칸에는 넣지 않는다. 그래서 앞 8칸과 단축키 1~8은 늘 같은 상황이고, 같은 상황은 팀이 바뀌어도 같은 칸에 있다. [STEP 4-2, K-06] 처음에는 밀려난 곡을 앞쪽 빈 칸(예: 아웃 칸)에 넣었는데, 그러면 단축키 2가 볼넷 곡을 트는 일이 생겨 바꿨다.
+  - 더한 줄은 4칸 단위로 빈 칸을 채운다. 곡을 버리지 않으면서 앞 8칸의 위치는 바뀌지 않는다. 더한 줄에는 단축키가 없다. 처음 데이터는 상황마다 곡이 하나라(BR-14) 이 경우는 사용자가 같은 상황의 곡을 더 등록했을 때만 생긴다.
   - 곡이 없는 칸은 누를 수 없는 빈 칸(`span`, `aria-hidden`)으로 그린다. 팀에 상황 곡이 하나도 없으면 상황 칸 묶음을 그리지 않는다.
 - [디자인 개편 후속] 팀 고르기 창과 재생 도구 시트는 같은 `Sheet` 컴포넌트(아래에서 올라오는 `<dialog>`, 제목과 닫기 버튼)를 쓴다.
 - [디자인 개편] 팀 메뉴는 `<select>` 대신 머리말의 팀 버튼(로고 판 36 + 팀 이름 + 아래 화살표)과 팀 고르기 창(TeamSheet)이다. 창은 `<dialog>`를 `showModal()`로 열어 대화상자 역할, 포커스 가두기, Esc로 닫기를 브라우저가 맡는다. 열면 지금 팀 칸에 포커스를 두고, 닫으면 팀 버튼으로 포커스가 돌아간다. 창 뒤를 어둡게 덮지 않아(`::backdrop` 투명) 플레이어가 가려지지 않는다. 휴대폰은 화면 아래에서 올라오는 시트, 노트북은 왼쪽 열 위쪽의 상자다. 팀 고르기 창과 첫 실행 화면은 같은 5×2 로고 격자(TeamGrid)를 쓴다.
@@ -573,7 +573,7 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 - [STEP 3-7] 진행 표시는 곡 구간 기준 `경과 / 길이`(예: 00:12 / 01:01)다. 모음 영상은 30분이 넘어, 영상 기준 시각(23:45 / 24:46)으로는 곡이 얼마나 남았는지 알기 어렵다. PlayerPanel이 250ms마다 `getCurrentTime()`을 읽고, 표시하는 초가 바뀔 때만 상태를 바꾼다. 응원가 시작 지점이 구간 안에 있으면 막대에 눈금으로 표시한다.
 - 버튼 최소 크기는 44×44px(NFR-02)이고, 페이지 전체 가로 스크롤은 없다(NFR-01). 상황 칸은 고정 4열이라 가로로 넘기지 않는다.
 - 플레이어 크기는 IFrame API 문서의 "Embedded players must have a viewport that is at least 200px by 200px" 조건에 따른다. 휴대폰에서 첫 재생이 막혔을 때 사용자가 영상을 직접 눌러 허용하려면 플레이어가 보여야 한다(8.6). [R-02]
-- 설정 화면 맨 아래에 "이 브라우저 저장소: `http://192.168.0.10:5173`(지금 접속 주소)"를 보여 주고, "접속 주소가 바뀌면 곡 목록이 따로 저장됩니다. 노트북은 항상 localhost:5173으로 열고, 휴대폰은 JSON 가져오기로 옮겨 주세요. 공유기에서 노트북 IP를 고정하면 편합니다"를 함께 적는다(BR-44). [R-08]
+- 설정 화면 맨 아래에 "이 브라우저 저장소: `http://192.168.0.10:5173`(지금 접속 주소)"를 보여 주고, "접속 주소가 바뀌면 곡 목록이 따로 저장됩니다. 늘 같은 주소(https://kbocheer.kdhoon.me)로 열고, 다른 기기로 옮길 때는 JSON 내보내기·가져오기를 써 주세요"를 함께 적는다(BR-44). [R-08, 공개 배포]
 
 ### 5.3 사용자 동선
 
@@ -629,7 +629,7 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 
 #### 모션 [STEP 3-9]
 
-움직임은 누른 일을 확인하고 그것이 어디서 왔는지 보여 줄 뿐이다. 소리를 기다리게 하지 않고(누른 순간 곡이 나오고 재생 중 표시가 바뀐다), 거리는 24px 이하, 들어오는 것은 200ms 안에 읽히며, 장식으로 움직이는 것은 없다. `motion@14.14.0`(`motion/react`)을 쓰고, 값은 모두 `src/ui/motionTokens.ts` 한 곳에 둔다.
+움직임은 누른 일을 확인하고 그것이 어디서 왔는지 보여 줄 뿐이다. 소리를 기다리게 하지 않고(누른 순간 곡이 나오고 재생 중 표시가 바뀐다), 거리는 24px 이하, 들어오는 것은 200ms 안에 읽히며, 장식으로 움직이는 것은 없다. `motion@14.14.0`을 쓰고, 값은 모두 `src/ui/motionTokens.ts` 한 곳에 둔다. [STEP 4-2] 컴포넌트는 `motion/react-m`의 `m.*`로 그리고, App이 `<LazyMotion features={domAnimation} strict>`로 필요한 기능만 싣는다(strict라 `motion.*`을 쓰면 오류). 재생 줄 높이는 `motion/react-mini`의 `useAnimate`(WAAPI)로 움직이고, 이것은 MotionConfig를 읽지 않으므로 동작 줄이기를 PlayerPanel이 직접 본다. React 묶음은 `vite.config.ts`의 `codeSplitting`으로 따로 떼어, 빌드 결과가 index 283.78 kB(gzip 85.21)와 react 218.75 kB(gzip 68.27)가 되고 500 kB 경고가 없어졌다(바꾸기 전 한 파일 569.57 kB).
 
 | 토큰 | 값 | 쓰는 곳 |
 | --- | --- | --- |
@@ -649,7 +649,7 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 - 스프링: motion은 `bounce`를 감쇠비 `1 - bounce`로 바꾼다(`motion-dom`의 `bounceToDampingRatio`). 감쇠비 0.92는 `bounce` 0.08이고, 넘침은 exp(-ζπ/√(1-ζ²)) ≈ 0.06%라 24px에서 0.02px다. 눈에 보이는 넘침은 없다.
 - 누름: 1px 선으로 붙은 칸(선수 칸, 상황 칸, 팀 응원가 줄, 검색 결과 줄, 팀 고르기 칸)은 칸과 선은 그대로 두고 안의 내용(`.press-content`)만 0.96으로 줄어든다(`ui/Press.tsx`의 `PressCell`). 상황 칸의 단축키 번호는 줄어들지 않는다. 혼자 선 버튼(정지, 응원가로, 더보기, 지금을 응원가 시작으로, 전 팀, 팀 버튼, 메뉴, 창 닫기)은 버튼 전체가 줄어든다(`TapButton`). 들어갈 때 `tap`, 풀릴 때 `spring.press`. 재생 중 칸의 반전은 움직이지 않고 바로 바뀐다.
 - 팀 전환: 선수 격자·팀 응원가 목록(`#panel-songs`)이 팀 순서(`TEAMS`)에서 새 팀이 있는 쪽에서 24px 들어온다(`swap`). 방향은 `lib/motion.ts`의 `teamSwitchDirection`이 정하고, TeamLayout이 직전 팀을 기억해 `<Outlet context>`로 내려 준다(Outlet은 팀마다 `key`로 새로 만들어져 직전 팀을 모른다). 「전 팀」으로 두 팀을 오가면 늘 반대쪽에서 온다. 같은 팀 안에서 화면만 바뀌면 움직이지 않는다. 나가는 목록은 그 프레임에 사라진다. 머리말, 검색칸, 탭, 상황 칸은 움직이지 않는다. 들어오는 격자가 가로 스크롤을 만들지 않게 `.app-main`에 `overflow-x: clip`을 둔다.
-- 목록 첫 등장: 검색 결과가 처음 나타날 때, 곡 관리 화면과 가져오기 후보 목록이 처음 열릴 때 줄이 아래 8px에서 24ms씩 차례로 올라온다(`listItemMotion`). 이미 열린 검색 결과에 검색어를 더 쳐서 생기는 줄은 움직이지 않는다(`hooks/useMounted.ts`).
+- 목록 첫 등장: 검색 결과가 처음 나타날 때, 곡 관리 화면과 가져오기 후보 목록이 처음 열릴 때 줄이 아래 8px에서 24ms씩 차례로 올라온다(`listItemMotion`). 이미 열린 검색 결과에 검색어를 더 쳐서 생기는 줄은 움직이지 않는다(SearchResults가 처음 렌더의 곡 id를 `useState`로 기억한다. [STEP 4-2] 렌더 중 ref 읽기 경고를 없애려고 `useMounted`를 없앴다).
 - 팀 고르기 창과 재생 도구 시트(`Sheet`): `<dialog>`는 그대로 `showModal()`로 열고, 보이는 판(`.sheet-body`)이 아래 24px에서 `spring.sheet`로 올라온다. 닫을 때(닫기, 팀 고르기, 바깥 누름, Esc)는 판이 `exit`로 사라진 뒤 `close()`한다. Esc는 `cancel` 이벤트를 막고 같은 길로 닫는다. 포커스는 `close()` 때 팀 버튼으로 돌아간다. 창 뒤는 5.2대로 어둡게 덮지 않는다(플레이어가 가려지지 않게).
 - 화면 메뉴(휴대폰): 머리말 아래로 펼쳐지므로 위 8px에서 내려오고(`spring.sheet`, 페이드 `swap`), 닫을 때 `exit`. 메뉴가 내용을 밀어내는 높이 변화는 움직이지 않는다.
 - 휴대폰 플레이어 자리가 첫 곡에 펼쳐지는 것은 움직이지 않는다(iframe을 움직이는 요소로 감싸지 않는다).
@@ -941,7 +941,7 @@ export function loadYouTubeIframeApi(timeoutMs = 10000): Promise<void> {
 - 타입은 DefinitelyTyped의 `@types/youtube`(전역 `YT` 네임스페이스)와 2절의 `youtube-global.d.ts`를 쓴다. `any` 없이 `YT.Player`, `YT.PlayerState`, `YT.OnStateChangeEvent`를 쓸 수 있다. [R-12]
 - 시간 초과로 실패해도 `<script>`는 지우지 않는다. 늦게라도 로드되면 다음 시도에서 `window.YT.Player`가 있어 바로 성공한다. 스크립트 로드 자체가 실패(onerror)했을 때만 지우고 새로 넣는다. 그래서 스크립트가 두 개 들어가지 않는다. [R-13, C-12]
 - `settled` 플래그로 성공·실패·시간 초과 중 처음 한 번만 처리하고, 끝나면 타이머를 지운다. 늦게 온 이전 요청의 실패가 새 요청의 `apiPromise`를 비우지 않도록 `apiPromise === p`를 확인한다. [C-12]
-- PlayerProvider가 처음 마운트될 때 바로 불러온다. 첫 버튼을 누를 때 기다리지 않게 하기 위해서다(NFR-03). 실패 상태에서 재생을 누르면 "플레이어를 불러오지 못했습니다" 알림 후 다시 시도한다(EX-10).
+- PlayerProvider가 처음 마운트될 때 바로 불러온다. 첫 버튼을 누를 때 기다리지 않게 하기 위해서다(NFR-03). 실패 상태에서 재생을 누르면 "플레이어를 불러오지 못했습니다" 알림 후 다시 시도한다(EX-10). [STEP 4-2, K-01] 스크립트를 받은 뒤 플레이어 iframe의 `onReady`가 10초(`READY_TIMEOUT_MS`) 안에 오지 않아도 같은 실패로 본다. apiState를 'failed'로 바꿔 그 플레이어를 치우고, 기다리던 곡이 있으면 알린다. 다음에 곡을 누르면 플레이어를 새로 만든다.
 
 ### 8.2 플레이어 하나를 만들고 정리하기 [R-05, C-01, C-02]
 
@@ -1100,7 +1100,7 @@ trackBuffering(state):   // tick에서
 
 `endSeconds` 도달 때 플레이어가 PAUSED나 ENDED 중 무엇을 보내든 둘 다 `finish()`로 끝나므로 결과가 같다.
 
-- 구현 중 브라우저에서 확인한 것(2026-11-15): 앞 곡이 끝난(ENDED) 상태에서 `loadVideoById`를 부르면, 새 곡을 불러온 직후(약 30ms, 위치 0초) ENDED가 한 번 더 온다. 그래서 불러오기·이동 직후 1.5초 안에 끝 시각 근처가 아닌 위치에서 오는 ENDED·PAUSED는 이전 로드에서 남은 신호로 보고 무시한다(`lib/playback.ts`의 `isLeftoverStop`). 또 「응원가로」(seekTo) 뒤에도 끝 시각에서 ENDED가 와서, 이번 확인에서는 seekTo 뒤에도 endSeconds가 유지됐다. 앱 감시 타이머는 그대로 두 번째 안전장치로 남긴다.
+- 구현 중 브라우저에서 확인한 것(2026-11-15): 앞 곡이 끝난(ENDED) 상태에서 `loadVideoById`를 부르면, 새 곡을 불러온 직후(약 30ms, 위치 0초) ENDED가 한 번 더 온다. 그래서 불러온 직후 1.5초 안에, 새 곡이 아직 한 번도 PLAYING이 되지 않았을 때 오는 ENDED·PAUSED 중 위치가 새 곡의 끝 시각 ±1초 밖(구간 앞이든 뒤든)인 것은 이전 로드에서 남은 신호로 보고 무시한다(`lib/playback.ts`의 `isLeftoverStop`). [STEP 4-2, K-02] 처음에는 PLAYING을 받은 뒤에도 1.5초 동안 무시해, 재생 직후 실제로 멈춘 것을 놓쳤다. 또 위치가 끝 시각보다 앞일 때만 무시해, 뒤 챕터에서 앞 챕터로 바꿀 때 이전 위치(구간 뒤)의 ENDED가 새 곡을 끊을 수 있었다(코드 검토의 확인 필요 항목). PLAYING을 받으면 자동 재생 확인 타이머도 지운다. 또 「응원가로」(seekTo) 뒤에도 끝 시각에서 ENDED가 와서, 이번 확인에서는 seekTo 뒤에도 endSeconds가 유지됐다. 앱 감시 타이머는 그대로 두 번째 안전장치로 남긴다.
 
 | 상황 | 감지 | 처리 |
 | --- | --- | --- |
@@ -1114,6 +1114,7 @@ trackBuffering(state):   // tick에서
 | 오래 버퍼링(EX-27) | BUFFERING이 8초 넘게 이어짐 | 안내만 하고 계속 기다림 [C-13] |
 | 외부 요인 일시정지(EX-28) | 앱이 부르지 않은 PAUSED | finish() 후 안내 [R-11] |
 | 스크립트 로드 실패(EX-10) | loader reject | apiState 'failed', 재생 누르면 알림 후 재시도 |
+| 플레이어 준비 실패(EX-10) [STEP 4-2] | 스크립트는 받았는데 `onReady`가 10초 안에 안 옴 | apiState 'failed'로 플레이어 정리, 기다리던 곡이 있으면 알림, 다음 재생 때 새로 만듦 |
 | 네트워크 끊김(EX-09) | 스크립트 실패 또는 오래 버퍼링 | 위 처리로 안내 |
 
 - onError의 `e.data`는 `const code: number = e.data`로 숫자로 받아 비교한다. `@types/youtube`의 `PlayerError` 열거형에는 153이 없기 때문이다. [R-12]
@@ -1177,7 +1178,7 @@ searchSongs(songs, query, currentTeamId):
 // src/api/youtubeData.ts
 export type DataApiError =
   | 'noKey'          // 키 미설정(EX-06)
-  | 'lanHost'        // localhost·127.0.0.1이 아닌 주소(EX-20)
+  | 'lanHost'        // 허용 출처(DATA_API_ORIGINS)가 아닌 주소(EX-20)
   | 'keyRejected'    // 키 무효, 리퍼러 불일치(EX-07)
   | 'quotaExceeded'  // 할당량 초과(EX-08)
   | 'network'        // fetch 실패(EX-09)
@@ -1198,7 +1199,7 @@ export function errorMessage(error: DataApiError): string;
 | searchVideos | `GET /youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&maxResults=10&q=<검색어>&key=<키>` | 100 |
 
 - 키는 `import.meta.env.VITE_YOUTUBE_API_KEY`로만 읽는다. `vite-env.d.ts`에 `readonly VITE_YOUTUBE_API_KEY?: string`을 선언한다. 키를 콘솔이나 화면에 찍지 않는다(NFR-07).
-- `dataApiAvailability`는 fetch 전에 검사한다. 키가 비었으면 noKey, `location.hostname`이 `localhost`·`127.0.0.1`이 아니면 lanHost. LAN 접속에서는 API를 부르지 않는다(BR-18, EX-20).
+- `dataApiAvailability`는 fetch 전에 검사한다. 키가 비었으면 noKey, `location.origin`이 `lib/env.ts`의 `DATA_API_ORIGINS`(`https://kbocheer.kdhoon.me`, `http://localhost:5173`, `http://127.0.0.1:5173`)에 없으면 lanHost. 목록은 API 키의 리퍼러 제한과 같게 둔다. 목록 밖 주소에서는 API를 부르지 않는다(BR-18, EX-20). [공개 배포] 호스트 이름만 보던 것을 포트까지 포함한 출처로 바꿨다. 리퍼러 제한도 출처 단위라 다른 포트의 localhost는 키가 거절되기 때문이다.
 - 퍼가기 금지·라이브·연령 제한은 API 오류가 아니라 정상 응답의 내용이라, `DataApiError`에 넣지 않고 ImportPage가 `VideoInfo`를 보고 판단한다(10.4).
 - 검색은 `videoEmbeddable=true`로 퍼가기 가능한 영상만 받는다. 그래도 고른 영상은 fetchVideo로 다시 확인한다.
 - 응답은 `unknown`으로 받아 `isVideoListResponse` 같은 타입 가드로 필요한 필드만 검사해 꺼낸다. `contentDetails.duration`(예: `PT1H4M50S`, 라이브는 `P0D`)은 `lib/time.ts`의 `parseIsoDuration`으로 초로 바꾼다. `contentDetails.contentRating.ytRating === 'ytAgeRestricted'`면 `ageRestricted: true`. [R-20]
@@ -1220,7 +1221,7 @@ export function errorMessage(error: DataApiError): string;
 | 분류·판단 | 화면 문구 |
 | --- | --- |
 | noKey | API 키가 없어 곡 가져오기를 쓸 수 없습니다 |
-| lanHost | 휴대폰(LAN 주소)에서는 곡 가져오기를 쓸 수 없습니다. 노트북(localhost)에서 등록한 뒤 JSON 내보내기·가져오기로 옮겨 주세요 |
+| lanHost | 이 주소(LAN 주소)에서는 곡 가져오기를 쓸 수 없습니다. https://kbocheer.kdhoon.me에서 등록하거나 JSON 내보내기·가져오기로 옮겨 주세요 |
 | keyRejected | API 키 설정을 확인해 주세요 |
 | quotaExceeded | 오늘 YouTube API 사용량을 다 썼습니다. 내일 다시 시도해 주세요 |
 | network | 네트워크 연결을 확인해 주세요 |
@@ -1345,7 +1346,7 @@ PlayerGrid 버튼 onClick
 ### 12.2 곡 수정
 
 ```
-SongListPage 「수정」 → navigate('/team/:teamId/songs/:songId/edit')
+SongListPage 「수정」 → navigate('/team/:teamId/songs/' + encodeURIComponent(songId) + '/edit')   // [STEP 4-2, K-04] 가져온 JSON의 id에 / 가 있어도 경로가 맞는다
  → SongEditPage: useParams → songs에서 id와 teamId가 모두 맞는 곡 찾기(없으면 EX-29)
  → SongForm(initial) → 「저장」: 검증(BR-19~21) 통과, 같은 제목 상황 곡이면 경고만(BR-43)
  → SongsContext.updateSong({ ...song, ...fields, cheerStart: kind가 player가 아니면 null })
@@ -1389,7 +1390,7 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
    e.key === 'Escape'            → 검색어 비우기
    e.code === 'Digit1'~'Digit8'  → situationSlots(상황 곡)[n-1]이 곡이면 play, 빈 칸이면 아무것도 안 함 [디자인 개편]
  keyup(e):
-   e.code === 'Space'이고 대상이 button이면 e.preventDefault()   // 포커스된 버튼이 keyup에서 눌리지 않게
+   keydown에서 정지로 쓴 Space이고 대상이 button이면 e.preventDefault()   // 포커스된 버튼이 keyup에서 눌리지 않게 [STEP 4-2, K-07]
 ```
 
 - [STEP 3-7] 리스너는 한 번만 등록하고 MainPage의 최신 처리 함수는 ref로 읽는다. 볼륨 슬라이더처럼 글자를 받지 않는 input(range, checkbox 등)에 포커스가 있을 때는 입력 중으로 보지 않는다. 마우스로 볼륨을 바꾼 직후 Space로 정지할 수 있게 하기 위해서다.
@@ -1399,7 +1400,7 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 - 글자 키는 `e.key`가 아니라 `e.code`(물리 키 위치)로 판단한다. 한글 입력 상태에서는 `S`·`T`의 `e.key`가 `ㄴ`·`ㅅ`로 들어오기 때문이다.
 - Space 문제: 재생 버튼을 마우스로 누른 뒤 Space를 누르면, 포커스된 버튼이 keyup 때 눌려 정지 직후 같은 곡이 다시 시작될 수 있다. 두 겹으로 막는다. [R-06]
   1. 재생 버튼은 마우스 클릭 때 포커스를 가져가지 않는다(6.2).
-  2. Space의 keydown·keyup을 모두 `preventDefault`한다.
+  2. 정지로 쓴 Space의 keydown·keyup을 모두 `preventDefault`한다. [STEP 4-2, K-07] 처음에는 keyup을 모든 버튼에서 막아, 팀 고르기 창 안의 버튼을 Space로 누를 수 없었다. 이제 keydown에서 정지 단축키로 쓴 Space만 기억해 그 keyup만 막는다.
   - 브라우저마다 동작이 다를 수 있으므로 STEP 3에서 Chrome·Edge(가능하면 Firefox)로 확인한다.
 
 ## 13. 결정 사항
@@ -1442,7 +1443,7 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 | FR-25 페이드아웃 | stop, startFade, cancelFade, finish | 8.5 |
 | FR-26 구단 표시 | TeamLogo(`public/teams/<팀>.webp`), Team.color(재생 중 띠), useMatch | 1.3, 5.1, 5.2, 5.4 |
 | FR-27 격자 정렬 | Settings.gridSort, PlayerGrid | 7.3, 6.2 |
-| FR-28 휴대폰 접속 안내 | dataApiAvailability('lanHost'), DataApiNotice, 설정 화면 접속 주소 | 5.2, 10.1 |
+| FR-28 접속 주소 안내 | dataApiAvailability('lanHost'), DataApiNotice, 설정 화면 접속 주소 | 5.2, 10.1 |
 
 ### 14.2 비기능 요구사항
 
@@ -1478,7 +1479,7 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 | BR-14~15, BR-42 중복, 이미 있음, 같은 이름 선수 | evaluateCandidates 파생 판정 | 4.6 |
 | BR-16 퍼가기 금지 | VideoInfo.embeddable 검사 | 10.4 |
 | BR-17 이름 규칙 | isSong, SongForm 검증, titleError | 3.2, 4.6 |
-| BR-18 localhost에서만 API | dataApiAvailability | 10.1 |
+| BR-18 허용 출처에서만 API | DATA_API_ORIGINS, dataApiAvailability | 10.1 |
 | BR-19~21 시각 형식·범위, 응원가 시작 | `time.ts`, SongForm 검증, updateSong | 6.2, 12.2 |
 | BR-22 영상 ID 수정 불가 | SongForm에 videoId는 읽기 전용 표시 | 6.2 |
 | BR-23 삭제 확인 | `window.confirm` | 14.1 FR-16 |
@@ -1505,7 +1506,7 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 | EX-16 팀에 곡 없음 | EmptyState | 6.2 |
 | EX-17 검색 결과 없음 | SearchResults 빈 문구 | 9.2 |
 | EX-19 시각 이상 | LIS 판정, 경고 줄, 링크 | 4.4, 10.4 |
-| EX-20 LAN 접속 | lanHost, DataApiNotice | 10.1 |
+| EX-20 허용 출처가 아닌 주소 | lanHost, DataApiNotice | 10.1 |
 | EX-21~22 잘못된 JSON, 빈 JSON | parseSongsFile 오류 | 3.4 |
 | EX-23 응원가 시작 지정 불가 | canCheerHere, onCheerHere 조건 | 7.4 |
 | EX-24 iOS 볼륨 | canControlVolume, VolumeSlider 안내 | 8.5 |

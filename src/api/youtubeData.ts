@@ -1,5 +1,5 @@
 //20241476-김도훈-(2026-11-15)
-import { isLocalHost } from '../lib/env.ts'
+import { isDataApiOrigin } from '../lib/env.ts'
 import { isRecord } from '../lib/songValidation.ts'
 import { parseIsoDuration } from '../lib/time.ts'
 import type { VideoInfo, VideoSearchItem } from '../types.ts'
@@ -23,27 +23,27 @@ export type RequestResult<T> = ApiResult<T> | AbortedResult
 
 export interface ApiEnv {
   key: string | undefined
-  hostname: string
+  origin: string
 }
 
 const API_BASE = 'https://www.googleapis.com/youtube/v3'
 
 function currentEnv(): ApiEnv {
-  return { key: import.meta.env.VITE_YOUTUBE_API_KEY, hostname: location.hostname }
+  return { key: import.meta.env.VITE_YOUTUBE_API_KEY, origin: location.origin }
 }
 
 export function dataApiAvailability(
   env: ApiEnv = currentEnv(),
 ): { ok: true } | { ok: false; error: 'noKey' | 'lanHost' } {
   if (env.key === undefined || env.key.trim() === '') return { ok: false, error: 'noKey' }
-  if (!isLocalHost(env.hostname)) return { ok: false, error: 'lanHost' }
+  if (!isDataApiOrigin(env.origin)) return { ok: false, error: 'lanHost' }
   return { ok: true }
 }
 
 const MESSAGES: Record<ImportError, string> = {
   noKey: 'API 키가 없어 곡 가져오기를 쓸 수 없습니다',
   lanHost:
-    '휴대폰(LAN 주소)에서는 곡 가져오기를 쓸 수 없습니다. 노트북(localhost)에서 등록한 뒤 JSON 내보내기·가져오기로 옮겨 주세요',
+    '이 주소(LAN 주소)에서는 곡 가져오기를 쓸 수 없습니다. https://kbocheer.kdhoon.me에서 등록하거나 JSON 내보내기·가져오기로 옮겨 주세요',
   keyRejected: 'API 키 설정을 확인해 주세요',
   quotaExceeded: '오늘 YouTube API 사용량을 다 썼습니다. 내일 다시 시도해 주세요',
   network: '네트워크 연결을 확인해 주세요',

@@ -1,5 +1,5 @@
 //20241476-김도훈-(2026-11-15)
-import { motion } from 'motion/react'
+import * as m from 'motion/react-m'
 import { formatTime } from '../lib/time.ts'
 import type { Song, SongKind } from '../types.ts'
 import { listItemMotion } from '../ui/motionTokens.ts'
@@ -20,7 +20,7 @@ const KIND_LABELS: Record<SongKind, string> = {
 
 export default function SongRow({ song, index, onEdit, onDelete }: Props) {
   return (
-    <motion.li className="song-row" {...listItemMotion(index)}>
+    <m.li className="song-row" {...listItemMotion(index)}>
       <div className="song-row-info">
         <span className="song-row-kind">{KIND_LABELS[song.kind]}</span>
         <strong className="song-row-title">{song.title}</strong>
@@ -39,6 +39,6 @@ export default function SongRow({ song, index, onEdit, onDelete }: Props) {
           삭제
         </button>
       </div>
-    </motion.li>
+    </m.li>
   )
 }

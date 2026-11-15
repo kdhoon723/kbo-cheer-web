@@ -1,8 +1,9 @@
 //20241476-김도훈-(2026-11-15)
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { DEFAULT_SETTINGS, loadSettings, loadTeamState, saveSettings, saveTeamState } from '../lib/storage.ts'
 import type { GridSort, Settings, TeamId, TeamState } from '../types.ts'
+import { useNotice } from './NoticeContext.tsx'
 
 interface PrefsContextValue {
   teamState: TeamState
@@ -14,17 +15,36 @@ interface PrefsContextValue {
 
 const PrefsContext = createContext<PrefsContextValue | null>(null)
 
+const SAVE_FAILED = '설정을 저장하지 못했습니다. 새로고침하면 팀·볼륨·정렬이 이전 값으로 돌아갈 수 있습니다'
+
 export function PrefsProvider({ children }: { children: ReactNode }) {
-  const [teamState, setTeamState] = useState<TeamState>(() => loadTeamState().value)
+  const { notify } = useNotice()
+  const [initialTeam] = useState(() => loadTeamState())
+  const [teamState, setTeamState] = useState<TeamState>(initialTeam.value)
   const [settings, setSettings] = useState<Settings>(() => loadSettings().value)
+  // 저장소를 아예 쓸 수 없으면 곡 목록 쪽이 이미 알렸으므로 같은 뜻의 알림을 다시 띄우지 않는다.
+  // 실패는 다시 성공할 때까지 한 번만 알린다(EX-15)
+  const saveFailing = useRef({ team: initialTeam.status === 'unavailable', settings: initialTeam.status === 'unavailable' })
+
+  const report = useCallback(
+    (key: 'team' | 'settings', ok: boolean) => {
+      if (ok) {
+        saveFailing.current[key] = false
+      } else if (!saveFailing.current[key]) {
+        saveFailing.current[key] = true
+        notify(SAVE_FAILED, 'error')
+      }
+    },
+    [notify],
+  )
 
   useEffect(() => {
-    saveTeamState(teamState)
-  }, [teamState])
+    report('team', saveTeamState(teamState))
+  }, [teamState, report])
 
   useEffect(() => {
-    saveSettings(settings)
-  }, [settings])
+    report('settings', saveSettings(settings))
+  }, [settings, report])
 
   const visitTeam = useCallback((teamId: TeamId) => {
     setTeamState((prev) =>

@@ -2,12 +2,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { ChevronsRight, EllipsisVertical, Flag, Square } from 'lucide-react'
-import { motion, useAnimate } from 'motion/react'
+import { useReducedMotionConfig } from 'motion/react'
+import { useAnimate } from 'motion/react-mini'
+import * as m from 'motion/react-m'
 import { getTeam } from '../data/teams.ts'
 import { usePlayer } from '../context/PlayerContext.tsx'
 import { usePrefs } from '../context/PrefsContext.tsx'
 import { useSongs } from '../context/SongsContext.tsx'
-import { useMounted } from '../hooks/useMounted.ts'
 import { cheerHereSecond, cheerTarget, segmentElapsed } from '../lib/playback.ts'
 import { formatTime } from '../lib/time.ts'
 import type { NowPlaying } from '../types.ts'
@@ -51,6 +52,8 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   const [toolsOpen, setToolsOpen] = useState(false)
   const [rowRef, animate] = useAnimate<HTMLDivElement>()
   const idleHeight = useRef(0)
+  // mini의 useAnimate는 MotionConfig를 읽지 않으므로 동작 줄이기는 여기서 직접 본다
+  const reduceMotion = useReducedMotionConfig()
 
   const song = nowPlaying ? songs.find((s) => s.id === nowPlaying.songId) : undefined
   if (song && !hasPlayed) setHasPlayed(true)
@@ -89,10 +92,10 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
     const el = rowRef.current
     if (!el || !hasPlayed) return
     const to = el.offsetHeight
-    if (to === idleHeight.current) return
+    if (to === idleHeight.current || reduceMotion) return
     // 자라는 동안 안의 버튼이 아래 상황 칸 위로 삐져나오지 않게 한다
     el.style.overflow = 'clip'
-    const growth = animate(el, { height: [idleHeight.current, to] }, row)
+    const growth = animate(el, { height: [`${idleHeight.current}px`, `${to}px`] }, row)
     const settle = () => {
       el.style.height = ''
       el.style.overflow = ''
@@ -102,7 +105,7 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
       growth.stop()
       settle()
     }
-  }, [hasPlayed, rowRef, animate])
+  }, [hasPlayed, rowRef, animate, reduceMotion])
 
   function onCheerHere() {
     const sec = cheerHereSecond(song, getCurrentTime())
@@ -210,25 +213,25 @@ interface NowTextProps {
 
 function NowText({ rise, label, titleKey, title, children }: NowTextProps) {
   // 처음 곡이 올라오는 순간에는 줄 전체만 움직이고 제목은 따로 바뀌지 않는다
-  const mounted = useMounted()
+  const [firstTitleKey] = useState(titleKey)
   return (
-    <motion.div
+    <m.div
       className="now"
       initial={rise ? { opacity: 0, y: distance.row } : false}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...swap, delay: rowTextDelay }}
     >
       <p className="now-label">{label}</p>
-      <motion.p
+      <m.p
         key={titleKey ?? 'none'}
         className="now-title"
-        initial={mounted ? { opacity: 0 } : false}
+        initial={titleKey === firstTitleKey ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ ...quick, ease: ease.out }}
       >
         {title}
-      </motion.p>
+      </m.p>
       <p className="now-meta">{children}</p>
-    </motion.div>
+    </m.div>
   )
 }

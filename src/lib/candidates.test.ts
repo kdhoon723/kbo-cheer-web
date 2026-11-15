@@ -270,12 +270,21 @@ describe('중복', () => {
     expect(simple(kindChanged).map((r) => r.duplicate)).toEqual([false, false, true])
   })
 
-  it('이미 저장된 줄은 그룹에서 빠진다', () => {
+  it('이미 저장된 상황 곡도 같은 제목이 팀에 있으므로 다시 고를 수 없다(K-05)', () => {
     const songs = [makeSong({ videoId: 'vvvvvvvvvvv', start: 60, kind: 'situation', title: '볼넷 송' })]
-    const rows = simple([sim('01:00', '볼넷 송'), sim('02:00', '볼넷 송')], 1000, songs)
+    const rows = simple([sim('01:00', '볼넷 송', { selection: 'on' }), sim('02:00', '볼넷 송')], 1000, songs)
+    expect(rows[0].existing).toBe(true)
+    expect(rows[0].duplicate).toBe(true)
+    expect(rows[0].willSave).toBe(false)
+    expect(rows[1].duplicate).toBe(true)
+  })
+
+  it('이미 저장된 상황 곡의 제목을 팀에 없는 제목으로 고치면 고를 수 있다', () => {
+    const songs = [makeSong({ videoId: 'vvvvvvvvvvv', start: 60, kind: 'situation', title: '볼넷 송' })]
+    const rows = simple([sim('01:00', '볼넷 송 2', { selection: 'on' })], 1000, songs)
     expect(rows[0].existing).toBe(true)
     expect(rows[0].duplicate).toBe(false)
-    expect(rows[1].duplicate).toBe(true)
+    expect(rows[0].willSave).toBe(true)
   })
 
   it('선수와 팀 곡은 같은 이름이어도 중복이 아니다', () => {

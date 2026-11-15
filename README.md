@@ -4,6 +4,8 @@
 
 2026-2학기 스크립트프로그래밍 과제 / 20241476 김도훈
 
+바로 쓰기: <https://kbocheer.kdhoon.me> (휴대폰과 노트북 모두 이 주소로 열면 재생, 곡 가져오기, YouTube 검색을 모두 쓸 수 있다)
+
 | 휴대폰(360×640) | 노트북(1280×800) |
 | --- | --- |
 | ![휴대폰 메인 화면](docs/screenshots/after2-playing-360x640.png) | ![노트북 메인 화면](docs/screenshots/after2-playing-1280x800.png) |
@@ -22,6 +24,10 @@
 
 ## 실행
 
+공개 주소 <https://kbocheer.kdhoon.me>로 열면 설치 없이 쓸 수 있다. 곡 목록과 설정은 기기·브라우저·주소마다 따로 저장되므로, 늘 같은 주소로 열고 다른 기기로 옮길 때는 설정 화면의 JSON 내보내기·가져오기를 쓴다.
+
+### 개발 서버
+
 Node.js 20.19 이상 또는 22.12 이상이 필요하다(Vite 8 기준, 개발 환경은 22.21).
 
 ```bash
@@ -36,16 +42,27 @@ npm run dev        # http://localhost:5173 (포트 5173 고정, 같은 와이파
 VITE_YOUTUBE_API_KEY=발급받은_API_키
 ```
 
-- 키는 Google Cloud 콘솔에서 YouTube Data API v3용으로 만들고, HTTP 리퍼러를 `http://localhost:5173/*`, `http://127.0.0.1:5173/*`로 제한한다.
-- 노트북은 항상 `http://localhost:5173`으로 연다. 휴대폰은 `http://<노트북 LAN 주소>:5173`으로 접속한다. 휴대폰에서는 키의 리퍼러 제한 때문에 곡 가져오기가 꺼지므로, 노트북에서 등록한 곡을 JSON 내보내기·가져오기로 옮긴다.
-- LocalStorage는 접속 주소마다 따로 저장된다. 주소가 바뀌면 곡 목록도 따로 보인다.
+- 키는 Google Cloud 콘솔에서 YouTube Data API v3용으로 만들고, HTTP 리퍼러를 `https://kbocheer.kdhoon.me/*`, `http://localhost:5173/*`, `http://127.0.0.1:5173/*`로 제한한다. 앱도 같은 세 출처(`src/lib/env.ts`의 `DATA_API_ORIGINS`)에서만 API를 부른다.
+- 개발 서버에 휴대폰이 `http://<노트북 LAN 주소>:5173`으로 접속하면 재생과 곡 관리는 되지만, 키의 리퍼러 제한 때문에 곡 가져오기는 꺼지고 안내 문구가 나온다.
 
 | 명령 | 하는 일 |
 | --- | --- |
 | `npm run dev` | 개발 서버 |
 | `npm run build` | 타입 검사와 배포용 빌드(`dist/`) |
 | `npm test` | 단위 테스트(Vitest) |
+| `npm run test:e2e` | E2E 테스트(Playwright, 실제 YouTube 재생) |
 | `npm run lint` | 린트(oxlint) |
+
+### 배포(Cloudflare Workers 정적 자산)
+
+`wrangler.jsonc`가 `dist/`를 정적 자산으로 올리고, 없는 경로는 모두 `index.html`을 돌려준다(SPA). Cloudflare 계정 로그인이 필요하다.
+
+```bash
+npm run build                 # .env.local의 키가 빌드 결과에 들어간다
+npx wrangler deploy           # 처음에는 npx wrangler login
+```
+
+- Vite는 `VITE_`로 시작하는 환경 변수를 빌드한 자바스크립트에 그대로 넣는다. 배포된 키는 누구나 볼 수 있으므로 반드시 위의 리퍼러 제한을 걸어 둔다.
 
 ## 기술
 

@@ -28,7 +28,7 @@ KBO 응원가 즉시 재생 웹서비스. 2026-2학기 스크립트프로그래�
 ## 모션 규칙
 
 - 움직임은 누른 일을 확인하고 어디서 왔는지 보여 줄 뿐이다. 소리를 기다리게 하지 않는다(누른 순간 재생과 재생 중 표시가 바뀌고, 움직임이 끝나기를 기다리는 일은 없다). 거리는 24px 이하, 들어오는 것은 200ms 안에 읽힌다. 장식으로 움직이는 것은 없다.
-- 시간, 이징, 스프링, 거리, 눌림 크기는 모두 `src/ui/motionTokens.ts`에서 가져다 쓴다. 컴포넌트에 숫자를 직접 쓰지 않는다. 라이브러리는 `motion@14.14.0`(`motion/react`)만 쓴다.
+- 시간, 이징, 스프링, 거리, 눌림 크기는 모두 `src/ui/motionTokens.ts`에서 가져다 쓴다. 컴포넌트에 숫자를 직접 쓰지 않는다. 라이브러리는 `motion@14.14.0`만 쓴다. 컴포넌트는 `motion/react-m`의 `m.*`로 그리고(App의 `LazyMotion strict`가 `motion.*`을 막는다), 높이처럼 직접 움직일 때는 `motion/react-mini`의 `useAnimate`를 쓴다.
 - transform과 opacity만 움직인다. 예외는 첫 곡에 재생 줄이 한 번 자라는 높이 하나다. 진행 막대는 `scaleX`로 그린다. 프레임마다 React 상태를 바꾸지 않는다.
 - YouTube iframe(PlayerHost)은 옮기거나, 움직이는 요소로 감싸거나, 다시 마운트하지 않는다. 재생 중 칸의 반전과 진행 막대도 움직이지 않는다.
 - 앱 전체를 `<MotionConfig reducedMotion="user">`로 감싼다. 동작 줄이기가 켜지면 옮기기·크기·스프링은 꺼지고 페이드만 남는다. 누름(`TapButton`, `PressCell`)과 닫을 때의 옮기기는 동작 줄이기에서 아예 빠진다.
@@ -37,6 +37,8 @@ KBO 응원가 즉시 재생 웹서비스. 2026-2학기 스크립트프로그래�
 
 - 개발 서버: `npm run dev` (포트 5173 고정, LAN 접속 허용. `vite.config.ts`)
 - 빌드: `npm run build` / 단위 테스트: `npm test` / 린트: `npm run lint`
+- E2E: `npm run test:e2e`. 시작할 때 `e2e/global-setup.ts`가 재생이 되는 YouTube 방문자 쿠키를 만들어 모든 테스트가 나눠 쓴다(쿠키 없는 새 방문자는 가끔 YouTube가 영상을 주지 않는다. `docs/test-results.md` F-01).
+- 배포: 공개 주소 https://kbocheer.kdhoon.me (Cloudflare Workers 정적 자산, `wrangler.jsonc`). 실제 배포 명령(`npx wrangler deploy`)은 계정 자격증명이 필요해 직접 실행하지 않는다.
 - 브라우저 확인은 Playwright MCP로 하고, 화면 캡처는 `docs/screenshots/`에 저장한다.
 - 개발 서버 같은 프로세스는 직접 띄운 PID로만 끈다. `pkill -f`, `killall` 같은 이름 패턴 종료는 쓰지 않는다.
 - 백그라운드로 띄울 때는 `npx`·`npm run`을 거치지 말고 `node node_modules/vite/bin/vite.js`로 직접 띄운다. `npm exec`의 PID를 끄면 그 아래 vite 프로세스가 남아 포트를 계속 잡는다.
@@ -45,7 +47,7 @@ KBO 응원가 즉시 재생 웹서비스. 2026-2학기 스크립트프로그래�
 
 - 키는 `.env.local`의 `VITE_YOUTUBE_API_KEY`로만 읽는다(`import.meta.env`). 원본은 `~/credentials/youtube/kbo-cheer-web.env`에 있다.
 - 키 값은 화면, 콘솔, 로그, 커밋, 보고 어디에도 쓰지 않는다. `.env.local`은 `.gitignore`의 `*.local`로 제외된다.
-- 키는 `http://localhost:5173`, `http://127.0.0.1:5173` 리퍼러에서만 동작한다. 포트를 바꾸지 않는다.
+- 키는 `https://kbocheer.kdhoon.me`, `http://localhost:5173`, `http://127.0.0.1:5173` 리퍼러에서만 동작한다. 앱의 허용 목록은 `src/lib/env.ts`의 `DATA_API_ORIGINS`다. 포트를 바꾸지 않는다.
 
 ## Git
 

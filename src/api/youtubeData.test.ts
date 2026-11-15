@@ -221,17 +221,20 @@ describe('searchVideos', () => {
 
 describe('dataApiAvailability', () => {
   it('키가 비었거나 공백이면 noKey이다', () => {
-    expect(dataApiAvailability({ key: undefined, hostname: 'localhost' })).toEqual({ ok: false, error: 'noKey' })
-    expect(dataApiAvailability({ key: '   ', hostname: 'localhost' })).toEqual({ ok: false, error: 'noKey' })
+    expect(dataApiAvailability({ key: undefined, origin: 'http://localhost:5173' })).toEqual({ ok: false, error: 'noKey' })
+    expect(dataApiAvailability({ key: '   ', origin: 'http://localhost:5173' })).toEqual({ ok: false, error: 'noKey' })
   })
 
-  it('localhost가 아닌 주소는 lanHost이다', () => {
-    expect(dataApiAvailability({ key: 'k', hostname: '192.168.0.10' })).toEqual({ ok: false, error: 'lanHost' })
+  it('허용 출처가 아닌 주소(LAN 주소, 다른 포트)는 lanHost이다', () => {
+    expect(dataApiAvailability({ key: 'k', origin: 'http://192.168.0.10:5173' })).toEqual({ ok: false, error: 'lanHost' })
+    expect(dataApiAvailability({ key: 'k', origin: 'http://localhost:4173' })).toEqual({ ok: false, error: 'lanHost' })
+    expect(dataApiAvailability({ key: 'k', origin: 'http://kbocheer.kdhoon.me' })).toEqual({ ok: false, error: 'lanHost' })
   })
 
-  it('키가 있고 localhost나 127.0.0.1이면 ok이다', () => {
-    expect(dataApiAvailability({ key: 'k', hostname: 'localhost' })).toEqual({ ok: true })
-    expect(dataApiAvailability({ key: 'k', hostname: '127.0.0.1' })).toEqual({ ok: true })
+  it('키가 있고 공개 주소, localhost:5173, 127.0.0.1:5173이면 ok이다', () => {
+    expect(dataApiAvailability({ key: 'k', origin: 'https://kbocheer.kdhoon.me' })).toEqual({ ok: true })
+    expect(dataApiAvailability({ key: 'k', origin: 'http://localhost:5173' })).toEqual({ ok: true })
+    expect(dataApiAvailability({ key: 'k', origin: 'http://127.0.0.1:5173' })).toEqual({ ok: true })
   })
 })
 

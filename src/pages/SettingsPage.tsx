@@ -91,8 +91,8 @@ export default function SettingsPage() {
         <h3>저장 위치</h3>
         <p>이 브라우저 저장소: {window.location.origin}</p>
         <p>
-          접속 주소가 바뀌면 곡 목록이 따로 저장됩니다. 노트북은 항상 localhost:5173으로 열고, 휴대폰은 JSON
-          가져오기로 옮겨 주세요. 공유기에서 노트북 IP를 고정하면 편합니다
+          접속 주소가 바뀌면 곡 목록이 따로 저장됩니다. 늘 같은 주소(https://kbocheer.kdhoon.me)로 열고, 다른
+          기기로 옮길 때는 JSON 내보내기·가져오기를 써 주세요
         </p>
       </div>
     </section>

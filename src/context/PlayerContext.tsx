@@ -27,6 +27,8 @@ interface PlayerContextValue {
 
 const WATCH_MS = 200
 const AUTOPLAY_CHECK_MS = 3000
+// IFrame API 스크립트를 받은 뒤 플레이어 iframe이 준비(onReady)될 때까지 기다리는 한도
+const READY_TIMEOUT_MS = 10000
 const BUFFERING_NOTICE_MS = 8000
 const FADE_STEPS = 10
 const STOP_FADE_SEC = 1
@@ -60,6 +62,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const songsRef = useRef(songs)
   const fadingRef = useRef(false)
   const seekAtRef = useRef(0)
+  const loadedAtRef = useRef(0)
+  const playedSinceLoadRef = useRef(false)
   const pausingByAppRef = useRef(false)
   const bufferingSinceRef = useRef<number | null>(null)
   const bufferingNoticedRef = useRef(false)
@@ -151,6 +155,8 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       const p = playerRef.current
       if (!p) return
       seekAtRef.current = performance.now()
+      loadedAtRef.current = seekAtRef.current
+      playedSinceLoadRef.current = false
       p.setVolume(volumeRef.current)
       p.loadVideoById({ videoId: seg.videoId, startSeconds: seg.start, endSeconds: seg.end })
       startAutoplayCheck(seg)
@@ -220,9 +226,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       const seg = segRef.current
       const t = playerRef.current?.getCurrentTime() ?? 0
       // 앞 곡이 끝난 상태에서 loadVideoById를 부르면 새 곡을 불러온 직후 ENDED가 한 번 더 온다(브라우저에서 확인)
-      const leftover = seg !== null && isLeftoverStop(t, seg, performance.now() - seekAtRef.current)
+      const leftover =
+        seg !== null && isLeftoverStop(t, seg, performance.now() - loadedAtRef.current, playedSinceLoadRef.current)
       switch (state) {
         case YT.PlayerState.PLAYING:
+          playedSinceLoadRef.current = true
+          clearAutoplayCheck()
           if (seg && !fadingRef.current) setStatusBoth('playing')
           break
         case YT.PlayerState.ENDED:
@@ -245,7 +254,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
           break
       }
     },
-    [finish, notify, setStatusBoth],
+    [clearAutoplayCheck, finish, notify, setStatusBoth],
   )
 
   const handleError = useCallback(
@@ -287,6 +296,15 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     inner.id = 'yt-player'
     hostEl.appendChild(inner)
     let alive = true
+    // 스크립트는 받았는데 iframe이 준비되지 않으면 실패로 보고 플레이어를 치운다. 다음에 곡을 누르면 새로 만든다(EX-10)
+    const readyTimer = window.setTimeout(() => {
+      if (!alive || readyRef.current) return
+      setApiState('failed')
+      if (segRef.current) {
+        finish()
+        notify(LOAD_FAILED, 'error')
+      }
+    }, READY_TIMEOUT_MS)
     const p = new YT.Player(inner, {
       width: '100%',
       height: '100%',
@@ -294,6 +312,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       events: {
         onReady: () => {
           if (!alive) return
+          clearTimeout(readyTimer)
           readyRef.current = true
           setPlayerReady(true)
           runPending()
@@ -313,6 +332,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     playerRef.current = p
     return () => {
       alive = false
+      clearTimeout(readyTimer)
       cancelFade()
       clearAutoplayCheck()
       pendingRef.current = null
@@ -322,7 +342,18 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       playerRef.current = null
       inner.remove()
     }
-  }, [apiState, hostEl, runPending, handleStateChange, handleError, handleAutoplayBlocked, cancelFade, clearAutoplayCheck])
+  }, [
+    apiState,
+    hostEl,
+    runPending,
+    handleStateChange,
+    handleError,
+    handleAutoplayBlocked,
+    cancelFade,
+    clearAutoplayCheck,
+    finish,
+    notify,
+  ])
 
   useEffect(() => {
     if (!nowPlaying) return

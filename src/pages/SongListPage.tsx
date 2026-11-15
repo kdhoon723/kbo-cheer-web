@@ -52,7 +52,7 @@ export default function SongListPage() {
                   key={s.id}
                   song={s}
                   index={firstIndex[gi] + i}
-                  onEdit={(id) => navigate(`/team/${teamId}/songs/${id}/edit`)}
+                  onEdit={(id) => navigate(`/team/${teamId}/songs/${encodeURIComponent(id)}/edit`)}
                   onDelete={onDelete}
                 />
               ))}

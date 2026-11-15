@@ -1,6 +1,6 @@
 //20241476-김도훈-(2026-11-15)
 import { ExternalLink, TriangleAlert } from 'lucide-react'
-import { motion } from 'motion/react'
+import * as m from 'motion/react-m'
 import { formatTime } from '../lib/time.ts'
 import type { CandidateRow, ImportCandidate, SongKind } from '../types.ts'
 import { listItemMotion } from '../ui/motionTokens.ts'
@@ -33,7 +33,7 @@ export default function CandidateTable({ rows, videoId, onChange, disabled }: Pr
   return (
     <ul className="candidates">
       {rows.map((row, i) => (
-        <motion.li
+        <m.li
           key={row.key}
           className={row.warning ? 'candidate candidate-warning' : 'candidate'}
           {...listItemMotion(i)}
@@ -102,7 +102,7 @@ export default function CandidateTable({ rows, videoId, onChange, disabled }: Pr
               </a>
             </div>
           )}
-        </motion.li>
+        </m.li>
       ))}
     </ul>
   )

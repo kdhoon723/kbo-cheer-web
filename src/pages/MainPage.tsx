@@ -1,6 +1,6 @@
 //20241476-김도훈-(2026-11-15)
 import { useMemo, useRef, useState } from 'react'
-import { motion } from 'motion/react'
+import * as m from 'motion/react-m'
 import { createPortal } from 'react-dom'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import EmptyState from '../components/EmptyState.tsx'
@@ -139,7 +139,7 @@ export default function MainPage() {
               </div>
             )}
           </div>
-          <motion.div
+          <m.div
             id="panel-songs"
             role="tabpanel"
             aria-labelledby={tab === 'players' ? 'tab-players' : 'tab-team'}
@@ -152,7 +152,7 @@ export default function MainPage() {
             ) : (
               <TeamSongList songs={teamSongs} nowPlayingId={nowPlayingId} onPlay={play} />
             )}
-          </motion.div>
+          </m.div>
         </>
       )}
       {situationSlot &&

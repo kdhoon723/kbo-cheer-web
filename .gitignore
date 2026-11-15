@@ -30,3 +30,7 @@ dist-ssr
 # Playwright 결과
 playwright-report/
 test-results/
+
+# Cloudflare wrangler 로컬 상태
+.wrangler/
+e2e/.auth/

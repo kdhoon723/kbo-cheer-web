@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import seedJson from '../data/seed-songs.json'
 import { TEAM_IDS } from '../data/teams.ts'
 import type { Song, TeamId } from '../types.ts'
-import { situationCategory, situationLabel, situationSlots } from './situationSlots.ts'
+import { SITUATION_CELLS, situationCategory, situationLabel, situationSlots } from './situationSlots.ts'
 import { parseSongsFile } from './songsFile.ts'
 import { makeSong } from './testSongs.ts'
 
@@ -68,37 +68,42 @@ describe('situationSlots', () => {
     }
   })
 
-  it('제 칸이 찬 곡은 앞쪽 빈 칸으로 가고, 먼저 온 곡이 제 칸을 지킨다', () => {
+  it('같은 상황의 두 번째 곡은 다른 상황 칸을 차지하지 않고 9번째 칸부터 놓인다(K-06)', () => {
     const cells = situationSlots([
       situation('풀카운트 송', 0),
       situation('풀카운트 송 2', 1),
       situation('아웃 송', 2),
     ])
     expect(titles(cells)).toEqual([
-      '풀카운트 송 2', '아웃 송', null, '풀카운트 송',
+      null, '아웃 송', null, '풀카운트 송',
       null, null, null, null,
+      '풀카운트 송 2', null, null, null,
     ])
+  })
+
+  it('앞 8칸은 늘 칸 순서의 상황만 담는다', () => {
+    const cells = situationSlots([situation('볼넷 송', 0), situation('볼넷 송 2', 1), situation('안타 송', 2)])
+    cells.slice(0, 8).forEach((song, i) => {
+      if (song) expect(situationCategory(song.title)).toBe(SITUATION_CELLS[i])
+    })
   })
 
   it('order 순서로 놓는다', () => {
     const cells = situationSlots([situation('안타 B', 5), situation('안타 A', 1)])
     expect(cells[0]?.title).toBe('안타 A')
-    expect(cells[1]?.title).toBe('안타 B')
+    expect(cells[8]?.title).toBe('안타 B')
   })
 
   it('곡이 없으면 8칸 모두 빈다', () => {
     expect(situationSlots([])).toEqual(Array(8).fill(null))
   })
 
-  it('8곡을 넘으면 줄을 더하고 4칸 단위로 빈 칸을 채운다', () => {
-    const songs = Array.from({ length: 10 }, (_, i) => situation(`응원 ${i}`, i))
+  it('제 칸이 찬 곡은 9번째 칸부터 줄을 더해 놓고 4칸 단위로 빈 칸을 채운다', () => {
+    const songs = Array.from({ length: 6 }, (_, i) => situation(`응원 ${i}`, i))
     const cells = situationSlots(songs)
-    expect(cells).toHaveLength(12)
-    expect(titles(cells).slice(0, 8)).toEqual([
-      '응원 1', '응원 2', '응원 3', '응원 4',
-      '응원 5', '응원 6', '응원 7', '응원 0',
-    ])
-    expect(titles(cells).slice(8)).toEqual(['응원 8', '응원 9', null, null])
+    expect(cells).toHaveLength(16)
+    expect(titles(cells).slice(0, 8)).toEqual([null, null, null, null, null, null, null, '응원 0'])
+    expect(titles(cells).slice(8)).toEqual(['응원 1', '응원 2', '응원 3', '응원 4', '응원 5', null, null, null])
   })
 })
 

@@ -6,5 +6,15 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [react()],
   server: { port: 5173, strictPort: true, host: true },
+  build: {
+    rolldownOptions: {
+      output: {
+        // React 묶음은 앱 코드보다 덜 바뀌므로 따로 둔다. 배포 뒤 앱만 고쳐도 브라우저가 React 파일을 다시 받지 않는다
+        codeSplitting: {
+          groups: [{ name: 'react', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ }],
+        },
+      },
+    },
+  },
   test: { environment: 'jsdom', include: ['src/**/*.test.ts'] },
 })

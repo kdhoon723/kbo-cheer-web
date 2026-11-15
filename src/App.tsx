@@ -1,5 +1,5 @@
 //20241476-김도훈-(2026-11-15)
-import { MotionConfig } from 'motion/react'
+import { LazyMotion, MotionConfig, domAnimation } from 'motion/react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { NoticeProvider } from './context/NoticeContext.tsx'
 import { PlayerProvider } from './context/PlayerContext.tsx'
@@ -17,6 +17,8 @@ import SongListPage from './pages/SongListPage.tsx'
 export default function App() {
   return (
     <MotionConfig reducedMotion="user">
+      {/* m.* 컴포넌트는 domAnimation 기능만 싣는다. strict라 실수로 motion.*을 쓰면 바로 오류가 난다 */}
+      <LazyMotion features={domAnimation} strict>
       <BrowserRouter>
         <NoticeProvider>
           <PrefsProvider>
@@ -40,6 +42,7 @@ export default function App() {
           </PrefsProvider>
         </NoticeProvider>
       </BrowserRouter>
+      </LazyMotion>
     </MotionConfig>
   )
 }

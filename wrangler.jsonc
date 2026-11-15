@@ -1,0 +1,10 @@
+// Cloudflare Workers 정적 자산 배포 설정. `npm run build` 뒤 `npx wrangler deploy`
+{
+  "name": "kbo-cheer-web",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    // 없는 경로(/team/hanwha 등)는 index.html을 돌려줘 React Router가 화면을 고른다
+    "not_found_handling": "single-page-application"
+  }
+}

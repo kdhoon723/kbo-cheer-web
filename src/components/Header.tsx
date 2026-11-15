@@ -1,7 +1,8 @@
 //20241476-김도훈-(2026-11-15)
 import { useEffect, useState } from 'react'
 import { ChevronDown, Ellipsis, X } from 'lucide-react'
-import { AnimatePresence, motion, useReducedMotionConfig } from 'motion/react'
+import { AnimatePresence, useReducedMotionConfig } from 'motion/react'
+import * as m from 'motion/react-m'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { getTeam } from '../data/teams.ts'
 import type { TeamId } from '../types.ts'
@@ -96,7 +97,7 @@ export default function Header({ teamId }: { teamId: TeamId | null }) {
       {/* 휴대폰 메뉴는 플레이어를 덮지 않도록 머리말 아래로 펼쳐 내용을 밀어낸다 */}
       <AnimatePresence>
         {menuOpen && (
-          <motion.nav
+          <m.nav
             id="header-menu"
             className="header-menu"
             aria-label="화면"
@@ -106,7 +107,7 @@ export default function Header({ teamId }: { teamId: TeamId | null }) {
             exit={{ opacity: 0, ...menuExitY, transition: exit }}
           >
             {links()}
-          </motion.nav>
+          </m.nav>
         )}
       </AnimatePresence>
       {teamId && (

@@ -152,9 +152,14 @@ test.describe('5. 곡 등록', () => {
       duplicate: duplicate.map((r) => `${r.startText} ${r.title}`),
     })
     expect(existing).toHaveLength(44)
-    expect(duplicate.length).toBeGreaterThan(0)
-    expect(duplicate).toHaveLength(rows.length - existing.length)
-    expect(duplicate.every((r) => r.title === '공통 안타 송')).toBe(true)
+    // 처음부터 빠졌던 줄은 모두 중복 안타 송이다
+    const fresh = rows.filter((r) => !r.badges.includes('이미 있음'))
+    expect(fresh.length).toBeGreaterThan(0)
+    expect(fresh.every((r) => r.title === '공통 안타 송' && r.badges.includes('같은 상황 곡 있음(저장 안 함)'))).toBe(true)
+    // 이미 있는 상황 곡도 팀에 같은 제목이 있으므로 다시 고를 수 없다(K-05). 한화 상황 곡은 4곡이다
+    expect(duplicate.filter((r) => r.badges.includes('이미 있음')).map((r) => r.title).sort()).toEqual(
+      ['공통 안타 송', '라인업송', '볼넷 송', '풀카운트 송'],
+    )
     expect(rows.every((r) => !r.checked)).toBe(true)
     reportCalls(testInfo, calls)
   })
