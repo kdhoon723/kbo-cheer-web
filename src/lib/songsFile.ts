@@ -14,6 +14,13 @@ export function createSongsFile(songs: Song[], now: Date): SongsFile {
   return { format: 'kbo-cheer-songs', version: 1, exportedAt: now.toISOString(), songs }
 }
 
+export function exportFileName(date: Date): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `kbo-cheer-songs-${y}${m}${d}.json`
+}
+
 export function parseSongsFile(input: unknown, { allowEmpty }: ParseFileOptions): ParseFileResult {
   if (!isRecord(input) || input.format !== 'kbo-cheer-songs' || input.version !== 1) {
     return { ok: false, error: 'badFormat' }

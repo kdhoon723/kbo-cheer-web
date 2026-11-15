@@ -1,7 +1,7 @@
 //20241476-김도훈-(2026-11-15)
 import { describe, expect, it } from 'vitest'
 import seedJson from '../data/seed-songs.json'
-import { createSongsFile, parseSongsFile, parseSongsFileText } from './songsFile.ts'
+import { createSongsFile, exportFileName, parseSongsFile, parseSongsFileText } from './songsFile.ts'
 import { makeSong } from './testSongs.ts'
 
 const songs = [makeSong({ id: 'a' }), makeSong({ id: 'b', teamId: 'lg', kind: 'team', title: '팀 응원가' })]
@@ -37,5 +37,10 @@ describe('songsFile', () => {
 
   it('seed-songs.json이 통과한다', () => {
     expect(parseSongsFile(seedJson, { allowEmpty: true }).ok).toBe(true)
+  })
+
+  it('내보내기 파일 이름은 로컬 날짜로 만든다', () => {
+    expect(exportFileName(new Date(2026, 10, 5, 23, 59))).toBe('kbo-cheer-songs-20261105.json')
+    expect(exportFileName(new Date(2026, 0, 1))).toBe('kbo-cheer-songs-20260101.json')
   })
 })

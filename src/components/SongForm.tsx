@@ -11,6 +11,7 @@ interface Props {
   isDuplicateSituationTitle: (title: string) => boolean
   submitLabel: string
   onSubmit: (fields: SongFields) => void
+  onPreview?: (fields: SongFields) => void
   onCancel: () => void
 }
 
@@ -22,7 +23,7 @@ const KIND_LABELS: Record<SongKind, string> = {
 const KINDS: SongKind[] = ['player', 'situation', 'team']
 
 export default function SongForm(props: Props) {
-  const { initial, videoId, videoDuration, isDuplicateSituationTitle, submitLabel, onSubmit, onCancel } = props
+  const { initial, videoId, videoDuration, isDuplicateSituationTitle, submitLabel, onSubmit, onPreview, onCancel } = props
   const [values, setValues] = useState<SongFormValues>(initial)
   const [errors, setErrors] = useState<Partial<Record<keyof SongFormValues, string>>>({})
 
@@ -30,15 +31,25 @@ export default function SongForm(props: Props) {
     setValues((v) => ({ ...v, [key]: value }))
   }
 
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault()
+  function validated(): SongFields | null {
     const result = validateSongForm(values, videoDuration)
     if (!result.ok) {
       setErrors(result.errors)
-      return
+      return null
     }
     setErrors({})
-    onSubmit(result.fields)
+    return result.fields
+  }
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    const fields = validated()
+    if (fields) onSubmit(fields)
+  }
+
+  function handlePreview() {
+    const fields = validated()
+    if (fields) onPreview?.(fields)
   }
 
   const showDuplicate = values.kind === 'situation' && isDuplicateSituationTitle(values.title)
@@ -63,7 +74,8 @@ export default function SongForm(props: Props) {
           value={values.kind}
           onChange={(e) => {
             const kind = KINDS.find((k) => k === e.target.value)
-            if (kind) set('kind', kind)
+            if (!kind) return
+            setValues((v) => ({ ...v, kind, cheerStartText: kind === 'player' ? v.cheerStartText : '' }))
           }}
         >
           {KINDS.map((k) => (
@@ -95,6 +107,11 @@ export default function SongForm(props: Props) {
       </label>
       <div className="button-row">
         <button type="submit">{submitLabel}</button>
+        {onPreview && (
+          <button type="button" onClick={handlePreview}>
+            미리 듣기
+          </button>
+        )}
         <button type="button" onClick={onCancel}>
           취소
         </button>

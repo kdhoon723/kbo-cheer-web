@@ -17,6 +17,7 @@ interface SongsContextValue {
   importSongs: (drafts: SongDraft[]) => number
   replaceAll: (songs: Song[]) => void
   resetToSeed: () => void
+  seedCount: number
 }
 
 const SongsContext = createContext<SongsContextValue | null>(null)
@@ -92,7 +93,7 @@ export function SongsProvider({ children }: { children: ReactNode }) {
   )
 
   const value = useMemo(
-    () => ({ songs, addSong, updateSong, deleteSong, importSongs, replaceAll, resetToSeed }),
+    () => ({ songs, addSong, updateSong, deleteSong, importSongs, replaceAll, resetToSeed, seedCount: SEED.length }),
     [songs, addSong, updateSong, deleteSong, importSongs, replaceAll, resetToSeed],
   )
   return <SongsContext.Provider value={value}>{children}</SongsContext.Provider>
