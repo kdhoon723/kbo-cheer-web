@@ -26,3 +26,7 @@ dist-ssr
 # 작업 도구 상태 파일
 .omx/
 .playwright-mcp/
+
+# Playwright 결과
+playwright-report/
+test-results/
