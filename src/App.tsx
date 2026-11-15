@@ -1,6 +1,7 @@
 //20241476-김도훈-(2026-11-15)
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { NoticeProvider } from './context/NoticeContext.tsx'
+import { PlayerProvider } from './context/PlayerContext.tsx'
 import { PrefsProvider } from './context/PrefsContext.tsx'
 import { SongsProvider } from './context/SongsContext.tsx'
 import AppLayout from './layouts/AppLayout.tsx'
@@ -18,19 +19,21 @@ export default function App() {
       <NoticeProvider>
         <PrefsProvider>
           <SongsProvider>
-            <Routes>
-              <Route path="/" element={<AppLayout />}>
-                <Route index element={<HomeRedirect />} />
-                <Route path="team/:teamId" element={<TeamLayout />}>
-                  <Route index element={<MainPage />} />
-                  <Route path="songs" element={<SongListPage />} />
-                  <Route path="songs/:songId/edit" element={<SongEditPage />} />
-                  <Route path="import" element={<ImportPage />} />
+            <PlayerProvider>
+              <Routes>
+                <Route path="/" element={<AppLayout />}>
+                  <Route index element={<HomeRedirect />} />
+                  <Route path="team/:teamId" element={<TeamLayout />}>
+                    <Route index element={<MainPage />} />
+                    <Route path="songs" element={<SongListPage />} />
+                    <Route path="songs/:songId/edit" element={<SongEditPage />} />
+                    <Route path="import" element={<ImportPage />} />
+                  </Route>
+                  <Route path="settings" element={<SettingsPage />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
                 </Route>
-                <Route path="settings" element={<SettingsPage />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Route>
-            </Routes>
+              </Routes>
+            </PlayerProvider>
           </SongsProvider>
         </PrefsProvider>
       </NoticeProvider>

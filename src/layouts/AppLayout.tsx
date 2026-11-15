@@ -2,6 +2,7 @@
 import type { CSSProperties } from 'react'
 import { Outlet } from 'react-router-dom'
 import Header from '../components/Header.tsx'
+import PlayerPanel from '../components/PlayerPanel.tsx'
 import Toast from '../components/Toast.tsx'
 import { useActiveTeam } from '../hooks/useActiveTeam.ts'
 
@@ -15,9 +16,12 @@ export default function AppLayout() {
   return (
     <div className="app" style={style}>
       <Header teamId={team?.id ?? null} />
-      <main className="app-main">
-        <Outlet />
-      </main>
+      <div className="app-body">
+        <main className="app-main">
+          <Outlet />
+        </main>
+        <PlayerPanel />
+      </div>
       <Toast />
     </div>
   )
