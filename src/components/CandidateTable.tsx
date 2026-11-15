@@ -1,4 +1,5 @@
 //20241476-김도훈-(2026-11-15)
+import { ExternalLink, TriangleAlert } from 'lucide-react'
 import { formatTime } from '../lib/time.ts'
 import type { CandidateRow, ImportCandidate, SongKind } from '../types.ts'
 
@@ -81,13 +82,17 @@ export default function CandidateTable({ rows, videoId, onChange, disabled }: Pr
           {row.warning && (
             <div className="candidate-warn-detail">
               <code>{row.rawLine}</code>
-              <p>시각이 앞뒤 줄과 맞지 않습니다. 영상에서 확인해 고쳐 주세요</p>
+              <p>
+                <TriangleAlert size={16} strokeWidth={1.75} aria-hidden="true" />
+                시각이 앞뒤 줄과 맞지 않습니다. 영상에서 확인해 고쳐 주세요
+              </p>
               <a
                 href={`https://www.youtube.com/watch?v=${videoId}&t=${openSeconds(rows, i)}s`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 YouTube에서 그 시각 열기
+                <ExternalLink size={16} strokeWidth={1.75} aria-hidden="true" />
               </a>
             </div>
           )}

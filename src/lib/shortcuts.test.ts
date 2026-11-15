@@ -16,9 +16,10 @@ describe('shortcutAction', () => {
     expect(shortcutAction(key('Escape', 'Escape'), false)).toEqual({ type: 'clearSearch' })
   })
 
-  it('숫자 1~9는 상황 버튼 0~8번째다', () => {
+  it('숫자 1~8은 상황 칸 0~7번째다', () => {
     expect(shortcutAction(key('Digit1', '1'), false)).toEqual({ type: 'situation', index: 0 })
-    expect(shortcutAction(key('Digit9', '9'), false)).toEqual({ type: 'situation', index: 8 })
+    expect(shortcutAction(key('Digit8', '8'), false)).toEqual({ type: 'situation', index: 7 })
+    expect(shortcutAction(key('Digit9', '9'), false)).toBeNull()
     expect(shortcutAction(key('Digit0', '0'), false)).toBeNull()
   })
 

@@ -1,7 +1,9 @@
 //20241476-김도훈-(2026-11-15)
 import type { SearchHit } from '../lib/search.ts'
 import type { Song } from '../types.ts'
+import { bandStyle } from './band.ts'
 import StatusMessage from './StatusMessage.tsx'
+import TeamLogo from './TeamLogo.tsx'
 
 interface Props {
   hits: SearchHit[]
@@ -19,13 +21,19 @@ export default function SearchResults({ hits, nowPlayingId, onPick }: Props) {
           <li key={song.id}>
             <button
               type="button"
-              className={playing ? 'play-btn result-btn is-playing' : 'play-btn result-btn'}
+              className={playing ? 'song-line is-playing' : 'song-line'}
+              style={playing ? bandStyle(song.teamId) : undefined}
               aria-pressed={playing}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => onPick(song)}
             >
-              {song.title}
-              {!isCurrentTeam && <span className="result-team"> [{team.name}]</span>}
+              <span className="song-line-title">{song.title}</span>
+              {!isCurrentTeam && (
+                <span className="result-team">
+                  <TeamLogo teamId={team.id} size={28} />
+                  <span className="result-team-name">{team.name}</span>
+                </span>
+              )}
             </button>
           </li>
         )

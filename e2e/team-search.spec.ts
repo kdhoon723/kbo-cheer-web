@@ -1,12 +1,16 @@
 //20241476-김도훈-(2026-11-15)
 import { expect, test } from '@playwright/test'
 import {
+  expectCurrentTeam,
   gotoHanwha,
   note,
+  nowTeam,
   nowTitle,
+  pickTeam,
+  playerButton,
   prevTeamButton,
-  teamPicker,
   teamSongs,
+  teamTrigger,
 } from './helpers.ts'
 
 const TEAMS = [
@@ -51,7 +55,7 @@ test.describe('2. 팀 선택·전환', () => {
     await page.goto('/')
     await expect(page.getByRole('heading', { name: '응원할 팀을 고르세요' })).toBeVisible()
     await expect(page.locator('.team-grid button')).toHaveText(TEAMS.map((t) => t.name))
-    await expect(prevTeamButton(page)).toHaveText('⇄ 전 팀')
+    await expect(prevTeamButton(page)).toHaveAccessibleName('전 팀')
     await expect(prevTeamButton(page)).toBeDisabled()
   })
 
@@ -77,17 +81,25 @@ test.describe('2. 팀 선택·전환', () => {
 
   test('TC-04 전 팀 전환', async ({ page }) => {
     await gotoHanwha(page)
-    await teamPicker(page).selectOption('samsung')
+    await teamTrigger(page).click()
+    const sheet = page.getByRole('dialog', { name: '팀 고르기' })
+    await expect(sheet).toBeVisible()
+    await expect(sheet.getByRole('button', { name: '한화', exact: true })).toBeFocused()
+    await page.keyboard.press('Escape')
+    await expect(sheet).toBeHidden()
+    await expect(teamTrigger(page)).toBeFocused()
+    await pickTeam(page, 'samsung')
     await expect(page).toHaveURL(/\/team\/samsung$/)
-    await expect(prevTeamButton(page)).toHaveText('⇄ 한화')
+    await expect(prevTeamButton(page)).toHaveAccessibleName('전 팀: 한화')
+    await expect(prevTeamButton(page).locator('img')).toHaveAttribute('src', '/teams/hanwha.webp')
     await prevTeamButton(page).click()
     await expect(page).toHaveURL(/\/team\/hanwha$/)
-    await expect(teamPicker(page)).toHaveValue('hanwha')
-    await expect(prevTeamButton(page)).toHaveText('⇄ 삼성')
+    await expectCurrentTeam(page, 'hanwha')
+    await expect(prevTeamButton(page)).toHaveAccessibleName('전 팀: 삼성')
     await prevTeamButton(page).click()
     await expect(page).toHaveURL(/\/team\/samsung$/)
-    await expect(teamPicker(page)).toHaveValue('samsung')
-    await expect(prevTeamButton(page)).toHaveText('⇄ 한화')
+    await expectCurrentTeam(page, 'samsung')
+    await expect(prevTeamButton(page)).toHaveAccessibleName('전 팀: 한화')
   })
 
   test('TC-05 없는 팀 주소', async ({ page }) => {
@@ -99,21 +111,46 @@ test.describe('2. 팀 선택·전환', () => {
     await expect(page.getByRole('heading', { name: '응원할 팀을 고르세요' })).toBeVisible()
   })
 
-  test('TC-06 구단 색과 대비', async ({ page }, testInfo) => {
-    const rows: { team: string; background: string; color: string; ratio: number }[] = []
+  test('TC-06 구단 표시와 대비', async ({ page }, testInfo) => {
+    const rows: { team: string; header: number; playing: number; band: string }[] = []
+    const bg = hexToRgb('#131211')
     for (const team of TEAMS) {
       await page.goto(`/team/${team.id}`)
-      await expect(teamPicker(page)).toHaveValue(team.id)
-      const { background, color } = await page.locator('.app-header').evaluate((el) => {
-        const cs = getComputedStyle(el)
-        return { background: cs.backgroundColor, color: cs.color }
+      await expectCurrentTeam(page, team.id)
+      await expect(teamTrigger(page).locator('img')).toHaveAttribute('src', `/teams/${team.id}.webp`)
+      const header = await page.locator('.app-header').evaluate((el) => {
+        const name = el.querySelector('.team-trigger-name')
+        return {
+          background: getComputedStyle(el).backgroundColor,
+          color: name ? getComputedStyle(name).color : '',
+        }
       })
-      const ratio = contrast(parseRgb(background), parseRgb(color))
-      rows.push({ team: team.id, background, color, ratio: Number(ratio.toFixed(2)) })
-      expect(parseRgb(background), `${team.name} 머리말 배경`).toEqual(hexToRgb(team.color))
-      expect(ratio, `${team.name} 대비`).toBeGreaterThanOrEqual(4.5)
+      expect(parseRgb(header.background), `${team.name} 머리말은 팀 색으로 칠하지 않는다`).toEqual(bg)
+
+      const cell = page.locator('.player-grid button').first()
+      await cell.click()
+      await expect(cell).toHaveAttribute('aria-pressed', 'true')
+      const playing = await cell.evaluate((el) => {
+        const cs = getComputedStyle(el)
+        return { background: cs.backgroundColor, color: cs.color, shadow: cs.boxShadow }
+      })
+      const [r, g, b] = hexToRgb(team.color)
+      expect(playing.shadow, `${team.name} 재생 칸 위쪽 띠`).toContain(`rgb(${r}, ${g}, ${b})`)
+      const stageBand = await page.locator('.player-stage').evaluate((el) => getComputedStyle(el).borderTopColor)
+      expect(parseRgb(stageBand), `${team.name} 플레이어 위쪽 띠`).toEqual([r, g, b])
+
+      const headerRatio = contrast(parseRgb(header.background), parseRgb(header.color))
+      const playingRatio = contrast(parseRgb(playing.background), parseRgb(playing.color))
+      rows.push({
+        team: team.id,
+        header: Number(headerRatio.toFixed(2)),
+        playing: Number(playingRatio.toFixed(2)),
+        band: team.color,
+      })
+      expect(headerRatio, `${team.name} 머리말 글자 대비`).toBeGreaterThanOrEqual(4.5)
+      expect(playingRatio, `${team.name} 재생 칸 글자 대비`).toBeGreaterThanOrEqual(4.5)
     }
-    note(testInfo, '머리말 색과 대비', rows)
+    note(testInfo, '머리말·재생 칸 대비', rows)
   })
 })
 
@@ -135,10 +172,29 @@ test.describe('3. 메인 화면과 검색', () => {
   })
 
   test('TC-08 상황 버튼·팀 응원가', async ({ page }) => {
+    const cells = page.locator('.dock-situations .situation-grid .situation-cell')
+    await expect(cells).toHaveCount(8)
+    const grid = await cells.evaluateAll((els) =>
+      els.map((el) => ({
+        label: el.querySelector('.situation-label')?.textContent ?? null,
+        key: el.getAttribute('aria-keyshortcuts'),
+      })),
+    )
+    expect(grid).toEqual([
+      { label: '공통 안타 송', key: '1' },
+      { label: null, key: null },
+      { label: '볼넷 송', key: '3' },
+      { label: '풀카운트 송', key: '4' },
+      { label: '라인업송', key: '5' },
+      { label: null, key: null },
+      { label: null, key: null },
+      { label: null, key: null },
+    ])
+    await expect(page.locator('.dock-situations .situation-cell.is-empty')).toHaveCount(4)
     const labels = page.locator('.dock-situations .situation-btn .situation-label')
-    await expect(labels).toHaveText(['라인업송', '풀카운트 송', '볼넷 송', '공통 안타 송'])
     const texts = await labels.allInnerTexts()
     expect(new Set(texts).size).toBe(texts.length)
+    await page.getByRole('tab', { name: /^팀 응원가/ }).click()
     await expect(page.locator('.team-song-list button')).toHaveCount(18)
   })
 
@@ -153,13 +209,16 @@ test.describe('3. 메인 화면과 검색', () => {
   test('TC-10 다른 팀 검색 결과', async ({ page }) => {
     await page.locator('.search-box').fill('디아즈')
     const hit = page.locator('.result-list button').filter({ hasText: '디아즈' })
-    await expect(hit).toHaveText('디아즈 [삼성]')
+    await expect(hit.locator('.song-line-title')).toHaveText('디아즈')
+    await expect(hit.locator('.result-team-name')).toHaveText('삼성')
+    await expect(hit.locator('.result-team img')).toHaveAttribute('src', '/teams/samsung.webp')
     await hit.click()
     await expect(page).toHaveURL(/\/team\/samsung$/)
-    await expect(prevTeamButton(page)).toHaveText('⇄ 한화')
+    await expect(prevTeamButton(page)).toHaveAccessibleName('전 팀: 한화')
     await expect(page.locator('.search-box')).toHaveValue('')
-    await expect(nowTitle(page)).toHaveText('디아즈 · 삼성')
-    await expect(page.locator('.player-grid').getByRole('button', { name: '디아즈', exact: true })).toHaveAttribute(
+    await expect(nowTitle(page)).toHaveText('디아즈')
+    await expect(nowTeam(page)).toHaveText('삼성')
+    await expect(playerButton(page, '디아즈')).toHaveAttribute(
       'aria-pressed',
       'true',
     )

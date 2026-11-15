@@ -93,6 +93,7 @@ test.describe('5. 곡 등록', () => {
     note(testInfo, '저장 뒤 한화 곡 수', hanwha.length)
     expect(hanwha).toHaveLength(44)
     await expect(page.locator('.player-grid button')).toHaveCount(22)
+    await page.getByRole('tab', { name: /^팀 응원가/ }).click()
     await expect(page.locator('.team-song-list button')).toHaveCount(18)
     await expect(page.locator('.dock-situations .situation-btn')).toHaveCount(4)
     reportCalls(testInfo, calls)

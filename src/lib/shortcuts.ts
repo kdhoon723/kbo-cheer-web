@@ -23,7 +23,7 @@ const BY_CODE = new Map<string, ShortcutAction>([
   ['KeyS', { type: 'cheer' }],
   ['KeyT', { type: 'prevTeam' }],
 ])
-const DIGIT = /^Digit([1-9])$/
+const DIGIT = /^Digit([1-8])$/
 
 export function shortcutAction(e: ShortcutKey, inInput: boolean): ShortcutAction | null {
   if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return null

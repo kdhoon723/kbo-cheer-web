@@ -11,7 +11,7 @@ import {
   seedSongs,
   songRow,
   storedSongs,
-  teamPicker,
+  expectCurrentTeam,
   toast,
 } from './helpers.ts'
 
@@ -76,7 +76,7 @@ test.describe('7. JSON과 처음 데이터', () => {
     await expect(toast(page)).toHaveText(/처음 데이터\(507곡\)로 되돌렸습니다/)
     const songs = await storedSongs(page)
     expect(songs).toEqual(seedSongs())
-    await expect(teamPicker(page)).toHaveValue('hanwha')
+    await expectCurrentTeam(page, 'hanwha')
     const team: unknown = await page.evaluate(() => JSON.parse(localStorage.getItem('kboCheer.team') ?? 'null'))
     expect(team).toMatchObject({ currentTeamId: 'hanwha' })
   })

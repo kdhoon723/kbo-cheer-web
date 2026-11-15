@@ -16,7 +16,8 @@ import {
   seedSongs,
   situationButton,
   storedSongs,
-  teamPicker,
+  nowTeam,
+  pickTeam,
   toast,
   waitNotPlaying,
   waitPlayingIn,
@@ -45,7 +46,8 @@ test.describe('4. 재생', () => {
     note(testInfo, '버튼부터 재생까지(ms)', first.waitedMs)
     expect(first.time).toBeGreaterThanOrEqual(414)
     expect(first.time).toBeLessThan(417)
-    await expect(nowTitle(page)).toHaveText('노시환 · 한화')
+    await expect(nowTitle(page)).toHaveText('노시환')
+    await expect(nowTeam(page)).toHaveText('한화')
     await expect(page.locator('.player-panel .now-time')).toHaveText(/^00:0[1-9] \/ 01:01$/, { timeout: 10_000 })
     note(testInfo, '진행 시각 표시', await page.locator('.player-panel .now-time').innerText())
   })
@@ -134,7 +136,7 @@ test.describe('4. 재생', () => {
     test.setTimeout(120_000)
     await playAndWait(page, '노시환')
     await waitPlayingIn(page, { start: 418, end: NOH.end })
-    await page.getByRole('button', { name: '지금 → 응원가 시작' }).click()
+    await page.getByRole('button', { name: '지금을 응원가 시작으로' }).click()
     const saved = (await storedSongs(page)).find((s) => s.id === NOH.id)
     const cheerStart = saved?.cheerStart ?? null
     note(testInfo, '저장된 cheerStart', cheerStart)
@@ -158,12 +160,13 @@ test.describe('4. 재생', () => {
     const song = seedSong('hanwha', '라인업송')
     await situationButton(page, '라인업송').click()
     await waitPlayingIn(page, { start: song.start, end: song.end })
-    await expect(nowTitle(page)).toHaveText('라인업송 · 한화')
+    await expect(nowTitle(page)).toHaveText('라인업송')
+    await expect(nowTeam(page)).toHaveText('한화')
     await expect(page.locator('button.skip-btn')).toBeDisabled()
-    await expect(page.getByRole('button', { name: '지금 → 응원가 시작' })).toBeDisabled()
+    await expect(page.getByRole('button', { name: '지금을 응원가 시작으로' })).toBeDisabled()
     await page.waitForTimeout(2_000)
     await expect(page.locator('button.skip-btn')).toBeDisabled()
-    await expect(page.getByRole('button', { name: '지금 → 응원가 시작' })).toBeDisabled()
+    await expect(page.getByRole('button', { name: '지금을 응원가 시작으로' })).toBeDisabled()
   })
 
   test('TC-20 정지 페이드', async ({ page }, testInfo) => {
@@ -243,7 +246,7 @@ test.describe('4. 재생', () => {
     const seen: number[] = []
     for (const step of ['곡 관리', '설정', 'KT'] as const) {
       if (step === 'KT') {
-        await teamPicker(page).selectOption('kt')
+        await pickTeam(page, 'kt')
         await expect(page).toHaveURL(/\/team\/kt$/)
       } else {
         await navLink(page, step).click()
@@ -254,7 +257,8 @@ test.describe('4. 재생', () => {
       seen.push(Number((s?.time ?? -1).toFixed(2)))
       expect(s?.state, `${step} 화면에서 재생 중`).toBe(PLAYING)
       await expect(page.locator('iframe')).toHaveCount(1)
-      await expect(nowTitle(page)).toHaveText('노시환 · 한화')
+      await expect(nowTitle(page)).toHaveText('노시환')
+      await expect(nowTeam(page)).toHaveText('한화')
     }
     note(testInfo, '화면마다 재생 위치', seen)
     expect(seen[1]).toBeGreaterThan(seen[0])

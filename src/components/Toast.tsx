@@ -1,5 +1,6 @@
 //20241476-김도훈-(2026-11-15)
 import { useEffect, useState } from 'react'
+import { CircleAlert, X } from 'lucide-react'
 import { useNotice } from '../context/NoticeContext.tsx'
 
 const HIDE_MS = 4000
@@ -26,10 +27,9 @@ export default function Toast() {
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => setHiddenId(notice.id)}
         >
+          {notice.tone === 'error' && <CircleAlert size={20} strokeWidth={1.75} aria-hidden="true" />}
           <span className="toast-text">{notice.text}</span>
-          <span className="toast-close" aria-hidden="true">
-            ✕
-          </span>
+          <X className="toast-close" size={18} strokeWidth={1.75} aria-hidden="true" />
         </button>
       )}
     </div>

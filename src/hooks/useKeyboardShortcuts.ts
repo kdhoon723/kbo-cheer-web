@@ -16,7 +16,9 @@ export function useKeyboardShortcuts(onAction: (action: ShortcutAction) => void)
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      const action = shortcutAction(e, isTextEntry(targetElement(e)))
+      const el = targetElement(e)
+      // 팀 고르기 창 안의 Space·숫자는 그 창의 버튼 조작이다(BR-36 대화상자)
+      const action = shortcutAction(e, isTextEntry(el) || el?.closest('dialog') != null)
       if (!action) return
       if (action.type === 'stop' || action.type === 'focusSearch') e.preventDefault()
       onActionRef.current(action)

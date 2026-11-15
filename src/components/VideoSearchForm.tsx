@@ -54,7 +54,7 @@ export default function VideoSearchForm({ disabled, onPick }: Props) {
             onChange={(e) => setQuery(e.target.value)}
           />
         </label>
-        <button type="submit" disabled={disabled || loading || query.trim() === ''}>
+        <button type="submit" className="primary-btn" disabled={disabled || loading || query.trim() === ''}>
           {loading ? '검색 중...' : '검색'}
         </button>
       </form>

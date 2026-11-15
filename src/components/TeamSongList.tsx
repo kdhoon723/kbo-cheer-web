@@ -1,5 +1,7 @@
 //20241476-김도훈-(2026-11-15)
 import type { Song } from '../types.ts'
+import { bandStyle } from './band.ts'
+import StatusMessage from './StatusMessage.tsx'
 
 interface Props {
   songs: Song[]
@@ -8,29 +10,29 @@ interface Props {
 }
 
 export default function TeamSongList({ songs, nowPlayingId, onPlay }: Props) {
-  if (songs.length === 0) return null
+  if (songs.length === 0) return <StatusMessage tone="empty">팀 응원가가 없습니다</StatusMessage>
   return (
-    <section>
-      <div className="section-head">
-        <h2>팀 응원가</h2>
-      </div>
-      <div className="team-song-list">
-        {songs.map((song) => {
-          const playing = song.id === nowPlayingId
-          return (
+    <ol className="team-song-list">
+      {songs.map((song, i) => {
+        const playing = song.id === nowPlayingId
+        return (
+          <li key={song.id}>
             <button
-              key={song.id}
               type="button"
-              className={playing ? 'play-btn is-playing' : 'play-btn'}
+              className={playing ? 'song-line is-playing' : 'song-line'}
+              style={playing ? bandStyle(song.teamId) : undefined}
               aria-pressed={playing}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => onPlay(song)}
             >
-              {song.title}
+              <span className="song-line-no" aria-hidden="true">
+                {i + 1}
+              </span>
+              <span className="song-line-title">{song.title}</span>
             </button>
-          )
-        })}
-      </div>
-    </section>
+          </li>
+        )
+      })}
+    </ol>
   )
 }

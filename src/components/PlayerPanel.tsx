@@ -1,5 +1,6 @@
 //20241476-김도훈-(2026-11-15)
 import { useEffect, useState } from 'react'
+import { ChevronsRight, Flag, Square } from 'lucide-react'
 import { getTeam } from '../data/teams.ts'
 import { usePlayer } from '../context/PlayerContext.tsx'
 import { usePrefs } from '../context/PrefsContext.tsx'
@@ -7,7 +8,9 @@ import { useSongs } from '../context/SongsContext.tsx'
 import { cheerHereSecond, cheerTarget, segmentElapsed } from '../lib/playback.ts'
 import { formatTime } from '../lib/time.ts'
 import type { NowPlaying } from '../types.ts'
+import { bandStyle } from './band.ts'
 import PlayerHost from './PlayerHost.tsx'
+import TeamLogo from './TeamLogo.tsx'
 import Toast from './Toast.tsx'
 import VolumeSlider from './VolumeSlider.tsx'
 
@@ -37,7 +40,6 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   const { nowPlaying, status, playerReady, canControlVolume, stop, skipToCheer, getCurrentTime } = usePlayer()
   const { songs, updateSong } = useSongs()
   const { settings, setVolume } = usePrefs()
-  const [expanded, setExpanded] = useState(false)
   const [tick, setTick] = useState<Tick>({ seg: null, elapsed: 0, canCheerHere: false })
 
   const song = nowPlaying ? songs.find((s) => s.id === nowPlaying.songId) : undefined
@@ -72,61 +74,65 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   const cheerAt = cheerTarget(song, nowPlaying)
   const percent = (sec: number) => `${duration > 0 ? (sec / duration) * 100 : 0}%`
 
-  const className = [
-    'player-panel',
-    expanded && 'is-expanded',
-    live && 'is-live',
-    live && status === 'playing' && 'is-playing',
-  ]
-    .filter(Boolean)
-    .join(' ')
-
   return (
-    <aside className={className} aria-label="재생 상태">
-      <PlayerHost />
+    <aside
+      className={live ? 'player-panel is-live' : 'player-panel'}
+      style={song ? bandStyle(song.teamId) : undefined}
+      aria-label="재생 상태"
+    >
+      <div className="player-stage">
+        <PlayerHost />
+      </div>
+      <div className="player-tools">
+        <button type="button" className="cheer-here-btn" disabled={!canCheerHere} onClick={onCheerHere}>
+          <Flag size={18} strokeWidth={1.75} aria-hidden="true" />
+          지금을 응원가 시작으로
+        </button>
+        <VolumeSlider value={settings.volume} onChange={setVolume} supported={canControlVolume} />
+      </div>
       <div className="dock">
         <Toast />
-        <div className="panel-controls">
+        <div className="progress" aria-hidden="true">
+          <div className="progress-fill" style={{ width: live ? percent(elapsed) : '0%' }} />
+          {live && cheerAt !== null && nowPlaying && (
+            <div className="progress-cheer" style={{ left: percent(cheerAt - nowPlaying.start) }} />
+          )}
+        </div>
+        <div className="play-row">
+          {song && <TeamLogo teamId={song.teamId} size={36} />}
           <div className="now">
             <p className="now-label">{live ? STATUS_LABELS[status] : STATUS_LABELS.idle}</p>
-            <p className="now-title">
-              {song ? song.title : '선택한 곡 없음'}
-              {song && <span className="now-team"> · {getTeam(song.teamId).name}</span>}
-            </p>
-            <p className="now-time">
-              {live ? `${formatTime(elapsed)} / ${formatTime(duration)}` : '--:-- / --:--'}
+            <p className="now-title">{song ? song.title : '선택한 곡 없음'}</p>
+            <p className="now-meta">
+              {song && (
+                <>
+                  <span className="now-team">{getTeam(song.teamId).name}</span>
+                  {' · '}
+                </>
+              )}
+              <span className="now-time">
+                {live ? `${formatTime(elapsed)} / ${formatTime(duration)}` : '--:-- / --:--'}
+              </span>
               {live && cheerAt !== null && nowPlaying && (
                 <span className="now-cheer"> · 응원가 {formatTime(cheerAt - nowPlaying.start)}</span>
               )}
             </p>
-            <div className="progress" aria-hidden="true">
-              <div className="progress-fill" style={{ width: live ? percent(elapsed) : '0%' }} />
-              {live && cheerAt !== null && nowPlaying && (
-                <div className="progress-cheer" style={{ left: percent(cheerAt - nowPlaying.start) }} />
-              )}
-            </div>
           </div>
-          <button
-            type="button"
-            className="panel-toggle"
-            aria-expanded={expanded}
-            aria-controls="panel-extra"
-            aria-label={expanded ? '조작 줄 접기' : '조작 줄 펼치기'}
-            onClick={() => setExpanded((v) => !v)}
-          >
-            {expanded ? '▴' : '▾'}
-          </button>
-          <button type="button" className="skip-btn" disabled={!canSkip} onClick={skipToCheer}>
-            응원가로
-          </button>
-          <button type="button" className="stop-btn" disabled={status === 'idle'} onClick={stop}>
-            ■ 정지
-          </button>
-          <div className="panel-extra" id="panel-extra">
-            <button type="button" disabled={!canCheerHere} onClick={onCheerHere}>
-              지금 → 응원가 시작
+          <div className="play-actions">
+            <button type="button" className="skip-btn" disabled={!canSkip} onClick={skipToCheer}>
+              <ChevronsRight className="wide-only" size={18} strokeWidth={1.75} aria-hidden="true" />
+              응원가로
             </button>
-            <VolumeSlider value={settings.volume} onChange={setVolume} supported={canControlVolume} />
+            <button
+              type="button"
+              className="stop-btn"
+              aria-label="정지"
+              disabled={status === 'idle'}
+              onClick={stop}
+            >
+              <Square size={16} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
+              <span className="wide-only">정지</span>
+            </button>
           </div>
         </div>
         <div className="dock-situations" ref={situationSlotRef} />

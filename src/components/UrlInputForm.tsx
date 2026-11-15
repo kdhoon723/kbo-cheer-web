@@ -39,7 +39,7 @@ export default function UrlInputForm({ disabled, onSubmit }: Props) {
         />
       </label>
       {error && <StatusMessage tone="error">{error}</StatusMessage>}
-      <button type="submit" disabled={disabled}>
+      <button type="submit" className="primary-btn" disabled={disabled}>
         불러오기
       </button>
     </form>

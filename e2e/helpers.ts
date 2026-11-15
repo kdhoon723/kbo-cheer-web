@@ -202,8 +202,34 @@ export function nowTitle(page: Page): Locator {
   return page.locator('.player-panel .now-title')
 }
 
-export function teamPicker(page: Page): Locator {
-  return page.locator('select[aria-label="팀 선택"]')
+export function nowTeam(page: Page): Locator {
+  return page.locator('.player-panel .now-team')
+}
+
+export function teamTrigger(page: Page): Locator {
+  return page.getByRole('button', { name: /^팀 선택: / })
+}
+
+const TEAM_NAMES: Record<TeamId, string> = {
+  kiwoom: '키움', hanwha: '한화', lotte: '롯데', ssg: 'SSG', doosan: '두산',
+  nc: 'NC', kia: 'KIA', lg: 'LG', samsung: '삼성', kt: 'KT',
+}
+
+export function teamName(teamId: TeamId): string {
+  return TEAM_NAMES[teamId]
+}
+
+/** 머리말의 팀 버튼으로 팀 고르기 창을 열어 팀을 고른다 */
+export async function pickTeam(page: Page, teamId: TeamId): Promise<void> {
+  await teamTrigger(page).click()
+  const sheet = page.getByRole('dialog', { name: '팀 고르기' })
+  await expect(sheet).toBeVisible()
+  await sheet.getByRole('button', { name: TEAM_NAMES[teamId], exact: true }).click()
+  await expect(sheet).toBeHidden()
+}
+
+export async function expectCurrentTeam(page: Page, teamId: TeamId): Promise<void> {
+  await expect(teamTrigger(page)).toHaveAccessibleName(`팀 선택: ${TEAM_NAMES[teamId]}`)
 }
 
 export function prevTeamButton(page: Page): Locator {

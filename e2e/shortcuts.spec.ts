@@ -10,7 +10,7 @@ import {
   presetSongs,
   seedSong,
   seedSongs,
-  teamPicker,
+  pickTeam,
   waitNotPlaying,
   waitPlayingIn,
   ytSnapshot,
@@ -18,6 +18,7 @@ import {
 
 const NOH = seedSong('hanwha', '노시환')
 const LINEUP = seedSong('hanwha', '라인업송')
+const HIT = seedSong('hanwha', '공통 안타 송')
 const CHEER_AT = 440
 
 test.describe('8. 키보드 단축키', () => {
@@ -28,7 +29,7 @@ test.describe('8. 키보드 단축키', () => {
       seedSongs().map((s) => (s.id === NOH.id ? { ...s, cheerStart: CHEER_AT } : s)),
     )
     await page.goto('/team/samsung')
-    await teamPicker(page).selectOption('hanwha')
+    await pickTeam(page, 'hanwha')
     await expect(page).toHaveURL(/\/team\/hanwha$/)
     await expectPlayerReady(page)
     const search = page.locator('.search-box')
@@ -55,7 +56,13 @@ test.describe('8. 키보드 단축키', () => {
     await expect(search).not.toBeFocused()
 
     await page.keyboard.press('1')
-    await expect(nowTitle(page)).toHaveText('라인업송 · 한화')
+    await expect(nowTitle(page)).toHaveText('공통 안타 송')
+    await waitPlayingIn(page, { start: HIT.start, end: HIT.end })
+    await page.keyboard.press('2')
+    await page.waitForTimeout(500)
+    await expect(nowTitle(page), '한화의 2번(아웃) 칸은 비어 있어 그대로다').toHaveText('공통 안타 송')
+    await page.keyboard.press('5')
+    await expect(nowTitle(page)).toHaveText('라인업송')
     await waitPlayingIn(page, { start: LINEUP.start, end: LINEUP.end })
 
     await page.keyboard.press('t')
@@ -64,7 +71,7 @@ test.describe('8. 키보드 단축키', () => {
 
   test('TC-50 입력칸에서는 Esc만', async ({ page }) => {
     await page.goto('/team/samsung')
-    await teamPicker(page).selectOption('hanwha')
+    await pickTeam(page, 'hanwha')
     await expect(page).toHaveURL(/\/team\/hanwha$/)
     const search = page.locator('.search-box')
     await search.click()

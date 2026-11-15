@@ -134,7 +134,7 @@ export default function ImportPage() {
           onChange={changeCandidate}
         />
         <div className="button-row">
-          <button type="button" disabled={saving.length === 0 || p.saving} onClick={save}>
+          <button type="button" className="primary-btn" disabled={saving.length === 0 || p.saving} onClick={save}>
             저장
           </button>
           <button type="button" disabled={p.saving} onClick={backToInput}>
