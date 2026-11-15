@@ -1,0 +1,104 @@
+//20241476-김도훈-(2026-11-15)
+import { useState } from 'react'
+import type { FormEvent } from 'react'
+import { validateSongForm } from '../lib/songValidation.ts'
+import type { SongFields, SongFormValues, SongKind } from '../types.ts'
+
+interface Props {
+  initial: SongFormValues
+  videoId: string
+  videoDuration: number
+  isDuplicateSituationTitle: (title: string) => boolean
+  submitLabel: string
+  onSubmit: (fields: SongFields) => void
+  onCancel: () => void
+}
+
+const KIND_LABELS: Record<SongKind, string> = {
+  player: '선수',
+  situation: '상황',
+  team: '팀 응원가',
+}
+const KINDS: SongKind[] = ['player', 'situation', 'team']
+
+export default function SongForm(props: Props) {
+  const { initial, videoId, videoDuration, isDuplicateSituationTitle, submitLabel, onSubmit, onCancel } = props
+  const [values, setValues] = useState<SongFormValues>(initial)
+  const [errors, setErrors] = useState<Partial<Record<keyof SongFormValues, string>>>({})
+
+  function set<K extends keyof SongFormValues>(key: K, value: SongFormValues[K]) {
+    setValues((v) => ({ ...v, [key]: value }))
+  }
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    const result = validateSongForm(values, videoDuration)
+    if (!result.ok) {
+      setErrors(result.errors)
+      return
+    }
+    setErrors({})
+    onSubmit(result.fields)
+  }
+
+  const showDuplicate = values.kind === 'situation' && isDuplicateSituationTitle(values.title)
+
+  return (
+    <form className="song-form" onSubmit={handleSubmit}>
+      <label className="field">
+        <span>영상 ID</span>
+        <input type="text" value={videoId} readOnly />
+      </label>
+      <label className="field">
+        <span>이름</span>
+        <input type="text" value={values.title} onChange={(e) => set('title', e.target.value)} />
+        {errors.title && <span className="form-error">{errors.title}</span>}
+        {showDuplicate && (
+          <span className="form-warning">같은 제목의 상황 곡이 이미 있습니다. 상황 버튼이 두 개 생깁니다</span>
+        )}
+      </label>
+      <label className="field">
+        <span>종류</span>
+        <select
+          value={values.kind}
+          onChange={(e) => {
+            const kind = KINDS.find((k) => k === e.target.value)
+            if (kind) set('kind', kind)
+          }}
+        >
+          {KINDS.map((k) => (
+            <option key={k} value={k}>
+              {KIND_LABELS[k]}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="field">
+        <span>시작</span>
+        <input type="text" value={values.startText} onChange={(e) => set('startText', e.target.value)} />
+        {errors.startText && <span className="form-error">{errors.startText}</span>}
+      </label>
+      <label className="field">
+        <span>끝</span>
+        <input type="text" value={values.endText} onChange={(e) => set('endText', e.target.value)} />
+        {errors.endText && <span className="form-error">{errors.endText}</span>}
+      </label>
+      <label className="field">
+        <span>응원가 시작(선수 곡만, 비워도 됩니다)</span>
+        <input
+          type="text"
+          value={values.cheerStartText}
+          disabled={values.kind !== 'player'}
+          onChange={(e) => set('cheerStartText', e.target.value)}
+        />
+        {errors.cheerStartText && <span className="form-error">{errors.cheerStartText}</span>}
+      </label>
+      <div className="button-row">
+        <button type="submit">{submitLabel}</button>
+        <button type="button" onClick={onCancel}>
+          취소
+        </button>
+      </div>
+    </form>
+  )
+}

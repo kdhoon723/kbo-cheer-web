@@ -26,3 +26,12 @@ export function formatTime(sec: number): string {
   const s = sec % 60
   return h > 0 ? `${h}:${pad2(m)}:${pad2(s)}` : `${pad2(m)}:${pad2(s)}`
 }
+
+const ISO_DURATION = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/
+
+export function parseIsoDuration(s: string): number | null {
+  if (s === 'P0D') return 0
+  const m = ISO_DURATION.exec(s)
+  if (!m || (m[1] === undefined && m[2] === undefined && m[3] === undefined)) return null
+  return Number(m[1] ?? 0) * 3600 + Number(m[2] ?? 0) * 60 + Number(m[3] ?? 0)
+}

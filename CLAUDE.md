@@ -22,6 +22,7 @@ KBO 응원가 즉시 재생 웹서비스. 2026-2학기 스크립트프로그래�
 - 빌드: `npm run build` / 단위 테스트: `npm test` / 린트: `npm run lint`
 - 브라우저 확인은 Playwright MCP로 하고, 화면 캡처는 `docs/screenshots/`에 저장한다.
 - 개발 서버 같은 프로세스는 직접 띄운 PID로만 끈다. `pkill -f`, `killall` 같은 이름 패턴 종료는 쓰지 않는다.
+- 백그라운드로 띄울 때는 `npx`·`npm run`을 거치지 말고 `node node_modules/vite/bin/vite.js`로 직접 띄운다. `npm exec`의 PID를 끄면 그 아래 vite 프로세스가 남아 포트를 계속 잡는다.
 
 ## YouTube API 키
 

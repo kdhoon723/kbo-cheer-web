@@ -1,6 +1,6 @@
 //20241476-김도훈-(2026-11-15)
 import { describe, expect, it } from 'vitest'
-import { formatTime, parseTime } from './time.ts'
+import { formatTime, parseIsoDuration, parseTime } from './time.ts'
 
 describe('parseTime', () => {
   it('MM:SS, M:SS, H:MM:SS를 초로 바꾼다', () => {
@@ -35,6 +35,26 @@ describe('formatTime', () => {
   it('parseTime(formatTime(x)) === x', () => {
     for (const x of [0, 1, 59, 60, 255, 3599, 3600, 3878, 7325]) {
       expect(parseTime(formatTime(x))).toBe(x)
+    }
+  })
+})
+
+describe('parseIsoDuration', () => {
+  it('PT#H#M#S 형식을 초로 바꾼다', () => {
+    expect(parseIsoDuration('PT1H4M50S')).toBe(3890)
+    expect(parseIsoDuration('PT4M5S')).toBe(245)
+    expect(parseIsoDuration('PT1H')).toBe(3600)
+    expect(parseIsoDuration('PT45S')).toBe(45)
+    expect(parseIsoDuration('PT10M')).toBe(600)
+  })
+
+  it('라이브 영상의 P0D는 0이다', () => {
+    expect(parseIsoDuration('P0D')).toBe(0)
+  })
+
+  it('알 수 없는 형식은 null이다', () => {
+    for (const bad of ['', 'PT', 'P', '1:00', 'PT1.5S', 'P1DT1H', 'pt1h']) {
+      expect(parseIsoDuration(bad)).toBeNull()
     }
   })
 })

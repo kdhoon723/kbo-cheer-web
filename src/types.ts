@@ -95,3 +95,19 @@ export interface SongsFile {
   exportedAt: string
   songs: Song[]
 }
+
+export interface SongFormValues {
+  title: string
+  kind: SongKind
+  startText: string
+  endText: string
+  cheerStartText: string
+}
+
+export interface SongFields {
+  title: string
+  kind: SongKind
+  start: number
+  end: number
+  cheerStart: number | null
+}
