@@ -13,6 +13,8 @@ export default defineConfig({
     baseURL: 'http://localhost:5173',
     viewport: { width: 1280, height: 800 },
     screenshot: 'only-on-failure',
+    // 움직임이 끝나기를 기다리며 확인이 흔들리지 않게 동작 줄이기로 돌린다. 옮기기·크기·스프링이 꺼지고 페이드만 남는다
+    contextOptions: { reducedMotion: 'reduce' },
     // 추적 파일은 요청 URL을 담아 API 키가 남으므로 끈다
     trace: 'off',
   },

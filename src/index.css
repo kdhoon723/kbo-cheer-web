@@ -281,6 +281,8 @@ kbd {
   flex: 1;
   min-width: 0;
   padding: var(--gutter) var(--gutter) 24px;
+  /* 팀을 바꿀 때 옆에서 들어오는 격자가 가로 스크롤을 만들지 않게 한다 */
+  overflow-x: clip;
 }
 
 .dock {
@@ -374,7 +376,7 @@ kbd {
   box-shadow: inset 0 -2px 0 var(--text);
 }
 
-/* 팀 고르기 창 */
+/* 팀 고르기 창. dialog는 자리만 잡고 보이는 판은 안의 sheet-body다. 판이 움직여도 창 밖으로 잘리지 않게 한다 */
 .team-sheet {
   position: fixed;
   inset: auto 0 0;
@@ -383,10 +385,10 @@ kbd {
   max-height: 100dvh;
   margin: 0;
   padding: 0;
+  overflow: visible;
   color: var(--text);
-  background: var(--surface);
+  background: none;
   border: 0;
-  border-top: 1px solid var(--edge);
 }
 
 /* 창 뒤를 어둡게 덮지 않는다. 플레이어가 가려지지 않게 하기 위해서다 */
@@ -395,7 +397,11 @@ kbd {
 }
 
 .sheet-body {
+  max-height: 100dvh;
+  overflow-y: auto;
   padding: 8px var(--gutter) calc(var(--gutter) + env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--edge);
 }
 
 .sheet-head {
@@ -408,6 +414,13 @@ kbd {
 .sheet-head h2 {
   font-size: 16px;
   font-weight: 700;
+}
+
+/* 누를 때 줄어드는 칸 안의 내용. 글자가 왼쪽에 붙어 있으니 왼쪽을 기준으로 줄어든다 */
+.press-content {
+  display: flex;
+  align-items: center;
+  transform-origin: left center;
 }
 
 /* 1px 선으로 나눈 격자. 칸마다 외곽선을 그려 빈 자리에는 선이 생기지 않게 한다 */
@@ -441,10 +454,14 @@ kbd {
 }
 
 .team-cell {
-  flex-direction: column;
-  gap: 8px;
   min-height: 88px;
   padding: 12px 4px;
+}
+
+.team-cell .press-content {
+  flex-direction: column;
+  gap: 8px;
+  transform-origin: center;
 }
 
 .team-cell-name {
@@ -604,7 +621,6 @@ kbd {
 
 .song-line {
   justify-content: flex-start;
-  gap: 12px;
   width: 100%;
   min-height: 52px;
   padding: 0 12px;
@@ -612,6 +628,12 @@ kbd {
   text-align: left;
   border: 0;
   border-radius: 0;
+}
+
+.song-line .press-content {
+  flex: 1;
+  gap: 12px;
+  min-width: 0;
 }
 
 .song-line-no {
@@ -741,7 +763,8 @@ kbd {
 .progress-fill {
   height: 100%;
   background: var(--text);
-  transition: width 250ms linear;
+  transform-origin: left;
+  transition: transform 250ms linear;
 }
 
 .progress-cheer {
@@ -1395,6 +1418,9 @@ kbd {
   .team-sheet {
     inset: 72px auto auto 24px;
     width: min(520px, calc(100vw - var(--col-w) - 48px));
+  }
+
+  .sheet-body {
     border: 1px solid var(--edge);
     border-radius: var(--r-plate);
   }

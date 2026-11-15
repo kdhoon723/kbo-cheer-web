@@ -1,6 +1,7 @@
 //20241476-김도훈-(2026-11-16)
 import { TEAMS } from '../data/teams.ts'
 import type { TeamId } from '../types.ts'
+import { PressCell } from '../ui/Press.tsx'
 import TeamLogo from './TeamLogo.tsx'
 
 interface Props {
@@ -12,7 +13,7 @@ export default function TeamGrid({ currentTeamId, onPick }: Props) {
   return (
     <div className="team-grid">
       {TEAMS.map((t) => (
-        <button
+        <PressCell
           key={t.id}
           type="button"
           className="team-cell"
@@ -21,7 +22,7 @@ export default function TeamGrid({ currentTeamId, onPick }: Props) {
         >
           <TeamLogo teamId={t.id} size={44} />
           <span className="team-cell-name">{t.name}</span>
-        </button>
+        </PressCell>
       ))}
     </div>
   )

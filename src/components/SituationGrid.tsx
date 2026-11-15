@@ -1,6 +1,7 @@
 //20241476-김도훈-(2026-11-16)
 import { SITUATION_CELLS } from '../lib/situationSlots.ts'
 import type { Song } from '../types.ts'
+import { PressCell } from '../ui/Press.tsx'
 import { bandStyle } from './band.ts'
 
 interface Props {
@@ -17,7 +18,7 @@ export default function SituationGrid({ cells, nowPlayingId, onPlay }: Props) {
         if (!song) return <span key={`empty-${i}`} className="situation-cell is-empty" aria-hidden="true" />
         const playing = song.id === nowPlayingId
         return (
-          <button
+          <PressCell
             key={song.id}
             type="button"
             className={playing ? 'situation-cell situation-btn is-playing' : 'situation-cell situation-btn'}
@@ -26,14 +27,17 @@ export default function SituationGrid({ cells, nowPlayingId, onPlay }: Props) {
             aria-keyshortcuts={key}
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => onPlay(song)}
+            contentClassName="situation-label"
+            extra={
+              key && (
+                <kbd className="situation-key" aria-hidden="true">
+                  {key}
+                </kbd>
+              )
+            }
           >
-            <span className="situation-label">{song.title}</span>
-            {key && (
-              <kbd className="situation-key" aria-hidden="true">
-                {key}
-              </kbd>
-            )}
-          </button>
+            {song.title}
+          </PressCell>
         )
       })}
     </div>

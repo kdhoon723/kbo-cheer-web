@@ -22,6 +22,12 @@ export default function SongListPage() {
   if (!team) return <p>팀을 먼저 선택해 주세요</p>
   const teamId = team.id
   const teamSongs = songs.filter((s) => s.teamId === teamId)
+  const groups = GROUPS.map(({ kind, label }) => ({
+    kind,
+    label,
+    songs: teamSongs.filter((s) => s.kind === kind).sort((a, b) => a.order - b.order),
+  }))
+  const firstIndex = groups.map((_, gi) => groups.slice(0, gi).reduce((n, g) => n + g.songs.length, 0))
 
   function onDelete(song: Song) {
     if (!window.confirm(`'${song.title}'을(를) 삭제합니다`)) return
@@ -35,26 +41,24 @@ export default function SongListPage() {
       {teamSongs.length === 0 ? (
         <EmptyState teamId={teamId} />
       ) : (
-        GROUPS.map(({ kind, label }) => {
-          const group = teamSongs.filter((s) => s.kind === kind).sort((a, b) => a.order - b.order)
-          return (
-            <div key={kind} className="song-group">
-              <h3>
-                {label} ({group.length})
-              </h3>
-              <ul className="song-rows">
-                {group.map((s) => (
-                  <SongRow
-                    key={s.id}
-                    song={s}
-                    onEdit={(id) => navigate(`/team/${teamId}/songs/${id}/edit`)}
-                    onDelete={onDelete}
-                  />
-                ))}
-              </ul>
-            </div>
-          )
-        })
+        groups.map(({ kind, label, songs: group }, gi) => (
+          <div key={kind} className="song-group">
+            <h3>
+              {label} ({group.length})
+            </h3>
+            <ul className="song-rows">
+              {group.map((s, i) => (
+                <SongRow
+                  key={s.id}
+                  song={s}
+                  index={firstIndex[gi] + i}
+                  onEdit={(id) => navigate(`/team/${teamId}/songs/${id}/edit`)}
+                  onDelete={onDelete}
+                />
+              ))}
+            </ul>
+          </div>
+        ))
       )}
     </section>
   )

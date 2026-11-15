@@ -1,7 +1,8 @@
 //20241476-김도훈-(2026-11-15)
 import { useMemo, useRef, useState } from 'react'
+import { motion } from 'motion/react'
 import { createPortal } from 'react-dom'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 import EmptyState from '../components/EmptyState.tsx'
 import PlayerGrid from '../components/PlayerGrid.tsx'
 import SearchBox from '../components/SearchBox.tsx'
@@ -14,9 +15,11 @@ import { useSituationSlot } from '../context/SituationSlotContext.ts'
 import { useSongs } from '../context/SongsContext.tsx'
 import { useActiveTeam } from '../hooks/useActiveTeam.ts'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts.ts'
+import type { SwitchDirection } from '../lib/motion.ts'
 import { buildSearchIndex, searchIndex } from '../lib/search.ts'
 import { situationSlots } from '../lib/situationSlots.ts'
 import type { GridSort, Song } from '../types.ts'
+import { distance, swap } from '../ui/motionTokens.ts'
 
 type Tab = 'players' | 'team'
 
@@ -35,6 +38,7 @@ export default function MainPage() {
   const [query, setQuery] = useState('')
   const [tab, setTab] = useState<Tab>('players')
   const inputRef = useRef<HTMLInputElement>(null)
+  const enterFrom = useOutletContext<SwitchDirection>()
 
   const teamId = team?.id ?? null
   const { players, teamSongs, situations } = useMemo(() => {
@@ -135,13 +139,20 @@ export default function MainPage() {
               </div>
             )}
           </div>
-          <div id="panel-songs" role="tabpanel" aria-labelledby={tab === 'players' ? 'tab-players' : 'tab-team'}>
+          <motion.div
+            id="panel-songs"
+            role="tabpanel"
+            aria-labelledby={tab === 'players' ? 'tab-players' : 'tab-team'}
+            initial={enterFrom === 0 ? false : { x: enterFrom * distance.team, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={swap}
+          >
             {tab === 'players' ? (
               <PlayerGrid songs={players} nowPlayingId={nowPlayingId} onPlay={play} />
             ) : (
               <TeamSongList songs={teamSongs} nowPlayingId={nowPlayingId} onPlay={play} />
             )}
-          </div>
+          </motion.div>
         </>
       )}
       {situationSlot &&

@@ -1,4 +1,5 @@
 //20241476-김도훈-(2026-11-15)
+import { MotionConfig } from 'motion/react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { NoticeProvider } from './context/NoticeContext.tsx'
 import { PlayerProvider } from './context/PlayerContext.tsx'
@@ -15,28 +16,30 @@ import SongListPage from './pages/SongListPage.tsx'
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <NoticeProvider>
-        <PrefsProvider>
-          <SongsProvider>
-            <PlayerProvider>
-              <Routes>
-                <Route path="/" element={<AppLayout />}>
-                  <Route index element={<HomeRedirect />} />
-                  <Route path="team/:teamId" element={<TeamLayout />}>
-                    <Route index element={<MainPage />} />
-                    <Route path="songs" element={<SongListPage />} />
-                    <Route path="songs/:songId/edit" element={<SongEditPage />} />
-                    <Route path="import" element={<ImportPage />} />
+    <MotionConfig reducedMotion="user">
+      <BrowserRouter>
+        <NoticeProvider>
+          <PrefsProvider>
+            <SongsProvider>
+              <PlayerProvider>
+                <Routes>
+                  <Route path="/" element={<AppLayout />}>
+                    <Route index element={<HomeRedirect />} />
+                    <Route path="team/:teamId" element={<TeamLayout />}>
+                      <Route index element={<MainPage />} />
+                      <Route path="songs" element={<SongListPage />} />
+                      <Route path="songs/:songId/edit" element={<SongEditPage />} />
+                      <Route path="import" element={<ImportPage />} />
+                    </Route>
+                    <Route path="settings" element={<SettingsPage />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
                   </Route>
-                  <Route path="settings" element={<SettingsPage />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Route>
-              </Routes>
-            </PlayerProvider>
-          </SongsProvider>
-        </PrefsProvider>
-      </NoticeProvider>
-    </BrowserRouter>
+                </Routes>
+              </PlayerProvider>
+            </SongsProvider>
+          </PrefsProvider>
+        </NoticeProvider>
+      </BrowserRouter>
+    </MotionConfig>
   )
 }

@@ -1,9 +1,12 @@
 //20241476-김도훈-(2026-11-15)
 import { useEffect, useState } from 'react'
 import { ChevronDown, Ellipsis, X } from 'lucide-react'
+import { AnimatePresence, motion, useReducedMotionConfig } from 'motion/react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { getTeam } from '../data/teams.ts'
 import type { TeamId } from '../types.ts'
+import { TapButton } from '../ui/Press.tsx'
+import { distance, exit, spring, swap } from '../ui/motionTokens.ts'
 import PrevTeamButton from './PrevTeamButton.tsx'
 import TeamLogo from './TeamLogo.tsx'
 import TeamSheet from './TeamSheet.tsx'
@@ -29,6 +32,8 @@ export default function Header({ teamId }: { teamId: TeamId | null }) {
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
+  // 동작 줄이기에서는 옮기기가 순간 이동이 되므로 닫을 때는 사라지기만 한다
+  const menuExitY = useReducedMotionConfig() ? {} : { y: -distance.row }
   const links = () =>
     navItems(teamId).map((item) => (
       <NavLink key={item.to} to={item.to} end={item.end}>
@@ -54,7 +59,7 @@ export default function Header({ teamId }: { teamId: TeamId | null }) {
     <header className="app-header">
       <div className="header-row">
         {teamId ? (
-          <button
+          <TapButton
             type="button"
             className="team-trigger"
             aria-label={`팀 선택: ${getTeam(teamId).name}`}
@@ -65,7 +70,7 @@ export default function Header({ teamId }: { teamId: TeamId | null }) {
             <TeamLogo teamId={teamId} size={36} />
             <span className="team-trigger-name">{getTeam(teamId).name}</span>
             <ChevronDown size={20} strokeWidth={1.75} aria-hidden="true" />
-          </button>
+          </TapButton>
         ) : (
           <h1 className="brand">KBO 응원가</h1>
         )}
@@ -73,12 +78,12 @@ export default function Header({ teamId }: { teamId: TeamId | null }) {
         <nav className="header-nav" aria-label="화면">
           {links()}
         </nav>
-        <button
+        <TapButton
           type="button"
           className="icon-btn menu-toggle"
           aria-label="메뉴"
           aria-expanded={menuOpen}
-          aria-controls="header-menu"
+          aria-controls={menuOpen ? 'header-menu' : undefined}
           onClick={() => setMenuOpen((v) => !v)}
         >
           {menuOpen ? (
@@ -86,12 +91,24 @@ export default function Header({ teamId }: { teamId: TeamId | null }) {
           ) : (
             <Ellipsis size={22} strokeWidth={1.75} aria-hidden="true" />
           )}
-        </button>
+        </TapButton>
       </div>
       {/* 휴대폰 메뉴는 플레이어를 덮지 않도록 머리말 아래로 펼쳐 내용을 밀어낸다 */}
-      <nav id="header-menu" className="header-menu" aria-label="화면" hidden={!menuOpen} onClick={() => setMenuOpen(false)}>
-        {links()}
-      </nav>
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.nav
+            id="header-menu"
+            className="header-menu"
+            aria-label="화면"
+            onClick={() => setMenuOpen(false)}
+            initial={{ opacity: 0, y: -distance.row }}
+            animate={{ opacity: 1, y: 0, transition: { y: spring.sheet, opacity: swap } }}
+            exit={{ opacity: 0, ...menuExitY, transition: exit }}
+          >
+            {links()}
+          </motion.nav>
+        )}
+      </AnimatePresence>
       {teamId && (
         <TeamSheet open={sheetOpen} currentTeamId={teamId} onClose={() => setSheetOpen(false)} onPick={pick} />
       )}

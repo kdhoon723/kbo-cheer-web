@@ -1,5 +1,6 @@
 //20241476-김도훈-(2026-11-15)
 import type { Song } from '../types.ts'
+import { PressCell } from '../ui/Press.tsx'
 import { bandStyle } from './band.ts'
 
 interface Props {
@@ -14,7 +15,7 @@ export default function PlayerGrid({ songs, nowPlayingId, onPlay }: Props) {
       {songs.map((song) => {
         const playing = song.id === nowPlayingId
         return (
-          <button
+          <PressCell
             key={song.id}
             type="button"
             className={playing ? 'player-cell is-playing' : 'player-cell'}
@@ -24,7 +25,7 @@ export default function PlayerGrid({ songs, nowPlayingId, onPlay }: Props) {
             onClick={() => onPlay(song)}
           >
             {song.title}
-          </button>
+          </PressCell>
         )
       })}
     </div>

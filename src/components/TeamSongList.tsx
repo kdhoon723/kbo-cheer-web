@@ -1,5 +1,6 @@
 //20241476-김도훈-(2026-11-15)
 import type { Song } from '../types.ts'
+import { PressCell } from '../ui/Press.tsx'
 import { bandStyle } from './band.ts'
 import StatusMessage from './StatusMessage.tsx'
 
@@ -17,7 +18,7 @@ export default function TeamSongList({ songs, nowPlayingId, onPlay }: Props) {
         const playing = song.id === nowPlayingId
         return (
           <li key={song.id}>
-            <button
+            <PressCell
               type="button"
               className={playing ? 'song-line is-playing' : 'song-line'}
               style={playing ? bandStyle(song.teamId) : undefined}
@@ -29,7 +30,7 @@ export default function TeamSongList({ songs, nowPlayingId, onPlay }: Props) {
                 {i + 1}
               </span>
               <span className="song-line-title">{song.title}</span>
-            </button>
+            </PressCell>
           </li>
         )
       })}

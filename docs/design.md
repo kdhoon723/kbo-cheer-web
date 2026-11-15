@@ -46,6 +46,7 @@ src/
     env.ts                    접속 주소(localhost/LAN), iOS 판별
     shortcuts.ts              단축키 → 동작, 입력 중 판별 [STEP 3-7]
     situationSlots.ts         상황 곡 → 4×2 칸 배치 [디자인 개편]
+    motion.ts                 팀 전환 방향, 목록 줄 지연 [STEP 3-9]
   api/
     youtubeData.ts            Data API 호출, 오류 분류
   player/
@@ -59,6 +60,10 @@ src/
     SituationSlotContext.ts   상황 버튼을 그릴 자리(오른쪽 열·하단 묶음) [STEP 3-7]
   hooks/
     useKeyboardShortcuts.ts   단축키
+    useMounted.ts             처음 있던 항목과 나중에 생긴 항목 가르기 [STEP 3-9]
+  ui/
+    motionTokens.ts           모션 시간·이징·스프링·거리 [STEP 3-9]
+    Press.tsx                 누름 모션(TapButton, PressCell) [STEP 3-9]
   layouts/
     AppLayout.tsx, TeamLayout.tsx
   pages/
@@ -619,6 +624,37 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 
 - 주 버튼에 마우스를 올리면 바탕이 #DDD7CB가 되고, 그 위 #171513 글자 대비는 12.71이다.
 - 셋째 글자는 #302D29(선 색) 위에서 4.17이라 선 위에는 글자를 두지 않는다. 재생 중인 밝은 판 위에서는 보조·셋째 글자도 모두 #171513으로 바꾼다(`.is-playing *`).
+
+#### 모션 [STEP 3-9]
+
+움직임은 누른 일을 확인하고 그것이 어디서 왔는지 보여 줄 뿐이다. 소리를 기다리게 하지 않고(누른 순간 곡이 나오고 재생 중 표시가 바뀐다), 거리는 24px 이하, 들어오는 것은 200ms 안에 읽히며, 장식으로 움직이는 것은 없다. `motion@14.14.0`(`motion/react`)을 쓰고, 값은 모두 `src/ui/motionTokens.ts` 한 곳에 둔다.
+
+| 토큰 | 값 | 쓰는 곳 |
+| --- | --- | --- |
+| `tap` | 80ms, `out` | 눌려 들어가기 |
+| `quick` | 140ms, `in` | 알림이 사라질 때. 재생 줄 제목이 바뀔 때는 같은 시간에 `out`으로 나타난다 |
+| `swap` | 200ms, `out` | 팀 전환 도착, 목록 첫 등장, 첫 곡의 재생 줄 글자, 알림 등장, 시트·메뉴의 페이드 |
+| `row` | 220ms, `out` | 첫 곡에 재생 줄이 자라기 |
+| `exit` | 180ms, `in` | 팀 고르기 창·화면 메뉴 닫기 |
+| `ease.out` / `ease.in` / `ease.inOut` | cubic-bezier(.2,.8,.2,1) / (.4,0,1,1) / (.4,0,.2,1) | 도착 / 나가기 / 화면 안 두 자리 사이 옮기기(지금 쓰는 곳 없음) |
+| `spring.press` | `visualDuration` 240ms, `bounce` 0 | 눌림이 풀려 돌아오기 |
+| `spring.sheet` | `visualDuration` 280ms, `bounce` 0.08 | 팀 고르기 창이 올라오기, 화면 메뉴가 내려오기(옮기기만. 페이드는 `swap`) |
+| `stagger` | 24ms, 앞 8줄까지 | 목록 첫 등장. 9번째 줄부터는 8번째 줄과 같이 움직인다(`lib/motion.ts`의 `staggerDelay`) |
+| `distance` | 팀 24px, 목록 줄 8px, 시트 24px | |
+| `pressScale` | 0.96 | |
+| `rowTextDelay` | 60ms | 첫 곡의 재생 줄 글자가 올라오기 전 기다림 |
+
+- 스프링: motion은 `bounce`를 감쇠비 `1 - bounce`로 바꾼다(`motion-dom`의 `bounceToDampingRatio`). 감쇠비 0.92는 `bounce` 0.08이고, 넘침은 exp(-ζπ/√(1-ζ²)) ≈ 0.06%라 24px에서 0.02px다. 눈에 보이는 넘침은 없다.
+- 누름: 1px 선으로 붙은 칸(선수 칸, 상황 칸, 팀 응원가 줄, 검색 결과 줄, 팀 고르기 칸)은 칸과 선은 그대로 두고 안의 내용(`.press-content`)만 0.96으로 줄어든다(`ui/Press.tsx`의 `PressCell`). 상황 칸의 단축키 번호는 줄어들지 않는다. 혼자 선 버튼(정지, 응원가로, 지금을 응원가 시작으로, 전 팀, 팀 버튼, 메뉴, 창 닫기)은 버튼 전체가 줄어든다(`TapButton`). 들어갈 때 `tap`, 풀릴 때 `spring.press`. 재생 중 칸의 반전은 움직이지 않고 바로 바뀐다.
+- 팀 전환: 선수 격자·팀 응원가 목록(`#panel-songs`)이 팀 순서(`TEAMS`)에서 새 팀이 있는 쪽에서 24px 들어온다(`swap`). 방향은 `lib/motion.ts`의 `teamSwitchDirection`이 정하고, TeamLayout이 직전 팀을 기억해 `<Outlet context>`로 내려 준다(Outlet은 팀마다 `key`로 새로 만들어져 직전 팀을 모른다). 「전 팀」으로 두 팀을 오가면 늘 반대쪽에서 온다. 같은 팀 안에서 화면만 바뀌면 움직이지 않는다. 나가는 목록은 그 프레임에 사라진다. 머리말, 검색칸, 탭, 상황 칸은 움직이지 않는다. 들어오는 격자가 가로 스크롤을 만들지 않게 `.app-main`에 `overflow-x: clip`을 둔다.
+- 목록 첫 등장: 검색 결과가 처음 나타날 때, 곡 관리 화면과 가져오기 후보 목록이 처음 열릴 때 줄이 아래 8px에서 24ms씩 차례로 올라온다(`listItemMotion`). 이미 열린 검색 결과에 검색어를 더 쳐서 생기는 줄은 움직이지 않는다(`hooks/useMounted.ts`).
+- 팀 고르기 창: `<dialog>`는 그대로 `showModal()`로 열고, 보이는 판(`.sheet-body`)이 아래 24px에서 `spring.sheet`로 올라온다. 닫을 때(닫기, 팀 고르기, 바깥 누름, Esc)는 판이 `exit`로 사라진 뒤 `close()`한다. Esc는 `cancel` 이벤트를 막고 같은 길로 닫는다. 포커스는 `close()` 때 팀 버튼으로 돌아간다. 창 뒤는 5.2대로 어둡게 덮지 않는다(플레이어가 가려지지 않게).
+- 화면 메뉴(휴대폰): 머리말 아래로 펼쳐지므로 위 8px에서 내려오고(`spring.sheet`, 페이드 `swap`), 닫을 때 `exit`. 메뉴가 내용을 밀어내는 높이 변화는 움직이지 않는다.
+- 재생 줄: 처음 곡을 튼 순간 한 번 `row`로 자라고(앱에서 높이를 움직이는 곳은 여기 하나), 글자(`.now`)는 60ms 뒤 아래 8px에서 `swap`으로 올라온다. 지금 배치에서는 재생 전과 재생 중의 줄 높이가 같아(360px에서 60px, 1280px에서 151.6px) 실제로 자라는 일은 없고 글자만 올라온다. 곡이 바뀌면 제목만 `quick`으로 페이드된다.
+- 알림: 아래 8px에서 `swap`으로 올라오고 `quick`으로 사라진다. 알림이 바로 다른 알림으로 바뀌면 앞 알림이 사라진 뒤 새 알림이 올라와 둘이 겹치지 않는다.
+- 움직이지 않는 것: 소리의 시작·정지 시점, 재생 중 표시(칸 반전, 아이콘), 진행 막대(재생 위치를 그대로 따른다. `width` 대신 `transform: scaleX`), YouTube iframe(옮기거나 감싸거나 다시 마운트하지 않는다).
+- transform과 opacity만 움직인다(예외는 재생 줄 높이). 프레임마다 React 상태를 바꾸지 않는다.
+- 동작 줄이기: 앱 전체를 `<MotionConfig reducedMotion="user">`로 감싸, 시스템의 동작 줄이기가 켜지면 옮기기·크기·스프링이 순간 적용되고 페이드만 남는다. 누름은 아예 꺼지고, 창·메뉴를 닫을 때는 옮기기 없이 사라지기만 한다(순간 이동으로 튀지 않게). E2E는 이 설정(`playwright.config.ts`의 `reducedMotion: 'reduce'`)으로 돈다.
 
 ## 6. 컴포넌트 구조
 

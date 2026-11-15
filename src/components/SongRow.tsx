@@ -1,9 +1,13 @@
 //20241476-김도훈-(2026-11-15)
+import { motion } from 'motion/react'
 import { formatTime } from '../lib/time.ts'
 import type { Song, SongKind } from '../types.ts'
+import { listItemMotion } from '../ui/motionTokens.ts'
 
 interface Props {
   song: Song
+  /** 화면 전체에서 몇 번째 줄인지. 처음 열 때 차례로 올라온다 */
+  index: number
   onEdit: (id: string) => void
   onDelete: (song: Song) => void
 }
@@ -14,9 +18,9 @@ const KIND_LABELS: Record<SongKind, string> = {
   team: '팀 응원가',
 }
 
-export default function SongRow({ song, onEdit, onDelete }: Props) {
+export default function SongRow({ song, index, onEdit, onDelete }: Props) {
   return (
-    <li className="song-row">
+    <motion.li className="song-row" {...listItemMotion(index)}>
       <div className="song-row-info">
         <span className="song-row-kind">{KIND_LABELS[song.kind]}</span>
         <strong className="song-row-title">{song.title}</strong>
@@ -35,6 +39,6 @@ export default function SongRow({ song, onEdit, onDelete }: Props) {
           삭제
         </button>
       </div>
-    </li>
+    </motion.li>
   )
 }

@@ -1,13 +1,18 @@
 //20241476-김도훈-(2026-11-15)
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 import { ChevronsRight, Flag, Square } from 'lucide-react'
+import { motion, useAnimate } from 'motion/react'
 import { getTeam } from '../data/teams.ts'
 import { usePlayer } from '../context/PlayerContext.tsx'
 import { usePrefs } from '../context/PrefsContext.tsx'
 import { useSongs } from '../context/SongsContext.tsx'
+import { useMounted } from '../hooks/useMounted.ts'
 import { cheerHereSecond, cheerTarget, segmentElapsed } from '../lib/playback.ts'
 import { formatTime } from '../lib/time.ts'
 import type { NowPlaying } from '../types.ts'
+import { TapButton } from '../ui/Press.tsx'
+import { distance, ease, quick, row, rowTextDelay, swap } from '../ui/motionTokens.ts'
 import { bandStyle } from './band.ts'
 import PlayerHost from './PlayerHost.tsx'
 import TeamLogo from './TeamLogo.tsx'
@@ -41,8 +46,12 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   const { songs, updateSong } = useSongs()
   const { settings, setVolume } = usePrefs()
   const [tick, setTick] = useState<Tick>({ seg: null, elapsed: 0, canCheerHere: false })
+  const [hasPlayed, setHasPlayed] = useState(false)
+  const [rowRef, animate] = useAnimate<HTMLDivElement>()
+  const idleHeight = useRef(0)
 
   const song = nowPlaying ? songs.find((s) => s.id === nowPlaying.songId) : undefined
+  if (song && !hasPlayed) setHasPlayed(true)
   const current = nowPlaying !== null && tick.seg === nowPlaying ? tick : null
   const canSkip = playerReady && cheerTarget(song, nowPlaying) !== null
   const canCheerHere = current?.canCheerHere ?? false
@@ -62,6 +71,37 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
     return () => clearInterval(id)
   }, [nowPlaying, song, getCurrentTime])
 
+  // 곡을 틀기 전 높이를 늘 알고 있어야 첫 곡에 자라는 시작점을 잡을 수 있다. 화면 폭이 바뀌면 높이도 바뀐다
+  useLayoutEffect(() => {
+    const el = rowRef.current
+    if (!el || hasPlayed) return
+    const observer = new ResizeObserver(() => {
+      idleHeight.current = el.offsetHeight
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [hasPlayed, rowRef])
+
+  // 재생 줄이 처음 곡에 한 번 자란다. 앱에서 높이를 움직이는 곳은 여기 하나다
+  useLayoutEffect(() => {
+    const el = rowRef.current
+    if (!el || !hasPlayed) return
+    const to = el.offsetHeight
+    if (to === idleHeight.current) return
+    // 자라는 동안 안의 버튼이 아래 상황 칸 위로 삐져나오지 않게 한다
+    el.style.overflow = 'clip'
+    const growth = animate(el, { height: [idleHeight.current, to] }, row)
+    const settle = () => {
+      el.style.height = ''
+      el.style.overflow = ''
+    }
+    void growth.then(settle)
+    return () => {
+      growth.stop()
+      settle()
+    }
+  }, [hasPlayed, rowRef, animate])
+
   function onCheerHere() {
     const sec = cheerHereSecond(song, getCurrentTime())
     if (!song || sec === null) return
@@ -72,7 +112,7 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   const duration = nowPlaying ? nowPlaying.end - nowPlaying.start : 0
   const elapsed = current?.elapsed ?? 0
   const cheerAt = cheerTarget(song, nowPlaying)
-  const percent = (sec: number) => `${duration > 0 ? (sec / duration) * 100 : 0}%`
+  const ratio = (sec: number) => (duration > 0 ? sec / duration : 0)
 
   return (
     <aside
@@ -84,46 +124,48 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
         <PlayerHost />
       </div>
       <div className="player-tools">
-        <button type="button" className="cheer-here-btn" disabled={!canCheerHere} onClick={onCheerHere}>
+        <TapButton type="button" className="cheer-here-btn" disabled={!canCheerHere} onClick={onCheerHere}>
           <Flag size={18} strokeWidth={1.75} aria-hidden="true" />
           지금을 응원가 시작으로
-        </button>
+        </TapButton>
         <VolumeSlider value={settings.volume} onChange={setVolume} supported={canControlVolume} />
       </div>
       <div className="dock">
         <Toast />
         <div className="progress" aria-hidden="true">
-          <div className="progress-fill" style={{ width: live ? percent(elapsed) : '0%' }} />
+          <div className="progress-fill" style={{ transform: `scaleX(${live ? ratio(elapsed) : 0})` }} />
           {live && cheerAt !== null && nowPlaying && (
-            <div className="progress-cheer" style={{ left: percent(cheerAt - nowPlaying.start) }} />
+            <div className="progress-cheer" style={{ left: `${ratio(cheerAt - nowPlaying.start) * 100}%` }} />
           )}
         </div>
-        <div className="play-row">
+        <div className="play-row" ref={rowRef}>
           {song && <TeamLogo teamId={song.teamId} size={36} />}
-          <div className="now">
-            <p className="now-label">{live ? STATUS_LABELS[status] : STATUS_LABELS.idle}</p>
-            <p className="now-title">{song ? song.title : '선택한 곡 없음'}</p>
-            <p className="now-meta">
-              {song && (
-                <>
-                  <span className="now-team">{getTeam(song.teamId).name}</span>
-                  {' · '}
-                </>
-              )}
-              <span className="now-time">
-                {live ? `${formatTime(elapsed)} / ${formatTime(duration)}` : '--:-- / --:--'}
-              </span>
-              {live && cheerAt !== null && nowPlaying && (
-                <span className="now-cheer"> · 응원가 {formatTime(cheerAt - nowPlaying.start)}</span>
-              )}
-            </p>
-          </div>
+          <NowText
+            key={hasPlayed ? 'live' : 'idle'}
+            rise={hasPlayed}
+            label={live ? STATUS_LABELS[status] : STATUS_LABELS.idle}
+            titleKey={song?.id ?? null}
+            title={song ? song.title : '선택한 곡 없음'}
+          >
+            {song && (
+              <>
+                <span className="now-team">{getTeam(song.teamId).name}</span>
+                {' · '}
+              </>
+            )}
+            <span className="now-time">
+              {live ? `${formatTime(elapsed)} / ${formatTime(duration)}` : '--:-- / --:--'}
+            </span>
+            {live && cheerAt !== null && nowPlaying && (
+              <span className="now-cheer"> · 응원가 {formatTime(cheerAt - nowPlaying.start)}</span>
+            )}
+          </NowText>
           <div className="play-actions">
-            <button type="button" className="skip-btn" disabled={!canSkip} onClick={skipToCheer}>
+            <TapButton type="button" className="skip-btn" disabled={!canSkip} onClick={skipToCheer}>
               <ChevronsRight className="wide-only" size={18} strokeWidth={1.75} aria-hidden="true" />
               응원가로
-            </button>
-            <button
+            </TapButton>
+            <TapButton
               type="button"
               className="stop-btn"
               aria-label="정지"
@@ -132,11 +174,44 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
             >
               <Square size={16} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
               <span className="wide-only">정지</span>
-            </button>
+            </TapButton>
           </div>
         </div>
         <div className="dock-situations" ref={situationSlotRef} />
       </div>
     </aside>
+  )
+}
+
+interface NowTextProps {
+  rise: boolean
+  label: string
+  titleKey: string | null
+  title: string
+  children: ReactNode
+}
+
+function NowText({ rise, label, titleKey, title, children }: NowTextProps) {
+  // 처음 곡이 올라오는 순간에는 줄 전체만 움직이고 제목은 따로 바뀌지 않는다
+  const mounted = useMounted()
+  return (
+    <motion.div
+      className="now"
+      initial={rise ? { opacity: 0, y: distance.row } : false}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ ...swap, delay: rowTextDelay }}
+    >
+      <p className="now-label">{label}</p>
+      <motion.p
+        key={titleKey ?? 'none'}
+        className="now-title"
+        initial={mounted ? { opacity: 0 } : false}
+        animate={{ opacity: 1 }}
+        transition={{ ...quick, ease: ease.out }}
+      >
+        {title}
+      </motion.p>
+      <p className="now-meta">{children}</p>
+    </motion.div>
   )
 }
