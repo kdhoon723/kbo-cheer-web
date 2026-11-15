@@ -266,11 +266,20 @@ test.describe('4. 재생', () => {
   })
 
   test('TC-24 플레이어 표시', async ({ page }, testInfo) => {
+    // 휴대폰은 곡을 틀기 전에 플레이어 자리를 접어 두고, 첫 곡에 펼친다. iframe은 그대로다
+    await page.setViewportSize({ width: 360, height: 640 })
+    const iframe = await page.locator('.player-host iframe').elementHandle()
+    const stageHeight = () => page.locator('.player-stage').evaluate((el) => el.getBoundingClientRect().height)
+    note(testInfo, '360×640 재생 전 플레이어 자리 높이', await stageHeight())
+    expect(await stageHeight()).toBe(0)
+    await playAndWait(page, '노시환')
+    expect(await page.locator('.player-host iframe').evaluate((el, before) => el === before, iframe)).toBe(true)
     for (const size of [
       { width: 360, height: 640 },
       { width: 1280, height: 800 },
     ]) {
       await page.setViewportSize(size)
+      await page.evaluate(() => window.scrollTo(0, 0))
       await page.waitForTimeout(300)
       const box = await page.locator('.player-host iframe').boundingBox()
       note(testInfo, `${size.width}×${size.height} 플레이어 크기`, box)
@@ -293,6 +302,29 @@ test.describe('4. 재생', () => {
       })
       expect(covered, `${size.width}px에서 플레이어를 가리는 요소`).toEqual([])
     }
+  })
+})
+
+test.describe('4. 휴대폰 재생 도구', () => {
+  test('TC-60 더보기 시트', async ({ page }) => {
+    await gotoHanwha(page)
+    await expectPlayerReady(page)
+    const more = page.getByRole('button', { name: '더보기' })
+    await expect(more).toBeHidden()
+    await expect(page.getByRole('button', { name: '지금을 응원가 시작으로' })).toBeVisible()
+
+    await page.setViewportSize({ width: 360, height: 640 })
+    await expect(page.getByRole('button', { name: '지금을 응원가 시작으로' })).toBeHidden()
+    await expect(page.getByRole('slider', { name: '볼륨' })).toBeHidden()
+    await playAndWait(page, '노시환')
+    await more.click()
+    const sheet = page.getByRole('dialog', { name: '재생 도구' })
+    await expect(sheet.getByRole('button', { name: '지금을 응원가 시작으로' })).toBeVisible()
+    await expect(sheet.getByRole('slider', { name: '볼륨' })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(sheet).toBeHidden()
+    await expect(more).toBeFocused()
+    expect((await ytSnapshot(page))?.state).toBe(PLAYING)
   })
 })
 

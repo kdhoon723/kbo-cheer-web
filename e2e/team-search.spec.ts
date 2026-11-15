@@ -9,6 +9,7 @@ import {
   pickTeam,
   playerButton,
   prevTeamButton,
+  situationButton,
   teamSongs,
   teamTrigger,
 } from './helpers.ts'
@@ -176,26 +177,39 @@ test.describe('3. 메인 화면과 검색', () => {
     await expect(cells).toHaveCount(8)
     const grid = await cells.evaluateAll((els) =>
       els.map((el) => ({
-        label: el.querySelector('.situation-label')?.textContent ?? null,
+        name: el.querySelector('.situation-name')?.textContent ?? null,
+        detail: el.querySelector('.situation-title')?.textContent ?? null,
+        title: el.getAttribute('aria-label'),
         key: el.getAttribute('aria-keyshortcuts'),
       })),
     )
+    const empty = { name: null, detail: null, title: null, key: null }
+    // 칸에는 상황 이름을 크게 쓰고, 이름과 사실상 같은 곡 제목은 다시 쓰지 않는다
     expect(grid).toEqual([
-      { label: '공통 안타 송', key: '1' },
-      { label: null, key: null },
-      { label: '볼넷 송', key: '3' },
-      { label: '풀카운트 송', key: '4' },
-      { label: '라인업송', key: '5' },
-      { label: null, key: null },
-      { label: null, key: null },
-      { label: null, key: null },
+      { name: '안타', detail: null, title: '공통 안타 송', key: '1' },
+      empty,
+      { name: '볼넷', detail: null, title: '볼넷 송', key: '3' },
+      { name: '풀카운트', detail: null, title: '풀카운트 송', key: '4' },
+      { name: '라인업', detail: null, title: '라인업송', key: '5' },
+      empty,
+      empty,
+      empty,
     ])
     await expect(page.locator('.dock-situations .situation-cell.is-empty')).toHaveCount(4)
-    const labels = page.locator('.dock-situations .situation-btn .situation-label')
-    const texts = await labels.allInnerTexts()
-    expect(new Set(texts).size).toBe(texts.length)
+    const names = await page.locator('.dock-situations .situation-btn .situation-name').allInnerTexts()
+    expect(new Set(names).size).toBe(names.length)
     await page.getByRole('tab', { name: /^팀 응원가/ }).click()
     await expect(page.locator('.team-song-list button')).toHaveCount(18)
+
+    // 이름만으로 어느 곡인지 알 수 없으면 곡 제목을 아래 줄에 쓴다
+    await page.goto('/team/lotte')
+    for (const [title, name] of [
+      ['수비 라인업송', '라인업 소개'],
+      ['공격 라인업송', '라인업'],
+    ]) {
+      await expect(situationButton(page, title).locator('.situation-name')).toHaveText(name)
+      await expect(situationButton(page, title).locator('.situation-title')).toHaveText(title)
+    }
   })
 
   test('TC-09 초성·부분 검색', async ({ page }) => {

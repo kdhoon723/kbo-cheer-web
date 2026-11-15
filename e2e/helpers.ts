@@ -191,7 +191,7 @@ export function playerButton(page: Page, title: string): Locator {
 }
 
 export function situationButton(page: Page, title: string): Locator {
-  return page.locator('.situation-btn').filter({ has: page.locator('.situation-label', { hasText: exactText(title) }) })
+  return page.locator('.dock-situations').getByRole('button', { name: title, exact: true })
 }
 
 export function toast(page: Page): Locator {

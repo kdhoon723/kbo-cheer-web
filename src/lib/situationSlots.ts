@@ -12,6 +12,34 @@ export const SITUATION_CELLS: readonly SituationCategory[] = [
 
 export const GRID_COLUMNS = 4
 
+const SITUATION_NAMES: Record<Exclude<SituationCategory, 'etc'>, string> = {
+  hit: '안타',
+  out: '아웃',
+  walk: '볼넷',
+  fullCount: '풀카운트',
+  lineup: '라인업',
+  lineupIntro: '라인업 소개',
+  opening: '경기 개시',
+}
+
+export interface SituationLabel {
+  name: string
+  /** 상황 이름만으로 알 수 없는 곡 제목. 이름과 사실상 같으면 null */
+  detail: string | null
+}
+
+// "공통 안타 송", "경기 개시 음악"처럼 상황 이름에 붙는 말을 떼면 이름과 같아지는 제목은 다시 쓰지 않는다
+function core(title: string): string {
+  return normalize(title).replace(/^공통/, '').replace(/(송|곡|음악|응원가)$/, '')
+}
+
+export function situationLabel(title: string): SituationLabel {
+  const category = situationCategory(title)
+  if (category === 'etc') return { name: title, detail: null }
+  const name = SITUATION_NAMES[category]
+  return { name, detail: core(title) === normalize(name) ? null : title }
+}
+
 export function situationCategory(title: string): SituationCategory {
   const t = normalize(title)
   if (t.includes('라인업')) return t.includes('소개') || t.includes('수비') ? 'lineupIntro' : 'lineup'

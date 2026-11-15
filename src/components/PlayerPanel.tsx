@@ -1,7 +1,7 @@
 //20241476-김도훈-(2026-11-15)
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { ChevronsRight, Flag, Square } from 'lucide-react'
+import { ChevronsRight, EllipsisVertical, Flag, Square } from 'lucide-react'
 import { motion, useAnimate } from 'motion/react'
 import { getTeam } from '../data/teams.ts'
 import { usePlayer } from '../context/PlayerContext.tsx'
@@ -15,6 +15,7 @@ import { TapButton } from '../ui/Press.tsx'
 import { distance, ease, quick, row, rowTextDelay, swap } from '../ui/motionTokens.ts'
 import { bandStyle } from './band.ts'
 import PlayerHost from './PlayerHost.tsx'
+import Sheet from './Sheet.tsx'
 import TeamLogo from './TeamLogo.tsx'
 import Toast from './Toast.tsx'
 import VolumeSlider from './VolumeSlider.tsx'
@@ -47,6 +48,7 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   const { settings, setVolume } = usePrefs()
   const [tick, setTick] = useState<Tick>({ seg: null, elapsed: 0, canCheerHere: false })
   const [hasPlayed, setHasPlayed] = useState(false)
+  const [toolsOpen, setToolsOpen] = useState(false)
   const [rowRef, animate] = useAnimate<HTMLDivElement>()
   const idleHeight = useRef(0)
 
@@ -113,23 +115,25 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   const elapsed = current?.elapsed ?? 0
   const cheerAt = cheerTarget(song, nowPlaying)
   const ratio = (sec: number) => (duration > 0 ? sec / duration : 0)
+  const panelClass = ['player-panel', live && 'is-live', hasPlayed && 'has-played'].filter(Boolean).join(' ')
+
+  // 노트북은 오른쪽 열에 늘 두고, 휴대폰은 경기 중에 쓰지 않으니 더보기 시트로 옮긴다
+  const tools = (
+    <>
+      <TapButton type="button" className="cheer-here-btn" disabled={!canCheerHere} onClick={onCheerHere}>
+        <Flag size={18} strokeWidth={1.75} aria-hidden="true" />
+        지금을 응원가 시작으로
+      </TapButton>
+      <VolumeSlider value={settings.volume} onChange={setVolume} supported={canControlVolume} />
+    </>
+  )
 
   return (
-    <aside
-      className={live ? 'player-panel is-live' : 'player-panel'}
-      style={song ? bandStyle(song.teamId) : undefined}
-      aria-label="재생 상태"
-    >
+    <aside className={panelClass} style={song ? bandStyle(song.teamId) : undefined} aria-label="재생 상태">
       <div className="player-stage">
         <PlayerHost />
       </div>
-      <div className="player-tools">
-        <TapButton type="button" className="cheer-here-btn" disabled={!canCheerHere} onClick={onCheerHere}>
-          <Flag size={18} strokeWidth={1.75} aria-hidden="true" />
-          지금을 응원가 시작으로
-        </TapButton>
-        <VolumeSlider value={settings.volume} onChange={setVolume} supported={canControlVolume} />
-      </div>
+      <div className="player-tools">{tools}</div>
       <div className="dock">
         <Toast />
         <div className="progress" aria-hidden="true">
@@ -150,7 +154,7 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
             {song && (
               <>
                 <span className="now-team">{getTeam(song.teamId).name}</span>
-                {' · '}
+                <span className="now-sep"> · </span>
               </>
             )}
             <span className="now-time">
@@ -175,10 +179,23 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
               <Square size={16} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
               <span className="wide-only">정지</span>
             </TapButton>
+            <TapButton
+              type="button"
+              className="more-btn narrow-only"
+              aria-label="더보기"
+              aria-haspopup="dialog"
+              aria-expanded={toolsOpen}
+              onClick={() => setToolsOpen(true)}
+            >
+              <EllipsisVertical size={20} strokeWidth={1.75} aria-hidden="true" />
+            </TapButton>
           </div>
         </div>
         <div className="dock-situations" ref={situationSlotRef} />
       </div>
+      <Sheet open={toolsOpen} title="재생 도구" titleId="tools-sheet-title" onClose={() => setToolsOpen(false)}>
+        <div className="sheet-tools">{tools}</div>
+      </Sheet>
     </aside>
   )
 }

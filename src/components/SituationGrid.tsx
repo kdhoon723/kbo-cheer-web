@@ -1,5 +1,5 @@
 //20241476-김도훈-(2026-11-16)
-import { SITUATION_CELLS } from '../lib/situationSlots.ts'
+import { SITUATION_CELLS, situationLabel } from '../lib/situationSlots.ts'
 import type { Song } from '../types.ts'
 import { PressCell } from '../ui/Press.tsx'
 import { bandStyle } from './band.ts'
@@ -17,12 +17,14 @@ export default function SituationGrid({ cells, nowPlayingId, onPlay }: Props) {
         const key = i < SITUATION_CELLS.length ? String(i + 1) : undefined
         if (!song) return <span key={`empty-${i}`} className="situation-cell is-empty" aria-hidden="true" />
         const playing = song.id === nowPlayingId
+        const label = situationLabel(song.title)
         return (
           <PressCell
             key={song.id}
             type="button"
             className={playing ? 'situation-cell situation-btn is-playing' : 'situation-cell situation-btn'}
             style={playing ? bandStyle(song.teamId) : undefined}
+            aria-label={song.title}
             aria-pressed={playing}
             aria-keyshortcuts={key}
             onMouseDown={(e) => e.preventDefault()}
@@ -36,7 +38,8 @@ export default function SituationGrid({ cells, nowPlayingId, onPlay }: Props) {
               )
             }
           >
-            {song.title}
+            <span className="situation-name">{label.name}</span>
+            {label.detail && <span className="situation-title">{label.detail}</span>}
           </PressCell>
         )
       })}

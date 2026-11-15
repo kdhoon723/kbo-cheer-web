@@ -376,8 +376,8 @@ kbd {
   box-shadow: inset 0 -2px 0 var(--text);
 }
 
-/* 팀 고르기 창. dialog는 자리만 잡고 보이는 판은 안의 sheet-body다. 판이 움직여도 창 밖으로 잘리지 않게 한다 */
-.team-sheet {
+/* 아래에서 올라오는 창. dialog는 자리만 잡고 보이는 판은 안의 sheet-body다. 판이 움직여도 창 밖으로 잘리지 않게 한다 */
+.sheet {
   position: fixed;
   inset: auto 0 0;
   width: 100%;
@@ -392,7 +392,7 @@ kbd {
 }
 
 /* 창 뒤를 어둡게 덮지 않는다. 플레이어가 가려지지 않게 하기 위해서다 */
-.team-sheet::backdrop {
+.sheet::backdrop {
   background: transparent;
 }
 
@@ -829,9 +829,35 @@ kbd {
   padding: 0 12px;
 }
 
-.stop-btn {
+.stop-btn,
+.more-btn {
   min-width: var(--tap);
   padding: 0;
+}
+
+.sheet-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 휴대폰: 곡을 틀기 전에는 플레이어 자리를 비워 격자를 더 보인다. iframe은 그대로 두고 칸만 접는다 */
+@media (max-width: 899.98px) {
+  .player-panel:not(.has-played) .player-stage {
+    height: 0;
+    overflow: hidden;
+    border-top-width: 0;
+  }
+
+  .player-tools {
+    display: none;
+  }
+
+  /* 더보기 버튼이 들어와 줄이 좁다. 팀은 로고로 보이니 진행 시각이 잘리지 않게 팀 이름을 뺀다 */
+  .now-team,
+  .now-sep {
+    display: none;
+  }
 }
 
 .situation-grid {
@@ -846,10 +872,36 @@ kbd {
   justify-content: flex-start;
   min-height: 52px;
   padding: 4px 8px;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.2;
   text-align: left;
+}
+
+.situation-label {
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.situation-name {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+  word-break: keep-all;
+}
+
+.situation-title {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--text-2);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.is-playing .situation-title {
+  color: var(--ink);
 }
 
 .situation-key {

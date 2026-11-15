@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import seedJson from '../data/seed-songs.json'
 import { TEAM_IDS } from '../data/teams.ts'
 import type { Song, TeamId } from '../types.ts'
-import { situationCategory, situationSlots } from './situationSlots.ts'
+import { situationCategory, situationLabel, situationSlots } from './situationSlots.ts'
 import { parseSongsFile } from './songsFile.ts'
 import { makeSong } from './testSongs.ts'
 
@@ -99,5 +99,33 @@ describe('situationSlots', () => {
       '응원 5', '응원 6', '응원 7', '응원 0',
     ])
     expect(titles(cells).slice(8)).toEqual(['응원 8', '응원 9', null, null])
+  })
+})
+
+describe('situationLabel', () => {
+  it('상황 이름을 쓰고, 이름과 사실상 같은 제목은 다시 쓰지 않는다', () => {
+    expect(situationLabel('공통 안타 송')).toEqual({ name: '안타', detail: null })
+    expect(situationLabel('볼넷송')).toEqual({ name: '볼넷', detail: null })
+    expect(situationLabel('풀카운트 송')).toEqual({ name: '풀카운트', detail: null })
+    expect(situationLabel('라인업 송')).toEqual({ name: '라인업', detail: null })
+    expect(situationLabel('라인업 소개 곡')).toEqual({ name: '라인업 소개', detail: null })
+    expect(situationLabel('경기 개시 음악')).toEqual({ name: '경기 개시', detail: null })
+  })
+
+  it('이름만으로 알 수 없는 제목은 아래 줄에 쓴다', () => {
+    expect(situationLabel('수비 라인업송')).toEqual({ name: '라인업 소개', detail: '수비 라인업송' })
+    expect(situationLabel('공격 라인업송')).toEqual({ name: '라인업', detail: '공격 라인업송' })
+    expect(situationLabel('안타 2')).toEqual({ name: '안타', detail: '안타 2' })
+  })
+
+  it('기타 칸은 곡 제목을 이름 자리에 쓴다', () => {
+    expect(situationLabel('승리의 노래')).toEqual({ name: '승리의 노래', detail: null })
+  })
+
+  it('처음 데이터의 10개 구단 상황 곡은 롯데 라인업 두 곡만 제목 줄이 있다', () => {
+    const withDetail = TEAM_IDS.flatMap((id) => seedSituations(id))
+      .map((s) => situationLabel(s.title).detail)
+      .filter((d) => d !== null)
+    expect(withDetail.sort()).toEqual(['공격 라인업송', '수비 라인업송'])
   })
 })
