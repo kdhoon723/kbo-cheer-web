@@ -346,16 +346,16 @@ function evaluateCandidates(
 ### 4.2 1단계: 줄 해석 (parseDescription)
 
 ```
-TIME_LINE = /^(?:(\d{1,2}):)?(\d{1,2}):(\d{2})\s+(.+)$/
+TIME_LINE = /^((?:\d{1,2}:)?\d{1,2}:\d{2})\s+(.+)$/
 SEPARATOR = /^-{3,}$/
 
 lines = description.split(/\r?\n/)
 for 각 줄 (lineNo, line.trim()):
   SEPARATOR면 구분선 줄 번호 목록에 넣는다
-  TIME_LINE이면(분·초가 60 이상이면 제외) 챕터 { lineNo, start, rawTitle: 제목.trim(), rawLine }
+  TIME_LINE이면 start = parseTime(시각 부분), null이면 제외 → 챕터 { lineNo, start, rawTitle: 제목.trim(), rawLine }
 ```
 
-- 시간 부분은 `H:MM:SS`와 `MM:SS`를 모두 받는다(BR-10). 그 밖의 줄(안내 문구, 해시태그)은 무시한다.
+- 시간 부분은 `H:MM:SS`와 `MM:SS`를 모두 받는다(BR-10). 초가 60 이상이거나, 시가 있는데 분이 60 이상이면 챕터가 아니다. 시 없이 쓴 `75:00`처럼 분이 60을 넘는 값은 받는다(1시간 넘는 영상을 분으로만 적는 설명란이 있어서). 그 밖의 줄(안내 문구, 해시태그)은 무시한다.
 - 챕터가 0개면 단일 영상 등록 화면으로 넘긴다(EX-04, FR-13).
 
 ### 4.3 2단계: 종류 분류 (BR-13)

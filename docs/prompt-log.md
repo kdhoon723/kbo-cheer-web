@@ -314,3 +314,69 @@ docs/requirements.md와 docs/design.md를 기준으로 개발한다.
 
 작업 계획을 먼저 세워 답장 첫머리에 적고, 이어서 바로 구현하라.
 ```
+
+### AI 결과 요약
+- create-vite 9.3.4(react-ts)로 프로젝트 생성, react-router-dom 7.18.5, vitest 5.1.0, jsdom. vite.config.ts에 포트 5173 고정·LAN 허용·테스트 환경.
+- 프로젝트 규칙 파일 `CLAUDE.md` 생성: 기준 문서, 코드 규칙(any 금지, 외부 입력은 unknown + 타입 가드, 첫 줄 주석 형식), 실행·검증 방법, API 키 취급, Git, 보고 원칙.
+- types.ts, teams.ts, songValidation.ts, storage.ts(깨진 곡 목록은 원래 문자열을 `kboCheer.songs.broken`에 보관), songsFile.ts, id.ts, Notice·Prefs·Songs Context, 라우트 뼈대와 빈 화면.
+- 검증(AI 실행): build 통과, test 34개 통과, lint 오류 0(경고 3: Provider와 훅을 한 파일에서 내보내는 수업 useCart 구조), `any` 0건. Playwright로 라우트 이동, 마지막 팀 복원, 없는 팀 주소, EX-14(깨진 값 → 알림·복구), 360px 가로 넘침 없음 확인, 캡처 2장.
+- 공개 저장소 https://github.com/kdhoon723/kbo-cheer-web 생성, 커밋 2개 푸시, 원격에 .env.local·node_modules·dist 없음 확인.
+- AI가 스스로 고친 것: 코드 작성을 맡긴 하위 작업자 결과에서 `any[]`로 좁혀지던 타입을 `unknown[]`로, 가로 넘침을 가리기만 하는 `overflow-x: hidden` 삭제(NFR-01 확인을 속일 수 있어서).
+- AI가 보고한 실수: 개발 서버를 끄려고 `pkill -f vite`를 실행해 자기 셸과, 같은 계정의 다른 vite 프로세스까지 끌 수 있었음.
+
+### 검토
+- 직접 실행: npm test 34개 통과, npm run build 통과, 저장소 공개 상태와 추적 파일 확인.
+- `pkill -f`는 이름에 vite가 들어간 같은 계정의 모든 프로세스를 끄는 위험한 명령이다. 다른 vite 프로세스가 꺼진 흔적은 찾지 못했지만 확실하지 않다. 같은 실수를 막도록 규칙 파일에 "PID로만 끈다"를 넣게 함.
+
+## 3-②. STEP 3 설명란 파싱과 가져오기 후보 평가 (2026-11-15)
+
+### 프롬프트 원문
+
+```
+# 역할
+너는 React와 TypeScript 전문 개발자이다.
+
+# 현재 개발 상태
+STEP 3-①까지 끝났다: Vite 프로젝트, 공개 저장소, 타입·팀 목록·LocalStorage 처리·JSON 파일 형식, Notice·Prefs·Songs Context, 라우트 뼈대, 단위 테스트 34개.
+
+# 먼저 고칠 것
+지난 단계에서 개발 서버를 끄려고 `pkill -f vite`를 실행해, 이 계정의 다른 vite 프로세스까지 끌 수 있었다. CLAUDE.md의 실행 규칙에 "개발 서버 같은 프로세스는 직접 띄운 PID로만 끈다. pkill -f, killall 같은 이름 패턴 종료는 쓰지 않는다"를 추가하라.
+
+# 이번 작업 목표 (STEP 3-② 설명란 파싱과 가져오기 후보 평가)
+화면 없이, 설계 4절과 10.3절의 순수 함수를 구현하고 단위 테스트로 검증한다.
+- YouTube URL·영상 ID 해석(BR-09): watch, youtu.be, shorts, embed, m.youtube.com, 11자리 ID, 뒤에 붙은 &pp, &t, &list, ?si 값 무시
+- 시각 문자열 해석·표시(MM:SS, H:MM:SS, 초 숫자)
+- 설명란 파싱(parseDescription): 타임스탬프 줄, 구분선, 팀 구획, 종류 분류(BR-13 순서)
+- 후보 평가(evaluateCandidates): 가장 긴 증가 부분열로 시각 이상 판정, 끝 시각 계산(다음 정상 챕터), 중복 상황 곡(대표 규칙), 이미 있음, 같은 이름 선수, 선택 상태와 저장 가능 여부
+
+# 참고 문서
+docs/requirements.md와 docs/design.md(4절, 10.3절)를 기준으로 개발한다.
+
+# 구현 범위
+src/lib/ 아래 해당 순수 함수 파일과 테스트 파일. 테스트 자료로 10개 모음 영상의 설명란을 쓰되, 설명란 원문 전체가 아니라 타임스탬프 줄과 구분선만 남긴 사본을 둔다(src/lib/__fixtures__/).
+
+# 구현 요구사항
+1. TypeScript를 사용하고 any를 쓰지 않는다.
+2. 설계의 데이터 구조와 함수 이름을 유지한다.
+3. 기존 정상 동작 기능과 테스트를 유지한다.
+4. 요청한 기능만 구현한다. 가져오기 화면과 Data API 호출은 다음 단계에서 만든다.
+
+# 완료 조건
+- 10개 영상 모두 선수 수가 키움 27, 한화 22, 롯데 22, SSG 24, 두산 24, NC 24, KIA 25, LG 17, 삼성 28, KT 22(합계 235)로 나온다.
+- 두산 `30:36 서울 두산 승리하리라` 한 줄만 시각 이상이고, 40:36으로 고치면 경고가 사라지며 "챔피언 두산"은 39:15~40:36이 된다.
+- `39:15`가 `49:15`로 잘못 적힌 경우 그 줄과 30:36만 경고가 된다.
+- 중복된 공통 안타 송이 후보에서 빠져도 앞 선수 곡의 끝 시각 경계로는 남는다.
+- URL 예시(&pp, &t, &list, ?si, youtu.be, shorts, m.youtube.com)에서 영상 ID가 바르게 나오고, 형식이 틀린 입력은 거부된다.
+- npm test, npm run build, npm run lint가 통과한다.
+
+# 검증 방법
+구현 후 실행한 테스트와 결과를 적는다. 테스트가 실패했다가 고친 것이 있으면 무엇이 왜 틀렸는지도 적는다.
+
+# 출력 형식
+- 수정 또는 생성한 파일 목록
+- 주요 코드 설명
+- 실행 및 검증 결과
+- 추가로 확인해야 할 사항
+
+작업 계획을 먼저 세워 답장 첫머리에 적고, 이어서 바로 구현하라. 끝나면 커밋하고 푸시하라.
+```
