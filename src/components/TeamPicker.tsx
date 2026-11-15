@@ -13,7 +13,7 @@ export default function TeamPicker({ teamId }: { teamId: TeamId | null }) {
   }
 
   return (
-    <select aria-label="팀 선택" value={teamId ?? ''} onChange={handleChange}>
+    <select className="team-picker" aria-label="팀 선택" value={teamId ?? ''} onChange={handleChange}>
       {teamId === null && (
         <option value="" disabled>
           팀 선택
@@ -21,7 +21,7 @@ export default function TeamPicker({ teamId }: { teamId: TeamId | null }) {
       )}
       {TEAMS.map((t) => (
         <option key={t.id} value={t.id}>
-          {t.name}
+          {t.fullName}
         </option>
       ))}
     </select>

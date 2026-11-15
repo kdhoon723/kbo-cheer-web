@@ -4,6 +4,7 @@ import type { FormEvent } from 'react'
 import { errorMessage, searchVideos } from '../api/youtubeData.ts'
 import type { DataApiError } from '../api/youtubeData.ts'
 import type { VideoSearchItem } from '../types.ts'
+import StatusMessage from './StatusMessage.tsx'
 
 interface Props {
   disabled: boolean
@@ -57,8 +58,8 @@ export default function VideoSearchForm({ disabled, onPick }: Props) {
           {loading ? '검색 중...' : '검색'}
         </button>
       </form>
-      {error && <p className="form-error">{errorMessage(error)}</p>}
-      {results !== null && results.length === 0 && <p>검색 결과가 없습니다</p>}
+      {error && <StatusMessage tone="error">{errorMessage(error)}</StatusMessage>}
+      {results !== null && results.length === 0 && <StatusMessage tone="empty">검색 결과가 없습니다</StatusMessage>}
       {results !== null && results.length > 0 && (
         <ul className="search-results">
           {results.map((item) => (

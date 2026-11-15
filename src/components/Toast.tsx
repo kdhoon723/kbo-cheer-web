@@ -15,10 +15,23 @@ export default function Toast() {
     return () => clearTimeout(timer)
   }, [noticeId])
 
-  if (!notice || notice.id === hiddenId) return null
+  const visible = notice !== null && notice.id !== hiddenId
   return (
-    <div className={`toast toast-${notice.tone}`} role="status" aria-live="polite">
-      {notice.text}
+    <div className="toast-region" role="status" aria-live="polite">
+      {visible && (
+        <button
+          type="button"
+          className={`toast toast-${notice.tone}`}
+          title="눌러서 닫기"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => setHiddenId(notice.id)}
+        >
+          <span className="toast-text">{notice.text}</span>
+          <span className="toast-close" aria-hidden="true">
+            ✕
+          </span>
+        </button>
+      )}
     </div>
   )
 }

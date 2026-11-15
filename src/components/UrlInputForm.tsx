@@ -3,6 +3,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { errorMessage } from '../api/youtubeData.ts'
 import { extractVideoId } from '../lib/youtubeUrl.ts'
+import StatusMessage from './StatusMessage.tsx'
 
 interface Props {
   disabled: boolean
@@ -37,7 +38,7 @@ export default function UrlInputForm({ disabled, onSubmit }: Props) {
           onChange={(e) => setText(e.target.value)}
         />
       </label>
-      {error && <p className="form-error">{error}</p>}
+      {error && <StatusMessage tone="error">{error}</StatusMessage>}
       <button type="submit" disabled={disabled}>
         불러오기
       </button>

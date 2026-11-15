@@ -9,14 +9,20 @@ interface Props {
 
 export default function SearchBox({ value, onChange, inputRef }: Props) {
   return (
-    <input
-      ref={inputRef}
-      className="search-box"
-      type="search"
-      value={value}
-      placeholder="검색: 초성·이름"
-      aria-label="곡 검색"
-      onChange={(e) => onChange(e.target.value)}
-    />
+    <div className="search-field">
+      <input
+        ref={inputRef}
+        className="search-box"
+        type="search"
+        value={value}
+        placeholder="검색: 초성·이름"
+        aria-label="곡 검색"
+        aria-keyshortcuts="/"
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <kbd className="search-key" aria-hidden="true">
+        /
+      </kbd>
+    </div>
   )
 }

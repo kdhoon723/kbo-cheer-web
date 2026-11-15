@@ -32,6 +32,15 @@ export function cheerHereSecond(song: Song | undefined, t: number | null): numbe
   return song.start < sec && sec < song.end ? sec : null
 }
 
+/**
+ * 재생 구간 안에서 지난 초(내림)를 0~구간 길이로 돌려준다.
+ * 위치를 모르거나 구간에서 1초 넘게 벗어난 값은 불러오기·이동 직전 위치라 0으로 본다
+ */
+export function segmentElapsed(seg: Pick<NowPlaying, 'start' | 'end'>, t: number | null): number {
+  if (t === null || t < seg.start - 1 || t > seg.end + 1) return 0
+  return Math.min(seg.end - seg.start, Math.max(0, Math.floor(t - seg.start)))
+}
+
 /** 불러오기·이동 직후 getCurrentTime()이 돌려주는 이동 전 위치인가 */
 export function isStalePosition(t: number, seg: Pick<NowPlaying, 'start' | 'end'>, msSinceSeek: number): boolean {
   return msSinceSeek < SEEK_GUARD_MS && (t < seg.start - 1 || t > seg.end + 1)

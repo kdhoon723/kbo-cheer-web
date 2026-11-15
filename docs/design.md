@@ -25,7 +25,7 @@
 src/
   main.tsx                    앱 시작점
   App.tsx                     BrowserRouter, Provider, Routes
-  index.css                   전체 스타일(반응형, 팀 색 변수)
+  index.css                   전체 스타일(디자인 변수, 반응형, 팀 색 변수)
   vite-env.d.ts               VITE_YOUTUBE_API_KEY 타입
   youtube-global.d.ts         window.YT, window.onYouTubeIframeAPIReady 타입 [R-12]
   types.ts                    공통 타입
@@ -44,6 +44,7 @@ src/
     search.ts                 곡 검색, 결과 정렬
     id.ts                     곡 ID 만들기
     env.ts                    접속 주소(localhost/LAN), iOS 판별
+    shortcuts.ts              단축키 → 동작, 입력 중 판별 [STEP 3-7]
   api/
     youtubeData.ts            Data API 호출, 오류 분류
   player/
@@ -54,6 +55,7 @@ src/
     songsReducer.ts           곡 목록 리듀서
     SongsContext.tsx          곡 목록 Context
     PlayerContext.tsx         재생 상태, 플레이어 제어
+    SituationSlotContext.ts   상황 버튼을 그릴 자리(오른쪽 열·하단 묶음) [STEP 3-7]
   hooks/
     useKeyboardShortcuts.ts   단축키
   layouts/
@@ -66,7 +68,8 @@ src/
     PlayerPanel.tsx, PlayerHost.tsx, VolumeSlider.tsx,
     SearchBox.tsx, SearchResults.tsx, PlayerGrid.tsx, TeamSongList.tsx,
     SituationBar.tsx, EmptyState.tsx, SongForm.tsx, SongRow.tsx,
-    UrlInputForm.tsx, VideoSearchForm.tsx, CandidateTable.tsx, DataApiNotice.tsx
+    UrlInputForm.tsx, VideoSearchForm.tsx, CandidateTable.tsx, DataApiNotice.tsx,
+    StatusMessage.tsx
 ```
 
 ## 1. 데이터 모델
@@ -491,49 +494,67 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 
 ### 5.2 화면 배치
 
-휴대폰(폭 360~767px), 플레이어는 최소 200×200px로 보이게 둔다(D-05 (a)). [R-07]
+휴대폰(폭 899px 이하), 플레이어는 최소 200×200px로 보이게 둔다(D-05 (a)). [R-07]
 
 ```
 ┌──────────────────────────────┐
-│ [한화 ▼]  [⇄ 삼성]   ☰ 메뉴   │ ← Header(팀 색, 56px), 메뉴: 응원/곡 관리/가져오기/설정
+│ [한화 이글스 ▼] [⇄ 삼성]   ☰ │ ← Header(팀 색, 56px). ☰ 메뉴는 머리말 아래로 펼쳐져 내용을 밀어낸다 [STEP 3-7]
 ├──────────────────────────────┤
 │  ┌────────────────────────┐  │
 │  │   YouTube 플레이어      │  │ ← PlayerHost(폭 100%, 높이 200px, 스크롤하면 위로 사라짐)
 │  └────────────────────────┘  │
 │ [검색: 초성·이름 ........ ]   │ ← SearchBox
-│ 선수  (챕터 순 | 가나다 순)    │
+│ ▍선수  (챕터 순 | 가나다 순)  │ ← 제목 앞 팀 색 막대, 바탕은 팀 색 7% [STEP 3-7]
 │ [최인호][페라자][문현빈]       │ ← PlayerGrid(3열)
-│ [강백호][노시환][허인서] ...   │
-│ 팀 응원가                      │
-│  · 불타는 태양  · 그대에게 ... │ ← TeamSongList
+│ [강백호][▮노시환][허인서] ...  │ ← 재생 중 버튼: 팀 색 + 이퀄라이저 표시 [STEP 3-7]
+│ ▍팀 응원가                     │
+│  (불타는 태양)(그대에게) ...   │ ← TeamSongList
+│  ┌ 3곡을 저장했습니다      ✕ ┐ │ ← Toast(하단 고정 줄 바로 위, 누르면 닫힘) [STEP 3-7]
 ├──────────────────────────────┤
-│ [풀카운트][볼넷][공통 안타][▸ │ ← SituationBar(한 줄, 줄 안에서만 가로로 넘김, 하단 고정)
-│ ▶ 노시환 ▾ [응원가로] [■ 정지]│ ← PlayerPanel 조작줄(한 줄, 하단 고정)
+│ [1 라인업송][2 풀카운트 송][ ›│ ← SituationBar(한 줄 가로 넘김, 가려진 쪽에 흐림과 ‹ ›) [STEP 3-7]
+│━━━━━━━━━│━━━━━━━━━━━━━━━━━━━│ ← 진행 막대 3px, │는 응원가 시작 지점 [STEP 3-7]
+│ ▮노시환 · 한화 ▾ [응원가로][■ 정지]│ ← PlayerPanel 조작줄(56px). 재생 중에는 줄 전체가 팀 색 [STEP 3-7]
+│ 00:12 / 01:01                │
 └──────────────────────────────┘
   ▾를 누르면 조작줄 위에 [지금 → 응원가 시작]  🔊━━━━○ 줄이 펼쳐진다
 ```
 
-노트북(폭 900px 이상):
+노트북(폭 900px 이상) [STEP 3-7]:
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│ [한화 ▼] [⇄ 삼성]        응원 | 곡 관리 | 가져오기 | 설정       │
-├───────────────────────────────────────┬──────────────────────┤
-│ [검색 ......]                          │ ┌──────────────────┐ │
-│ 선수 (챕터 순|가나다 순)               │ │ YouTube 플레이어  │ │
-│ [최인호][페라자][문현빈][강백호][노시환]│ │   356 × 200       │ │
-│ [허인서][김태연] ...        (5~6열)    │ └──────────────────┘ │
-│ 팀 응원가 ...                          │ ▶ 노시환              │
-├───────────────────────────────────────┤ [응원가로] [■ 정지]   │
-│ [풀카운트][볼넷][공통 안타][라인업] ...│ [지금 → 응원가 시작]  │
-│                                       │ 🔊 ━━━━━○  70         │
-└───────────────────────────────────────┴──────────────────────┘
+┌──────────────────────────────────────────────────────────────────────┐
+│ KBO 응원가 [한화 이글스 ▼] [⇄ 삼성]       응원 | 곡 관리 | 가져오기 | 설정 │ ← 64px, 스크롤해도 위에 고정
+├──────────────────────────────────────────┬───────────────────────────┤
+│ [검색 ........................... (/)]   │ ┌───────────────────────┐ │
+│ ▍선수 (챕터 순|가나다 순)                 │ │ YouTube 플레이어       │ │ ← 360×202, 열 위쪽에 고정
+│ [최인호][페라자][문현빈][강백호][노시환]  │ └───────────────────────┘ │
+│ [허인서][김태연] ...          (4~8열)     │ ┌ 지금 재생 ────────────┐ │ ← 재생 중이면 팀 색 카드
+│ ▍팀 응원가                                │ │ ▮노시환 · 한화         │ │
+│ (불타는 태양)(그대에게) ...               │ │ 00:12 / 01:01 · 응원가 00:30 │
+│                                          │ │ ━━━━━━━│━━━━━━━━━━━━━ │ │ ← 진행 막대, │는 응원가 시작
+│                                          │ └───────────────────────┘ │
+│                                          │ [ 응원가로 ][  ■ 정지  ]  │
+│                                          │ [  지금 → 응원가 시작   ] │
+│                                          │ 볼륨 ━━━━━━━━○ 70         │
+│                                          │ ▍상황                     │
+│ ┌ 알림 ✕ ┐ ← Toast(왼쪽 아래)              │ [1 라인업송][2 풀카운트 송]│ ← 줄바꿈 격자, 1~9 번호
+│ └───────┘                                │ [3 볼넷 송][4 공통 안타 송]│
+│                                          │ Space 정지 · S 응원가로 ·  │ ← 단축키 안내(노트북만)
+│                                          │ T 전 팀 · / 검색 · 1~9 상황│
+└──────────────────────────────────────────┴───────────────────────────┘
+  왼쪽: 고르기(검색, 선수, 팀 응원가)    오른쪽 열(392px, 화면 높이): 경기 중 조작
 ```
 
 - 휴대폰 높이 계산(360×640): 머리말 56 + 플레이어 200 + 검색 48 + 하단 고정 두 줄 112를 빼면 격자에 약 224px가 남는다. 선수 버튼 4줄(12명)이 보이고, 스크롤하면 플레이어가 위로 사라져 격자가 더 보인다. 검토 전 배치(조작줄 2줄, 상황 줄 줄바꿈)는 약 3줄이었다. [R-07]
 - 상황 버튼 줄은 한 줄로 두고 그 줄 안에서만 가로로 넘긴다(`overflow-x: auto`). 페이지 전체 가로 스크롤 금지(NFR-01)와는 충돌하지 않는다. [R-07]
+- [STEP 3-7] 상황 줄은 넘칠 때만 가려진 쪽 가장자리에 흐림과 ‹ › 표시를 띄우고, 끝까지 넘기면 그쪽 표시를 숨긴다. SituationBar가 ResizeObserver와 scroll 이벤트로 넘침을 잰다. 표시는 버튼 위에 겹쳐 그리고 `pointer-events: none`이라 버튼 크기(44×44px)와 배치는 그대로다.
+- [STEP 3-7] 노트북에서는 화면 아래가 비어 있었다. 경기 중에 누르는 것(플레이어, 재생 상태, 조작, 상황 버튼)을 오른쪽 열 하나에 모은다. 열은 머리말 아래에 붙은 채(`position: sticky`) 화면 높이를 쓰고, 플레이어는 열 위쪽에 고정한 채 그 아래만 스크롤된다. 상황 곡이 많아도 플레이어가 밀려 올라가거나 가려지지 않는다.
+- [STEP 3-7] 상황 버튼은 MainPage가 고르고(1~9번 단축키와 같은 배열), PlayerPanel 안의 자리(`.dock-situations`)에 `createPortal`로 그린다. 자리 요소는 AppLayout이 `SituationSlotContext`로 내려 준다. 휴대폰에서는 같은 자리가 하단 고정 묶음(`.dock`)의 맨 위라서 위 휴대폰 배치가 된다.
+- [STEP 3-7] 알림(Toast)은 하단 고정 묶음 안에 두어, 휴대폰에서는 상황 줄 바로 위에 뜨고 플레이어를 덮지 않는다. 노트북에서는 왼쪽 열 아래에 뜬다. 누르면 바로 닫히고, 4초 뒤에도 닫힌다.
+- [STEP 3-7] 진행 표시는 곡 구간 기준 `경과 / 길이`(예: 00:12 / 01:01)다. 모음 영상은 30분이 넘어, 영상 기준 시각(23:45 / 24:46)으로는 곡이 얼마나 남았는지 알기 어렵다. PlayerPanel이 250ms마다 `getCurrentTime()`을 읽고, 표시하는 초가 바뀔 때만 상태를 바꾼다. 응원가 시작 지점이 구간 안에 있으면 막대에 표시한다.
 - 격자 열 수는 CSS `grid-template-columns: repeat(auto-fill, minmax(96px, 1fr))`로 화면 폭에 맞춘다(NFR-01). 버튼 최소 크기는 44×44px(NFR-02)이다.
 - 팀 색은 AppLayout 최상위 요소에 CSS 변수 `--team-color`, `--team-on-color`로 넣고, 머리말·선택된 버튼·재생 중 표시에 쓴다(FR-26).
+- [STEP 3-7] 화면 색과 간격은 `index.css`의 `:root` 변수(바탕·면·테두리·글자·간격·모서리)로 정하고, 팀 색은 그 위에 얹는다. 팀 색 위의 글자는 언제나 `--team-on-color`만 쓴다. 본문 바탕은 팀 색 7%를 섞어 지금 팀을 은은하게 드러낸다. 이 바탕 위 본문 글자 대비는 가장 낮은 팀(KT)에서도 13.56, 보조 글자 5.98이다(WCAG 상대 휘도 공식).
 - 플레이어 크기는 IFrame API 문서의 "Embedded players must have a viewport that is at least 200px by 200px" 조건에 따른다. 휴대폰에서 첫 재생이 막혔을 때 사용자가 영상을 직접 눌러 허용하려면 플레이어가 보여야 한다(8.6). [R-02]
 - 설정 화면 맨 아래에 "이 브라우저 저장소: `http://192.168.0.10:5173`(지금 접속 주소)"를 보여 주고, "접속 주소가 바뀌면 곡 목록이 따로 저장됩니다. 노트북은 항상 localhost:5173으로 열고, 휴대폰은 JSON 가져오기로 옮겨 주세요. 공유기에서 노트북 IP를 고정하면 편합니다"를 함께 적는다(BR-44). [R-08]
 
@@ -581,7 +602,7 @@ App
               │ │   │ ├ PlayerGrid             (검색어 없을 때)
               │ │   │ ├ TeamSongList           (검색어 없을 때)
               │ │   │ ├ EmptyState             (팀에 곡이 없을 때)
-              │ │   │ └ SituationBar
+              │ │   │ └ SituationBar, 단축키 안내 (PlayerPanel의 .dock-situations에 포털로) [STEP 3-7]
               │ │   ├ SongListPage
               │ │   │ └ SongRow × N
               │ │   ├ SongEditPage
@@ -592,32 +613,33 @@ App
               │ │     ├ CandidateTable
               │ │     └ SongForm               (단일 영상 등록)
               │ └ SettingsPage
-              ├ PlayerPanel
-              │ ├ PlayerHost
-              │ └ VolumeSlider
-              └ Toast
+              └ PlayerPanel
+                ├ PlayerHost
+                ├ Toast                     (하단 고정 묶음 안) [STEP 3-7]
+                └ VolumeSlider
 ```
 
 ### 6.2 책임과 Props
 
 | 컴포넌트 | 책임 | Props | 쓰는 Context |
 | --- | --- | --- | --- |
-| AppLayout | 공통 틀, 팀 색 CSS 변수, 플레이어·알림 상시 표시 | 없음 | Prefs |
+| AppLayout | 공통 틀, 팀 색 CSS 변수, 플레이어·알림 상시 표시, 상황 버튼 자리를 `SituationSlotContext`로 제공 [STEP 3-7] | 없음 | Prefs |
 | Header | 팀 메뉴, 전 팀 버튼, 화면 메뉴. 팀은 `useMatch`로 URL에서 먼저 읽음 [R-24] | 없음 | Prefs |
 | TeamPicker | 10개 팀 `<select>` | `currentTeamId: TeamId \| null`, `onSelect(teamId: TeamId): void` | 없음 |
 | PrevTeamButton | 「⇄ 전 팀」(BR-27) | `prevTeam: Team \| null`, `onSwap(): void` | 없음 |
-| Toast | 알림 한 줄, 4초 뒤 사라짐 | 없음 | Notice |
+| Toast | 알림 한 줄, 4초 뒤 사라짐, 누르면 바로 닫힘 [STEP 3-7] | 없음 | Notice |
 | HomeRedirect | 마지막 팀으로 `<Navigate>` 또는 팀 선택 화면 | 없음 | Prefs |
 | TeamSelectPage | 10개 팀 버튼 | 없음 | 없음(useNavigate) |
 | TeamLayout | teamId 검사, 팀 방문 기록(`visitTeam`), `<Outlet key={teamId}>` [R-23] | 없음 | Prefs |
-| MainPage | 검색어 상태, 곡 나누기(선수/팀/상황), 단축키 연결 | 없음 | Songs, Prefs, Player |
+| MainPage | 검색어 상태, 곡 나누기(선수/팀/상황), 단축키 연결, 상황 버튼을 오른쪽 열 자리에 포털로 그림 [STEP 3-7] | 없음 | Songs, Prefs, Player, SituationSlot |
 | SearchBox | 검색 입력칸 | `value: string`, `onChange(v: string): void`, `inputRef: RefObject<HTMLInputElement \| null>` | 없음 |
 | SearchResults | 검색 결과 목록, 다른 팀 결과에 [팀명] | `hits: SearchHit[]`, `nowPlayingId: string \| null`, `onPick(song: Song): void` | 없음 |
 | PlayerGrid | 선수 이름 버튼 격자, 정렬 전환 | `songs: Song[]`, `sort: GridSort`, `onSortChange(s: GridSort): void`, `nowPlayingId: string \| null`, `onPlay(song: Song): void` | 없음 |
 | TeamSongList | 팀 응원가 목록 | `songs: Song[]`, `nowPlayingId: string \| null`, `onPlay(song: Song): void` | 없음 |
-| SituationBar | 상황 버튼 한 줄(1~9번 단축키 번호 표시) | `songs: Song[]`, `nowPlayingId: string \| null`, `onPlay(song: Song): void` | 없음 |
-| EmptyState | 곡 없음 문구, 가져오기 링크(EX-16) | `teamId: TeamId` | 없음 |
-| PlayerPanel | 재생 중 곡, 응원가로, 정지, 펼침 줄(지금→응원가 시작, 볼륨). 응원가 시작 버튼 활성 여부를 스스로 갱신 [C-10] | 없음 | Player, Songs, Prefs |
+| SituationBar | 상황 버튼 한 줄(1~9번 단축키 번호 표시), 넘칠 때 가려진 쪽 표시 [STEP 3-7] | `songs: Song[]`, `nowPlayingId: string \| null`, `onPlay(song: Song): void` | 없음 |
+| EmptyState | 곡 없음 문구, 가져오기 링크(EX-16). 메인과 곡 관리에서 함께 씀 | `teamId: TeamId` | 없음 |
+| StatusMessage | 빈 상태·불러오는 중·오류·안내 문구 한 가지 모양 [STEP 3-7] | `tone: 'empty' \| 'loading' \| 'error' \| 'info'`, `children: ReactNode`, `action?: ReactNode` | 없음 |
+| PlayerPanel | 재생 중 곡, 진행 시간·막대, 응원가로, 정지, 펼침 줄(지금→응원가 시작, 볼륨), 알림, 상황 버튼 자리. 응원가 시작 버튼 활성 여부와 진행 시간을 250ms마다 스스로 갱신 [C-10, STEP 3-7] | `situationSlotRef(el: HTMLDivElement \| null): void` | Player, Songs, Prefs |
 | PlayerHost | 플레이어가 들어갈 DOM 자리 | 없음 | Player(`attachHost`) |
 | VolumeSlider | 볼륨 0~100, iOS 안내(EX-24) | `value: number`, `onChange(v: number): void`, `supported: boolean` | 없음 |
 | SongListPage | 팀 곡을 종류별로 나열 | 없음 | Songs, Player |
@@ -1267,11 +1289,11 @@ UrlInputForm → extractVideoId → ImportPage.onSubmit(videoId)
 ### 12.5 단축키 (FR-23, BR-36) [R-06]
 
 ```
-MainPage → useKeyboardShortcuts({ situationSongs, onFocusSearch, onClearSearch })
+MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts.ts의 shortcutAction(순수 함수) [STEP 3-7]
  useEffect: window에 keydown·keyup 등록, cleanup에서 해제
  keydown(e):
    if e.ctrlKey || e.metaKey || e.altKey || e.repeat → 무시
-   입력 중(대상이 input·textarea·select·contentEditable) → Esc만 처리(검색어 비우기, blur)
+   입력 중(대상이 글자를 받는 input·textarea·select·contentEditable) → Esc만 처리(검색어 비우기, blur)
    e.code === 'Space'            → e.preventDefault(); stop()
    e.code === 'KeyS'             → skipToCheer()
    e.code === 'KeyT'             → 전 팀이 있으면 navigate('/team/' + prevTeamId)
@@ -1282,6 +1304,7 @@ MainPage → useKeyboardShortcuts({ situationSongs, onFocusSearch, onClearSearch
    e.code === 'Space'이고 대상이 button이면 e.preventDefault()   // 포커스된 버튼이 keyup에서 눌리지 않게
 ```
 
+- [STEP 3-7] 리스너는 한 번만 등록하고 MainPage의 최신 처리 함수는 ref로 읽는다. 볼륨 슬라이더처럼 글자를 받지 않는 input(range, checkbox 등)에 포커스가 있을 때는 입력 중으로 보지 않는다. 마우스로 볼륨을 바꾼 직후 Space로 정지할 수 있게 하기 위해서다.
 - 단축키는 메인 화면에서만 켠다. 곡 관리·가져오기·설정 화면은 글자를 입력하는 화면이라 겹치지 않게 하기 위해서다.
 - 글자 키는 `e.key`가 아니라 `e.code`(물리 키 위치)로 판단한다. 한글 입력 상태에서는 `S`·`T`의 `e.key`가 `ㄴ`·`ㅅ`로 들어오기 때문이다.
 - Space 문제: 재생 버튼을 마우스로 누른 뒤 Space를 누르면, 포커스된 버튼이 keyup 때 눌려 정지 직후 같은 곡이 다시 시작될 수 있다. 두 겹으로 막는다. [R-06]
@@ -1293,7 +1316,7 @@ MainPage → useKeyboardShortcuts({ situationSongs, onFocusSearch, onClearSearch
 
 | ID | 질문 | 결정 |
 | --- | --- | --- |
-| D-05 | YouTube 플레이어 화면을 얼마나 보이게 둘까(IFrame API 문서: 최소 200×200px) | (a) 채택. 휴대폰은 머리말 아래 폭 100%·높이 200px, 노트북은 오른쪽 열 356×200. 휴대폰 격자 공간은 조작줄을 한 줄로 줄이고 상황 버튼 줄을 한 줄로 두어 확보한다(5.2) [R-07] |
+| D-05 | YouTube 플레이어 화면을 얼마나 보이게 둘까(IFrame API 문서: 최소 200×200px) | (a) 채택. 휴대폰은 머리말 아래 폭 100%·높이 200px, 노트북은 오른쪽 열 360×202(STEP 3-7). 휴대폰 격자 공간은 조작줄을 한 줄로 줄이고 상황 버튼 줄을 한 줄로 두어 확보한다(5.2) [R-07] |
 | D-06 | 확인 단계에서 정상 후보의 시작 시각도 고칠 수 있나(R-27과 C-06의 의견 차이) | C-06 채택. 모든 후보의 시작 시각을 고칠 수 있다. 후보의 끝 시각·경고·이미 있음·중복은 파생 값으로 매번 계산한다(4절). requirements.md의 FR-12는 그대로 두고 BR-12 문구만 설계에 맞춘다 |
 
 ## 14. 요구사항 추적표

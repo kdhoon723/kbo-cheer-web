@@ -1,6 +1,7 @@
 //20241476-김도훈-(2026-11-15)
 import type { SearchHit } from '../lib/search.ts'
 import type { Song } from '../types.ts'
+import StatusMessage from './StatusMessage.tsx'
 
 interface Props {
   hits: SearchHit[]
@@ -9,7 +10,7 @@ interface Props {
 }
 
 export default function SearchResults({ hits, nowPlayingId, onPick }: Props) {
-  if (hits.length === 0) return <p className="empty-text">검색 결과가 없습니다</p>
+  if (hits.length === 0) return <StatusMessage tone="empty">검색 결과가 없습니다</StatusMessage>
   return (
     <ul className="result-list">
       {hits.map(({ song, team, isCurrentTeam }) => {

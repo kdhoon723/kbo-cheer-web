@@ -1,5 +1,6 @@
 //20241476-김도훈-(2026-11-15)
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import EmptyState from '../components/EmptyState.tsx'
 import SongRow from '../components/SongRow.tsx'
 import { useNotice } from '../context/NoticeContext.tsx'
 import { useSongs } from '../context/SongsContext.tsx'
@@ -32,12 +33,7 @@ export default function SongListPage() {
     <section className="song-list-page">
       <h2>곡 관리 · {team.fullName}</h2>
       {teamSongs.length === 0 ? (
-        <div className="empty-state">
-          <p>이 팀에는 곡이 없습니다</p>
-          <Link className="link-button" to={`/team/${teamId}/import`}>
-            곡 가져오기
-          </Link>
-        </div>
+        <EmptyState teamId={teamId} />
       ) : (
         GROUPS.map(({ kind, label }) => {
           const group = teamSongs.filter((s) => s.kind === kind).sort((a, b) => a.order - b.order)

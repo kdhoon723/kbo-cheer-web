@@ -6,6 +6,7 @@ import type { ImportError } from '../api/youtubeData.ts'
 import CandidateTable from '../components/CandidateTable.tsx'
 import DataApiNotice from '../components/DataApiNotice.tsx'
 import SongForm from '../components/SongForm.tsx'
+import StatusMessage from '../components/StatusMessage.tsx'
 import UrlInputForm from '../components/UrlInputForm.tsx'
 import VideoSearchForm from '../components/VideoSearchForm.tsx'
 import { useNotice } from '../context/NoticeContext.tsx'
@@ -201,19 +202,23 @@ export default function ImportPage() {
             YouTube 검색
           </button>
         </div>
-        {error && <p className="form-error">{errorMessage(error)}</p>}
+        {error && <StatusMessage tone="error">{errorMessage(error)}</StatusMessage>}
         {tab === 'url' ? (
           <UrlInputForm disabled={disabled} onSubmit={onSubmit} />
         ) : (
           <VideoSearchForm disabled={disabled} onPick={onSubmit} />
         )}
         {loading && (
-          <div className="button-row">
-            <p role="status">불러오는 중...</p>
-            <button type="button" onClick={backToInput}>
-              취소
-            </button>
-          </div>
+          <StatusMessage
+            tone="loading"
+            action={
+              <button type="button" onClick={backToInput}>
+                취소
+              </button>
+            }
+          >
+            불러오는 중...
+          </StatusMessage>
         )}
       </>
     )

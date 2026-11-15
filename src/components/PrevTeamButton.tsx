@@ -9,7 +9,12 @@ export default function PrevTeamButton() {
   const prevId = teamState.prevTeamId
 
   return (
-    <button type="button" disabled={prevId === null} onClick={() => prevId && navigate(`/team/${prevId}`)}>
+    <button
+      type="button"
+      className="prev-team"
+      disabled={prevId === null}
+      onClick={() => prevId && navigate(`/team/${prevId}`)}
+    >
       {prevId ? `⇄ ${getTeam(prevId).name}` : '⇄ 전 팀'}
     </button>
   )

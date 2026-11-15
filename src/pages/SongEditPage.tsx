@@ -1,6 +1,7 @@
 //20241476-김도훈-(2026-11-15)
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import SongForm from '../components/SongForm.tsx'
+import StatusMessage from '../components/StatusMessage.tsx'
 import { useNotice } from '../context/NoticeContext.tsx'
 import { usePlayer } from '../context/PlayerContext.tsx'
 import { useSongs } from '../context/SongsContext.tsx'
@@ -23,12 +24,16 @@ export default function SongEditPage() {
 
   if (!song) {
     return (
-      <section>
-        <p>곡을 찾을 수 없습니다</p>
-        <Link className="link-button" to={listPath}>
-          곡 관리로 돌아가기
-        </Link>
-      </section>
+      <StatusMessage
+        tone="empty"
+        action={
+          <Link className="link-button" to={listPath}>
+            곡 관리로 돌아가기
+          </Link>
+        }
+      >
+        곡을 찾을 수 없습니다
+      </StatusMessage>
     )
   }
 

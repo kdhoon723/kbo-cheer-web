@@ -1,6 +1,13 @@
 //20241476-김도훈-(2026-11-15)
 import { describe, expect, it } from 'vitest'
-import { cheerHereSecond, cheerTarget, isLeftoverStop, isStalePosition, playerErrorMessage } from './playback.ts'
+import {
+  cheerHereSecond,
+  cheerTarget,
+  isLeftoverStop,
+  isStalePosition,
+  playerErrorMessage,
+  segmentElapsed,
+} from './playback.ts'
 import { makeSong } from './testSongs.ts'
 
 const seg = { songId: 'song-1', videoId: 'abcdefghijk', start: 10, end: 70 }
@@ -76,5 +83,24 @@ describe('isLeftoverStop', () => {
   it('끝 시각 근처이거나 불러온 지 오래됐으면 진짜 정지다', () => {
     expect(isLeftoverStop(69.5, seg, 300)).toBe(false)
     expect(isLeftoverStop(30, seg, 1600)).toBe(false)
+  })
+})
+
+describe('segmentElapsed', () => {
+  it('구간 시작부터 지난 초를 내림해서 돌려준다', () => {
+    expect(segmentElapsed(seg, 10)).toBe(0)
+    expect(segmentElapsed(seg, 22.9)).toBe(12)
+    expect(segmentElapsed(seg, 70)).toBe(60)
+  })
+
+  it('구간 경계 1초 안쪽의 오차는 0과 구간 길이로 맞춘다', () => {
+    expect(segmentElapsed(seg, 9.4)).toBe(0)
+    expect(segmentElapsed(seg, 70.8)).toBe(60)
+  })
+
+  it('위치를 모르거나 구간에서 멀리 떨어진 이전 곡 위치는 0초다', () => {
+    expect(segmentElapsed(seg, null)).toBe(0)
+    expect(segmentElapsed(seg, 1800)).toBe(0)
+    expect(segmentElapsed(seg, 3)).toBe(0)
   })
 })
