@@ -75,6 +75,8 @@ export default function Header({ teamId }: { teamId: TeamId | null }) {
         ) : (
           <h1 className="brand">KBO 응원가</h1>
         )}
+        {/* 매치업 보드에서는 팀 버튼이 매치업 머리로 옮겨 가므로 이 자리에 앱 이름만 둔다 */}
+        {teamId && <span className="brand board-brand">KBO 응원가</span>}
         <PrevTeamButton />
         <nav className="header-nav" aria-label="화면">
           {links()}

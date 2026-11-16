@@ -314,6 +314,10 @@ kbd {
   font-weight: 700;
 }
 
+.board-brand {
+  display: none;
+}
+
 .team-trigger {
   gap: 8px;
   min-width: 0;
@@ -1784,6 +1788,13 @@ kbd {
   .app:has(.board) .team-trigger,
   .app:has(.board) .prev-team {
     display: none;
+  }
+
+  /* 매치업 머리의 팀 이름(22/700)보다 작고 흐리게 두어 두 팀 이름과 겨루지 않는다 */
+  .app:has(.board) .board-brand {
+    display: block;
+    font-size: 17px;
+    color: var(--text-2);
   }
 
   .toast-region {
