@@ -3,7 +3,10 @@ import { useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import { CircleAlert, TriangleAlert } from 'lucide-react'
 import { validateSongForm } from '../lib/songValidation.ts'
-import type { SongFields, SongFormValues, SongKind } from '../types.ts'
+import { stepTimeText } from '../lib/songEdit.ts'
+import type { SongFields, SongFormValues } from '../types.ts'
+import KindToggle from './KindToggle.tsx'
+import TimeField from './TimeField.tsx'
 
 interface Props {
   initial: SongFormValues
@@ -15,13 +18,6 @@ interface Props {
   onPreview?: (fields: SongFields) => void
   onCancel: () => void
 }
-
-const KIND_LABELS: Record<SongKind, string> = {
-  player: '선수',
-  situation: '상황',
-  team: '팀 응원가',
-}
-const KINDS: SongKind[] = ['player', 'situation', 'team']
 
 function FieldError({ children }: { children: ReactNode }) {
   return (
@@ -81,44 +77,35 @@ export default function SongForm(props: Props) {
           </span>
         )}
       </label>
-      <label className="field">
-        <span>종류</span>
-        <select
-          value={values.kind}
-          onChange={(e) => {
-            const kind = KINDS.find((k) => k === e.target.value)
-            if (!kind) return
-            setValues((v) => ({ ...v, kind, cheerStartText: kind === 'player' ? v.cheerStartText : '' }))
-          }}
-        >
-          {KINDS.map((k) => (
-            <option key={k} value={k}>
-              {KIND_LABELS[k]}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="field">
-        <span>시작</span>
-        <input type="text" value={values.startText} onChange={(e) => set('startText', e.target.value)} />
-        {errors.startText && <FieldError>{errors.startText}</FieldError>}
-      </label>
-      <label className="field">
-        <span>끝</span>
-        <input type="text" value={values.endText} onChange={(e) => set('endText', e.target.value)} />
-        {errors.endText && <FieldError>{errors.endText}</FieldError>}
-      </label>
-      <label className="field">
-        <span>응원가 시작(선수 곡만, 비워도 됩니다)</span>
-        <input
-          type="text"
+      <KindToggle
+        value={values.kind}
+        onChange={(kind) => setValues((v) => ({ ...v, kind, cheerStartText: kind === 'player' ? v.cheerStartText : '' }))}
+      />
+      <TimeField
+        label="시작"
+        value={values.startText}
+        onChange={(t) => set('startText', t)}
+        onStep={(d) => set('startText', stepTimeText(values.startText, d, videoDuration))}
+        error={errors.startText && <FieldError>{errors.startText}</FieldError>}
+      />
+      {values.kind === 'player' && (
+        <TimeField
+          label="응원가 시작"
           value={values.cheerStartText}
-          disabled={values.kind !== 'player'}
-          onChange={(e) => set('cheerStartText', e.target.value)}
+          hint="비워도 됩니다"
+          onChange={(t) => set('cheerStartText', t)}
+          onStep={(d) => set('cheerStartText', stepTimeText(values.cheerStartText || values.startText, d, videoDuration))}
+          error={errors.cheerStartText && <FieldError>{errors.cheerStartText}</FieldError>}
         />
-        {errors.cheerStartText && <FieldError>{errors.cheerStartText}</FieldError>}
-      </label>
-      <div className="button-row">
+      )}
+      <TimeField
+        label="끝"
+        value={values.endText}
+        onChange={(t) => set('endText', t)}
+        onStep={(d) => set('endText', stepTimeText(values.endText, d, videoDuration))}
+        error={errors.endText && <FieldError>{errors.endText}</FieldError>}
+      />
+      <div className="edit-actions">
         <button type="submit" className="primary-btn">
           {submitLabel}
         </button>

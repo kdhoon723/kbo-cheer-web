@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useReducer,
 import type { ReactNode } from 'react'
 import { loadSeedSongs } from '../data/seedSongs.ts'
 import { createSongId } from '../lib/id.ts'
+import { importOrders } from '../lib/importReview.ts'
 import { loadCurrentSongs, loadSongs, saveSongs } from '../lib/storage.ts'
 import type { LoadResult } from '../lib/storage.ts'
 import type { Song, SongDraft } from '../types.ts'
@@ -21,10 +22,6 @@ interface SongsContextValue {
 const SongsContext = createContext<SongsContextValue | null>(null)
 
 const SAVE_FAILED = '저장하지 못했습니다. 새로고침하면 바뀐 내용이 사라질 수 있습니다'
-
-function nextOrder(songs: Song[], teamId: Song['teamId']): number {
-  return songs.reduce((max, s) => (s.teamId === teamId ? Math.max(max, s.order) : max), -1) + 1
-}
 
 /**
  * 지금 차례로 저장된 곡 목록이 있으면 바로 쓰고, 아니면(처음 방문, 깨짐, 예전 차례) 처음 데이터를 받은 뒤 시작한다.
@@ -88,7 +85,7 @@ function SongsStore({ initial, children }: { initial: LoadResult<Song[]>; childr
 
   const addSong = useCallback(
     (draft: SongDraft): Song => {
-      const song: Song = { ...draft, id: createSongId(), order: nextOrder(songs, draft.teamId) }
+      const song: Song = { ...draft, id: createSongId(), order: importOrders(songs, [draft])[0] }
       dispatch({ type: 'ADD_SONG', song })
       return song
     },
@@ -102,10 +99,9 @@ function SongsStore({ initial, children }: { initial: LoadResult<Song[]>; childr
   const importSongs = useCallback(
     (drafts: SongDraft[]): number => {
       if (drafts.length === 0) return 0
-      const teamId = drafts[0].teamId
-      if (drafts.some((d) => d.teamId !== teamId)) throw new Error('가져오기 곡은 모두 같은 팀이어야 합니다')
-      const first = nextOrder(songs, teamId)
-      const added = drafts.map((d, i): Song => ({ ...d, id: createSongId(), order: first + i }))
+      // 여러 구단 영상은 여러 팀에 한 번에 넣는다. 저장할지는 확인 단계에서 곡마다 그 팀 곡과 견줘 정했다 [STEP 3-㉖]
+      const orders = importOrders(songs, drafts)
+      const added = drafts.map((d, i): Song => ({ ...d, id: createSongId(), order: orders[i] }))
       dispatch({ type: 'IMPORT_SONGS', songs: added })
       return added.length
     },

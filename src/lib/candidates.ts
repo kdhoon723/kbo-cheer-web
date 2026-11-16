@@ -4,6 +4,8 @@ import type {
   CandidateWarning,
   ImportCandidate,
   Song,
+  SongKind,
+  TeamId,
   VideoInfo,
 } from '../types.ts'
 import { normalize } from './hangul.ts'
@@ -61,10 +63,22 @@ function markTimeReversed(
   }
 }
 
+/** 여러 구단 영상을 볼 때 [STEP 3-㉖]. songs는 모든 팀 곡, split이면 곡마다 그 구단에 넣는다 */
+export interface TeamScope {
+  teamId: TeamId
+  songs: Song[]
+  split: boolean
+}
+
+/**
+ * 후보마다 저장 여부를 판단한다. 곡을 넣을 팀(여러 구단 영상이면 그 곡의 구단)의 곡과 견준다.
+ * scope가 없으면 모든 후보가 teamSongs의 팀으로 간다
+ */
 export function evaluateCandidates(
   candidates: ImportCandidate[],
   video: VideoInfo,
   teamSongs: Song[],
+  scope: TeamScope | null = null,
 ): CandidateRow[] {
   const starts = candidates.map((c) => parseTime(c.startText))
   const warnings = initialWarnings(starts, video.duration)
@@ -75,33 +89,42 @@ export function evaluateCandidates(
     if (warnings[i] === null && s !== null) boundaries.push(s)
   })
 
-  const existing = candidates.map((_, i) => {
-    const s = starts[i]
-    return (
-      warnings[i] === null &&
-      teamSongs.some((song) => song.videoId === video.videoId && song.start === s)
-    )
-  })
+  const targetOf = (c: ImportCandidate): TeamId | null => (scope && c.teamId ? c.teamId : null)
+  const songsCache = new Map<TeamId | null, Song[]>()
+  const songsOf = (c: ImportCandidate): Song[] => {
+    const target = targetOf(c)
+    let list = songsCache.get(target)
+    if (!list) {
+      list = target === null || scope === null ? teamSongs : scope.songs.filter((s) => s.teamId === target)
+      songsCache.set(target, list)
+    }
+    return list
+  }
+  const titlesOf = (c: ImportCandidate, kind: SongKind) =>
+    new Set(songsOf(c).filter((s) => s.kind === kind).map((s) => normalize(s.title)))
 
-  const teamSituationTitles = new Set(
-    teamSongs.filter((s) => s.kind === 'situation').map((s) => normalize(s.title)),
-  )
-  const teamPlayerTitles = new Set(
-    teamSongs.filter((s) => s.kind === 'player').map((s) => normalize(s.title)),
-  )
+  // 같은 영상 같은 시작인 곡, 또는 같은 이름의 팀 응원가(다른 모음 영상에서 이미 넣은 응원가)가 있으면 이미 있는 곡이다
+  const existing = candidates.map((c, i) => {
+    const s = starts[i]
+    if (warnings[i] !== null) return false
+    const teamSongsOfC = songsOf(c)
+    if (teamSongsOfC.some((song) => song.videoId === video.videoId && song.start === s)) return true
+    return c.kind === 'team' && titlesOf(c, 'team').has(normalize(c.title))
+  })
 
   // 이미 있는 후보도 묶음에 넣는다. 팀에 같은 제목이 있으면 다시 골라 같은 제목으로 두 번 저장할 수 없다(BR-14)
   const groups = new Map<string, number[]>()
   candidates.forEach((c, i) => {
     if (c.kind !== 'situation') return
-    const key = normalize(c.title)
+    const key = `${targetOf(c) ?? ''}|${normalize(c.title)}`
     const group = groups.get(key)
     if (group) group.push(i)
     else groups.set(key, [i])
   })
   const duplicate = candidates.map(() => false)
-  for (const [key, group] of groups) {
-    if (teamSituationTitles.has(key)) {
+  for (const group of groups.values()) {
+    const first = candidates[group[0]]
+    if (titlesOf(first, 'situation').has(normalize(first.title))) {
       for (const i of group) duplicate[i] = true
       continue
     }
@@ -117,7 +140,8 @@ export function evaluateCandidates(
         ? null
         : Math.min(...boundaries.filter((b) => b > start), video.duration)
     const titleError = titleErrorOf(c.title)
-    const selectable = warning === null && !duplicate[i] && titleError === null
+    const otherTeam = scope !== null && !scope.split && c.teamId !== null && c.teamId !== scope.teamId
+    const selectable = warning === null && !duplicate[i] && titleError === null && !otherTeam
     const willSave =
       selectable &&
       (c.selection === 'on' || (c.selection === 'auto' && !existing[i]))
@@ -129,7 +153,8 @@ export function evaluateCandidates(
       existing: existing[i],
       duplicate: duplicate[i],
       sameNamePlayer:
-        c.kind === 'player' && !existing[i] && teamPlayerTitles.has(normalize(c.title)),
+        c.kind === 'player' && !existing[i] && titlesOf(c, 'player').has(normalize(c.title)),
+      otherTeam,
       titleError,
       selectable,
       willSave,

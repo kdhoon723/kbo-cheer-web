@@ -8,6 +8,7 @@ import CandidateTable from '../components/CandidateTable.tsx'
 import DataApiNotice from '../components/DataApiNotice.tsx'
 import SongForm from '../components/SongForm.tsx'
 import StatusMessage from '../components/StatusMessage.tsx'
+import TeamSplitNotice from '../components/TeamSplitNotice.tsx'
 import UrlInputForm from '../components/UrlInputForm.tsx'
 import VideoSearchForm from '../components/VideoSearchForm.tsx'
 import { useNotice } from '../context/NoticeContext.tsx'
@@ -15,10 +16,22 @@ import { useSongs } from '../context/SongsContext.tsx'
 import { useActiveTeam } from '../hooks/useActiveTeam.ts'
 import { useSeedSongs } from '../hooks/useSeedSongs.ts'
 import { evaluateCandidates } from '../lib/candidates.ts'
-import { CANDIDATE_FILTERS, bulkSelection, matchesFilter, reviewCounts, savedTab, teamVideoId } from '../lib/importReview.ts'
-import type { CandidateFilter } from '../lib/importReview.ts'
-import { songListPath } from '../lib/songList.ts'
+import type { TeamScope } from '../lib/candidates.ts'
+import {
+  CANDIDATE_FILTERS,
+  bulkSelection,
+  kindTargets,
+  matchesFilter,
+  reviewCounts,
+  savedNotice,
+  savedTab,
+  teamVideoId,
+  withKind,
+} from '../lib/importReview.ts'
+import type { CandidateFilter, KindScope, TeamCount } from '../lib/importReview.ts'
+import { SONG_TABS, songListPath } from '../lib/songList.ts'
 import { parseDescription } from '../lib/chapterParser.ts'
+import { splitTeamPrefixes } from '../lib/teamPrefix.ts'
 import { normalize } from '../lib/hangul.ts'
 import { formatTime } from '../lib/time.ts'
 import type { ImportCandidate, SongDraft, SongFields, SongKind, VideoInfo } from '../types.ts'
@@ -34,16 +47,17 @@ type ImportPhase =
       filter: CandidateFilter
       /** 펼친 후보. 처음에는 경고가 있는 후보 */
       open: ReadonlySet<number>
+      /** 여러 구단 영상이면 구단별 곡 수, 아니면 null [STEP 3-㉖] */
+      teams: TeamCount[] | null
+      /** 여러 구단 영상을 구단별로 나눠 넣는가. 처음에는 false(이 팀 곡만) */
+      split: boolean
+      kindScope: KindScope
     }
   | { phase: 'single'; video: VideoInfo; saving: boolean }
 
 type Tab = 'url' | 'search'
 
-const KIND_ORDER: { kind: SongKind; label: string }[] = [
-  { kind: 'player', label: '선수' },
-  { kind: 'situation', label: '상황' },
-  { kind: 'team', label: '팀 응원가' },
-]
+const KIND_TO: Record<SongKind, string> = { player: '선수로', situation: '상황으로', team: '팀 응원가로' }
 
 export default function ImportPage() {
   const team = useActiveTeam()
@@ -87,14 +101,21 @@ export default function ImportPage() {
       setPhase({ phase: 'input', error: 'ageRestricted' })
       return
     }
-    const candidates = parseDescription(video.description)
-    if (candidates.length === 0) {
+    const parsed = parseDescription(video.description)
+    if (parsed.length === 0) {
       setPhase({ phase: 'single', video, saving: false })
       return
     }
-    const first = evaluateCandidates(candidates, video, teamSongs)
+    const multi = splitTeamPrefixes(parsed, songs)
+    const candidates = multi?.candidates ?? parsed
+    const teams = multi?.teams ?? null
+    const first = evaluateCandidates(candidates, video, teamSongs, scopeOf(teams, false))
     const open = new Set(first.filter((r) => r.warning !== null || r.titleError !== null).map((r) => r.key))
-    setPhase({ phase: 'review', video, candidates, saving: false, filter: 'all', open })
+    setPhase({ phase: 'review', video, candidates, saving: false, filter: 'all', open, teams, split: false, kindScope: 'checked' })
+  }
+
+  function scopeOf(teams: TeamCount[] | null, split: boolean): TeamScope | null {
+    return teams && team ? { teamId: team.id, songs, split } : null
   }
 
   // 확인 단계와 영상 하나 등록에서 취소하면 곡 관리 목록으로 돌아간다. 불러오는 중의 취소는 입력 단계로만 돌아간다
@@ -139,11 +160,18 @@ export default function ImportPage() {
   }
 
   function renderReview(p: Extract<ImportPhase, { phase: 'review' }>) {
-    const rows = evaluateCandidates(p.candidates, p.video, teamSongs)
+    const rows = evaluateCandidates(p.candidates, p.video, teamSongs, scopeOf(p.teams, p.split))
     const saving = rows.filter((r) => r.willSave)
-    const counts = KIND_ORDER.map(({ kind, label }) => `${label} ${saving.filter((r) => r.kind === kind).length}`)
+    const counts = SONG_TABS.map(({ kind, label }) => `${label} ${saving.filter((r) => r.kind === kind).length}`)
     const status = reviewCounts(rows)
+    const otherTeams = rows.filter((r) => r.otherTeam).length
     const visible = rows.filter((r) => matchesFilter(r, p.filter))
+    const kindKeys = kindTargets(rows, visible, p.kindScope)
+
+    function changeKinds(kind: SongKind) {
+      setPhase({ ...p, candidates: withKind(p.candidates, kindKeys, kind) })
+      notify(`${kindKeys.length}곡을 ${KIND_TO[kind]} 바꿨습니다`)
+    }
 
     function save() {
       setPhase({ ...p, saving: true })
@@ -151,7 +179,8 @@ export default function ImportPage() {
       for (const r of saving) {
         if (r.start === null || r.end === null || team === null) continue
         drafts.push({
-          teamId: team.id,
+          // 「이 팀 곡만」이면 다른 구단 곡은 고를 수 없어 여기 오지 않는다
+          teamId: r.teamId ?? team.id,
           kind: r.kind,
           title: r.title.trim(),
           videoId: p.video.videoId,
@@ -161,17 +190,29 @@ export default function ImportPage() {
           cheerStart: null,
         })
       }
-      const n = importSongs(drafts)
-      notify(`${n}곡을 저장했습니다`)
-      // 새로 들어온 곡이 있는 탭을 보여 준다
-      if (team) navigate(songListPath(team.id, '', savedTab(drafts.map((d) => d.kind))))
+      importSongs(drafts)
+      notify(savedNotice(drafts))
+      // 지금 팀 곡 관리로 돌아와 새로 들어온 곡이 있는 탭을 보여 준다(지금 팀 곡이 없으면 넣은 곡 전체 기준)
+      if (!team) return
+      const own = drafts.filter((d) => d.teamId === team.id)
+      navigate(songListPath(team.id, '', savedTab((own.length > 0 ? own : drafts).map((d) => d.kind))))
     }
 
     return (
       <>
         <VideoSummary video={p.video} />
+        {p.teams && team && (
+          <TeamSplitNotice
+            teams={p.teams}
+            team={team}
+            split={p.split}
+            disabled={p.saving}
+            onSplit={(split) => setPhase({ ...p, split })}
+          />
+        )}
         <p className="review-counts">
           새 곡 {status.new} · 이미 있음 {status.existing} · 경고 {status.warning}
+          {otherTeams > 0 && ` · 다른 구단 ${otherTeams}`}
         </p>
         {status.new === 0 && (
           <StatusMessage tone="empty">
@@ -202,6 +243,27 @@ export default function ImportPage() {
             </button>
           </div>
         </div>
+        {/* 고른 곡·보이는 곡이 대상이라 필터·전체 선택 바로 아래에 둔다. 늘 보여 목록이 밀리지 않는다 */}
+        <div className="kind-bulk">
+          <span className="kind-bulk-label" id="kind-bulk-label">
+            종류 한꺼번에 바꾸기
+          </span>
+          <div className="choice-toggle" role="group" aria-label="바꿀 곡">
+            <button type="button" aria-pressed={p.kindScope === 'checked'} disabled={p.saving} onClick={() => setPhase({ ...p, kindScope: 'checked' })}>
+              고른 곡 <span className="count">{saving.length}</span>
+            </button>
+            <button type="button" aria-pressed={p.kindScope === 'visible'} disabled={p.saving} onClick={() => setPhase({ ...p, kindScope: 'visible' })}>
+              보이는 곡 <span className="count">{visible.length}</span>
+            </button>
+          </div>
+          <div className="kind-bulk-actions" role="group" aria-labelledby="kind-bulk-label">
+            {SONG_TABS.map(({ kind }) => (
+              <button key={kind} type="button" disabled={p.saving || kindKeys.length === 0} onClick={() => changeKinds(kind)}>
+                {KIND_TO[kind]}
+              </button>
+            ))}
+          </div>
+        </div>
         <p className="import-summary">
           {counts.join(' · ')} / 저장 {saving.length}곡
         </p>
@@ -212,6 +274,8 @@ export default function ImportPage() {
             rows={visible}
             allRows={rows}
             videoId={p.video.videoId}
+            videoDuration={p.video.duration}
+            teamId={p.teams && team ? team.id : null}
             open={p.open}
             onToggle={toggleOpen}
             disabled={p.saving}

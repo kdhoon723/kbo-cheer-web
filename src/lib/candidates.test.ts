@@ -77,6 +77,7 @@ const sim = (startText: string, title: string, over: Partial<ImportCandidate> = 
   lineNo: 0,
   rawLine: '',
   inTeamSection: false,
+  teamId: null,
   kind: 'situation',
   title,
   startText,

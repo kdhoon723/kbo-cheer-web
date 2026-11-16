@@ -6,6 +6,7 @@ import { Link, useBlocker, useLocation, useNavigate, useParams } from 'react-rou
 import PlayerPortrait from '../components/PlayerPortrait.tsx'
 import SegmentBar from '../components/SegmentBar.tsx'
 import StatusMessage from '../components/StatusMessage.tsx'
+import KindToggle from '../components/KindToggle.tsx'
 import TeamLogo from '../components/TeamLogo.tsx'
 import TimeField from '../components/TimeField.tsx'
 import { useNotice } from '../context/NoticeContext.tsx'
@@ -250,21 +251,10 @@ function SongEditor({ song, listSearch }: EditorProps) {
             </span>
           )}
         </div>
-        <div className="field">
-          <span id="song-kind">종류</span>
-          <div className="kind-toggle" role="group" aria-labelledby="song-kind">
-            {SONG_TABS.map(({ kind, label }) => (
-              <button
-                key={kind}
-                type="button"
-                aria-pressed={values.kind === kind}
-                onClick={() => setValues((v) => ({ ...v, kind, cheerStartText: kind === 'player' ? v.cheerStartText : '' }))}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <KindToggle
+          value={values.kind}
+          onChange={(kind) => setValues((v) => ({ ...v, kind, cheerStartText: kind === 'player' ? v.cheerStartText : '' }))}
+        />
         <TimeField
           label="시작"
           value={values.startText}

@@ -124,7 +124,7 @@ test.describe('5. 곡 등록', () => {
     note(testInfo, '고치기 전 챔피언 두산', champBefore)
     expect(champBefore?.endText).toBe('끝 42:05')
 
-    await page.locator('.candidate-warning input[aria-label="시작 시각"]').fill('40:36')
+    await page.locator('.candidate-warning').getByRole('textbox', { name: '시작' }).fill('40:36')
     await expect(page.locator('.candidate-warning')).toHaveCount(0)
     const after = await candidateRows(page)
     const champ = after.find((r) => r.title === '챔피언 두산')

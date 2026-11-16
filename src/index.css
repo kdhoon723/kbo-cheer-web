@@ -1453,7 +1453,8 @@ kbd {
 }
 
 .filter-btn[aria-pressed='true'],
-.kind-toggle button[aria-pressed='true'] {
+.kind-toggle button[aria-pressed='true'],
+.choice-toggle button[aria-pressed='true'] {
   color: var(--ink);
   background: var(--plate);
   border-color: var(--plate);
@@ -1621,16 +1622,29 @@ kbd {
   color: var(--text-2);
 }
 
-.kind-toggle {
+.kind-toggle,
+.choice-toggle {
   display: flex;
   gap: 4px;
 }
 
-.kind-toggle button {
+.kind-toggle button,
+.choice-toggle button {
   flex: 1;
   padding: 0 8px;
   color: var(--text-2);
   border-color: var(--line);
+}
+
+.choice-toggle button[aria-pressed='true'] .count {
+  color: var(--ink);
+}
+
+/* 칸 아래 읽기만 하는 한 줄 */
+.field-note {
+  font-size: 13px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
 }
 
 .time-row {
@@ -1859,6 +1873,10 @@ kbd {
 }
 
 /* 가져오기 */
+.import-page .song-form {
+  margin-top: 16px;
+}
+
 .import-page .tabs {
   margin-bottom: 16px;
   border-bottom: 1px solid var(--line);
@@ -2005,6 +2023,79 @@ kbd {
   gap: 4px;
 }
 
+/* 종류 한꺼번에 바꾸기 [STEP 3-㉖]: 좁으면 이름표, 대상, 종류를 세 줄로 쌓는다 */
+.kind-bulk {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px 8px;
+  margin: 8px 0;
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.kind-bulk-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.kind-bulk-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.kind-bulk-actions button {
+  flex: 1;
+  padding: 0 8px;
+}
+
+@media (min-width: 900px) {
+  .kind-bulk {
+    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+  }
+}
+
+/* 여러 구단 영상 안내 [STEP 3-㉖] */
+.team-split {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--edge);
+  border-radius: var(--r-plate);
+}
+
+.team-split-title {
+  font-weight: 700;
+}
+
+.team-split-text {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.team-split-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 12px 0;
+  padding: 0;
+  list-style: none;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.team-split .choice-toggle {
+  max-width: 480px;
+}
+
+.team-split-counts li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .import-summary {
   margin-bottom: 8px;
   font-size: 13px;
@@ -2057,7 +2148,7 @@ kbd {
 .candidate-main {
   display: flex;
   flex: 1 1 100%;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   min-width: 0;
 }
@@ -2100,22 +2191,34 @@ kbd {
   transform: rotate(180deg);
 }
 
+.candidate-main .logo-plate {
+  flex: none;
+}
+
+/*
+ * 펼친 줄 [STEP 3-㉖]: 곡 수정 화면과 같은 칸(이름표는 칸 위, 칸은 열 폭을 다 채운다).
+ * 좁으면 한 열로 쌓고, 목록 폭이 720px 이상이면 「종류 | 이름 | 시작」 한 줄. 열 폭은 줄마다 같다
+ */
+.candidates {
+  container-type: inline-size;
+}
+
 .candidate-edit {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 8px;
-  padding: 4px 4px 12px var(--tap);
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  padding: 4px 4px 16px var(--tap);
 }
 
-.candidate-edit input[type='text'],
-.candidate-edit select {
-  width: 100%;
-  min-width: 0;
-  padding: 0 8px;
+.candidate-edit .field {
+  margin-bottom: 0;
 }
 
-.candidate-title {
-  grid-column: 1 / -1;
+@container (min-width: 720px) {
+  .candidate-edit {
+    grid-template-columns: 248px minmax(0, 1fr) 216px;
+    align-items: start;
+  }
 }
 
 .candidate-warn-detail {

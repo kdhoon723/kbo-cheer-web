@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import type { CandidateRow } from '../types.ts'
 import {
   bulkSelection,
+  importOrders,
   hasCandidateWarning,
   isExistingCandidate,
   matchesFilter,
@@ -19,6 +20,7 @@ function row(key: number, extra: Partial<CandidateRow> = {}): CandidateRow {
     lineNo: key,
     rawLine: '',
     inTeamSection: false,
+    teamId: null,
     kind: 'player',
     title: `곡${key}`,
     startText: '00:00',
@@ -29,6 +31,7 @@ function row(key: number, extra: Partial<CandidateRow> = {}): CandidateRow {
     existing: false,
     duplicate: false,
     sameNamePlayer: false,
+    otherTeam: false,
     titleError: null,
     selectable: true,
     willSave: true,
@@ -98,5 +101,17 @@ describe('teamVideoId와 songsPerTeam', () => {
       { teamId: 'hanwha', count: 3 },
       { teamId: 'lg', count: 1 },
     ])
+  })
+})
+
+describe('importOrders', () => {
+  it('팀마다 그 팀 마지막 곡 다음부터 차례로 붙인다', () => {
+    const songs = [
+      makeSong({ id: 'a', teamId: 'hanwha', order: 4 }),
+      makeSong({ id: 'b', teamId: 'hanwha', order: 9 }),
+      makeSong({ id: 'c', teamId: 'lg', order: 2 }),
+    ]
+    const drafts = [{ teamId: 'hanwha' as const }, { teamId: 'samsung' as const }, { teamId: 'hanwha' as const }, { teamId: 'lg' as const }]
+    expect(importOrders(songs, drafts)).toEqual([10, 0, 11, 3])
   })
 })

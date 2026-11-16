@@ -86,6 +86,8 @@ export interface ImportCandidate {
   lineNo: number
   rawLine: string
   inTeamSection: boolean
+  /** 여러 구단 영상에서 챕터 이름 앞 구단. 한 팀 영상이면 null(지금 팀) [STEP 3-㉖] */
+  teamId: TeamId | null
   kind: SongKind
   title: string
   startText: string
@@ -101,6 +103,8 @@ export interface CandidateRow extends ImportCandidate {
   existing: boolean
   duplicate: boolean
   sameNamePlayer: boolean
+  /** 「이 팀 곡만」으로 볼 때 다른 구단 곡. 고를 수 없다 [STEP 3-㉖] */
+  otherTeam: boolean
   titleError: string | null
   selectable: boolean
   willSave: boolean

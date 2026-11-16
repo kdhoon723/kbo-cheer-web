@@ -1,5 +1,5 @@
 //20241476-김도훈-(2026-11-16)
-import { TEAM_IDS } from '../data/teams.ts'
+import { TEAM_IDS, getTeam } from '../data/teams.ts'
 import type { CandidateRow, ImportCandidate, Song, SongKind, TeamId } from '../types.ts'
 
 export type CandidateFilter = 'all' | 'new' | 'warning' | 'existing'
@@ -21,11 +21,14 @@ export function hasCandidateWarning(row: CandidateRow): boolean {
   return row.warning !== null || row.titleError !== null
 }
 
-/** 새 곡: 이미 있지 않고 경고도 없는 후보. 경고 후보는 시각·이름을 고쳐야 새 곡인지 알 수 있다 */
+/**
+ * 새 곡: 이미 있지 않고 경고도 없는 후보. 경고 후보는 시각·이름을 고쳐야 새 곡인지 알 수 있다.
+ * 「이 팀 곡만」으로 볼 때 다른 구단 곡은 새 곡에도 이미 있음에도 들지 않는다(전체에만 보인다)
+ */
 export function matchesFilter(row: CandidateRow, filter: CandidateFilter): boolean {
-  if (filter === 'new') return !isExistingCandidate(row) && !hasCandidateWarning(row)
+  if (filter === 'new') return !row.otherTeam && !isExistingCandidate(row) && !hasCandidateWarning(row)
   if (filter === 'warning') return hasCandidateWarning(row)
-  if (filter === 'existing') return isExistingCandidate(row)
+  if (filter === 'existing') return !row.otherTeam && isExistingCandidate(row)
   return true
 }
 
@@ -48,6 +51,19 @@ export function bulkSelection(rows: CandidateRow[], on: boolean): { key: number;
     .map((r) => ({ key: r.key, selection: on ? 'on' : 'off' }))
 }
 
+/** 종류 한꺼번에 바꾸기의 대상. 고른 곡(저장할 곡 전체) 또는 지금 필터에 보이는 곡 [STEP 3-㉖] */
+export type KindScope = 'checked' | 'visible'
+
+export function kindTargets(rows: CandidateRow[], visible: CandidateRow[], scope: KindScope): number[] {
+  return (scope === 'checked' ? rows.filter((r) => r.willSave) : visible).map((r) => r.key)
+}
+
+/** 대상 후보의 종류만 바꾼다. 고른 상태(selection)는 그대로 두고, 판정은 다시 계산한다 */
+export function withKind(candidates: ImportCandidate[], keys: readonly number[], kind: SongKind): ImportCandidate[] {
+  const target = new Set(keys)
+  return candidates.map((c) => (target.has(c.key) && c.kind !== kind ? { ...c, kind } : c))
+}
+
 const KIND_ORDER: SongKind[] = ['player', 'situation', 'team']
 
 /** 저장한 곡이 있는 탭. 여러 종류면 선수 → 상황 → 팀 응원가 순으로 앞의 것 */
@@ -64,9 +80,33 @@ export function teamVideoId(seed: Song[], teamId: TeamId): string | null {
   return best
 }
 
-/** 백업 파일 미리 보기의 팀별 곡 수(곡이 있는 팀만, 팀 목록 순서) */
-export function songsPerTeam(songs: Song[]): { teamId: TeamId; count: number }[] {
+export interface TeamCount {
+  teamId: TeamId
+  count: number
+}
+
+/** 팀별 곡 수(곡이 있는 팀만, 팀 목록 순서). 백업 파일 미리 보기, 여러 구단 영상 안내, 저장 알림에 쓴다 */
+export function songsPerTeam(songs: readonly { teamId: TeamId }[]): TeamCount[] {
   return TEAM_IDS.map((teamId) => ({ teamId, count: songs.filter((s) => s.teamId === teamId).length })).filter(
     (t) => t.count > 0,
   )
+}
+
+/** 저장 뒤 알림. 여러 팀에 넣었으면 팀별 수를 붙인다 */
+export function savedNotice(drafts: readonly { teamId: TeamId }[]): string {
+  const teams = songsPerTeam(drafts)
+  const head = `${drafts.length}곡을 저장했습니다`
+  if (teams.length < 2) return head
+  return `${head} · ${teams.map((t) => `${getTeam(t.teamId).name} ${t.count}`).join(' · ')}`
+}
+
+/** 가져온 곡의 순서. 팀마다 그 팀 마지막 곡 다음부터 차례로 붙인다(여러 팀을 한 번에 넣을 때도 팀 안에서 이어진다) */
+export function importOrders(songs: readonly Song[], drafts: readonly { teamId: TeamId }[]): number[] {
+  const next = new Map<TeamId, number>()
+  for (const s of songs) next.set(s.teamId, Math.max(next.get(s.teamId) ?? 0, s.order + 1))
+  return drafts.map((d) => {
+    const order = next.get(d.teamId) ?? 0
+    next.set(d.teamId, order + 1)
+    return order
+  })
 }

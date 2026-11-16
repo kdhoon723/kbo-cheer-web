@@ -2,7 +2,7 @@
 
 - 과목: 2026-2학기 스크립트프로그래밍 / 작성: 20241476 김도훈 / 작성일: 2026-11-15
 - 단계: STEP 2 설계 (최종판, 설계 검토 반영)
-- 기준 문서: `docs/requirements.md` (FR-01~33, NFR-01~14, BR-01~51, EX-01~31). [STEP 3-⑪] FR-29~33, BR-45~51, EX-30·31, NFR-14는 5.5절. [STEP 3-⑲] FR-37~39, BR-57·58은 3.1·5.7·11절. [STEP 3-⑳] FR-40~42, BR-59~61은 3.1·5.8절. [STEP 3-㉑] BR-62·63은 8.6절. [STEP 3-㉓] FR-43~47은 5.9절. [STEP 3-㉔] FR-48~50은 5.10·10.4절, NFR-16은 5.11절. [STEP 3-㉕] FR-51·52는 5.12절
+- 기준 문서: `docs/requirements.md` (FR-01~33, NFR-01~14, BR-01~51, EX-01~31). [STEP 3-⑪] FR-29~33, BR-45~51, EX-30·31, NFR-14는 5.5절. [STEP 3-⑲] FR-37~39, BR-57·58은 3.1·5.7·11절. [STEP 3-⑳] FR-40~42, BR-59~61은 3.1·5.8절. [STEP 3-㉑] BR-62·63은 8.6절. [STEP 3-㉓] FR-43~47은 5.9절. [STEP 3-㉔] FR-48~50은 5.10·10.4절, NFR-16은 5.11절. [STEP 3-㉕] FR-51·52는 5.12절. [STEP 3-㉖] FR-53~55, BR-64·65는 4.8·5.13·10.4절
 - 검토 문서: `docs/reviews/design-review-claude.md`(R-01~28), `docs/reviews/design-review-codex.md`(C-01~18). 본문에서 검토 때문에 바뀐 곳에는 `[R-xx]`, `[C-xx]`를 붙였다. 전체 반영 내역은 15절.
 - 배포: `https://kbocheer.kdhoon.me`(Cloudflare Workers 정적 자산, `wrangler.jsonc`의 `assets.directory: ./dist`, `not_found_handling: single-page-application`으로 모든 경로에 index.html을 돌려준다) [공개 배포]
 - 기술 환경: React, TypeScript, Vite(포트 5173 고정, LAN 접속 허용), React Router(`react-router-dom`), YouTube IFrame Player API, YouTube Data API v3, LocalStorage, CSS
@@ -96,6 +96,7 @@ src/
     SituationGrid.tsx, EmptyState.tsx, SongForm.tsx(곡 추가의 영상 하나 등록),
     SongListItem.tsx, SegmentBar.tsx, TimeField.tsx [STEP 3-㉓], ProgressBar.tsx [STEP 3-㉕],
     UrlInputForm.tsx, VideoSearchForm.tsx, CandidateTable.tsx, DataApiNotice.tsx,
+    KindToggle.tsx, TeamSplitNotice.tsx [STEP 3-㉖],
     StatusMessage.tsx,
     TeamColumn.tsx, MatchupHeader.tsx, SituationTeamTabs.tsx, PlayerCard.tsx [STEP 3-⑫]
     LyricsBlock.tsx [STEP 3-⑳]
@@ -449,7 +450,8 @@ for 각 챕터 c:
 
 - 분류 순서는 BR-13에 적힌 순서(팀 구획 → 선수 → 나머지)를 그대로 따른다. 팀 구획 안에 "○○ 등장곡"이 있으면 팀 응원가로 분류하고, 사용자가 확인 단계에서 종류를 바꾼다. 10개 영상에는 그런 줄이 없다. [C-16]
 - "뒤에 챕터가 있는 마지막 구분선"으로 고르는 이유: 설명란 맨 끝 해시태그 앞에 구분선이 더 있어도 팀 구획을 잘못 잡지 않게 하기 위해서다.
-- 구단 고유 곡(체로키, 셀리오, 환희 등)은 위치에 따라 상황 곡으로 분류되고, 확인 단계에서 사용자가 종류를 바꾼다(D-04).
+- 구단 고유 곡(체로키, 셀리오, 환희 등)은 위치에 따라 상황 곡으로 분류되고, 확인 단계에서 사용자가 종류를 바꾼다(D-04). [STEP 3-㉖] 여러 곡을 한꺼번에 바꿀 수 있다(FR-53).
+- [STEP 3-㉖] 구분선이 없고 「등장곡」 접미어도 없는 영상은 모든 곡이 상황이 된다. 여러 구단 팀 응원가 모음 `hWF7dU4-fQU`(77곡, 챕터 「두산 베어스 - 승리를 위하여」 모양)가 그래서 77곡 모두 삼성 「상황」이 됐다. 이런 영상은 4.8절에서 다시 나눈다.
 - 중복 상황 곡도 후보 목록에서 빼지 않는다. 대표가 아닌 줄은 4.6절 평가에서 "중복"으로 표시한다. 후보를 고치면 대표가 바뀔 수 있기 때문이다. [C-08, C-17]
 
 ### 4.4 3단계: 시작 시각 해석과 시각 이상 판정 (BR-11) [R-03, C-07]
@@ -493,6 +495,8 @@ for 각 후보 k:
 
 ```
 existing(k) = 경고가 없고, teamSongs에 videoId === video.videoId 이고 start === k.start 인 곡이 있음   [C-09]
+              또는 k.kind === 'team' 이고 teamSongs에 normalize(title)이 같은 팀 응원가가 있음   [STEP 3-㉖]
+// [STEP 3-㉖] teamSongs는 그 후보를 넣을 팀의 곡이다. 여러 구단 영상을 나눠 넣으면 후보마다 그 구단 곡(4.8)
 
 // 상황 곡 중복: normalize = 공백 제거 + 소문자
 teamTitles = teamSongs 중 상황 곡 제목들의 normalize 집합
@@ -505,7 +509,8 @@ sameNamePlayer(k) = k.kind === 'player' 이고 existing이 아니고,
                     teamSongs에 normalize(title)이 같은 선수 곡이 있음                    [R-15]
 
 titleError = 이름이 비었거나 30자 초과(BR-17)
-selectable = warning === null && !duplicate && titleError === null
+otherTeam  = 여러 구단 영상을 「이 팀 곡만」으로 볼 때 다른 구단 후보   [STEP 3-㉖]
+selectable = warning === null && !duplicate && titleError === null && !otherTeam
 willSave   = selectable && (selection === 'on' || (selection === 'auto' && !existing))
 ```
 
@@ -516,9 +521,34 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 - 같은 이름 선수는 표시만 하고 기본 선택은 그대로 둔다(BR-42). 새 시즌 영상을 가져온 뒤 옛 곡은 곡 관리에서 지운다. [R-15]
 - 알려진 한계: 새 시즌 영상의 상황 곡은 팀에 같은 제목이 이미 있으면 모두 중복이 된다. 새 영상의 상황 곡으로 바꾸려면 옛 상황 곡을 먼저 지운 뒤 가져온다.
 
+- [STEP 3-㉖] 팀 응원가를 이름으로도 「이미 있음」으로 보는 까닭: 같은 응원가가 구단 모음 영상과 여러 구단 모음 영상에 따로 있어, 영상·시각으로만 견주면 처음 데이터에 있는 응원가 60곡이 모두 새 곡으로 들어갔다. 이미 있음이라 기본으로 풀려 있을 뿐 직접 고르면 저장한다(BR-15).
+
 ### 4.7 저장
 
 `willSave`인 후보만 `SongDraft`로 바꾼다: `{ teamId, kind, title, videoId, videoDuration, start, end, cheerStart: null }`. `importSongs(drafts)`가 ID와 order를 붙여 `IMPORT_SONGS`로 보낸다. 끝나면 `/team/:teamId`로 이동하고 "N곡을 저장했습니다" 알림을 띄운다.
+
+[STEP 3-㉖] `teamId`는 후보의 구단(`row.teamId`, 한 팀 영상이면 지금 팀)이다. `importSongs`는 여러 팀 초안을 한 번에 받고, `importOrders(songs, drafts)`가 팀마다 그 팀 마지막 곡 다음부터 order를 붙인다(`addSong`도 같은 함수). 저장할지는 확인 단계에서 곡마다 그 팀 곡과 견줘 이미 정했으므로 `importSongs`는 다시 판정하지 않는다. 알림은 `savedNotice(drafts)`로, 여러 팀이면 「17곡을 저장했습니다 · 한화 1 · 롯데 2 …」다. 지금 팀 곡 관리로 돌아가며, 지금 팀에 넣은 곡의 탭(없으면 넣은 곡 전체 기준)을 연다.
+
+### 4.8 여러 구단 영상 [STEP 3-㉖]
+
+`lib/teamPrefix.ts`의 순수 함수다. 설명란 해석(4.2·4.3) 뒤, 평가(4.6) 앞에 한 번 돈다.
+
+```
+teamPrefixOf(title):  /^(.+?)\s*[-–—]\s*(.+)$/ 의 앞쪽이 구단 표기(띄어쓰기·대소문자 무시)와 같으면 { teamId, rest }
+  구단 표기: 정식 이름, 줄인 이름, 별칭, 예전 이름 (KIA 타이거즈·KIA·기아·타이거즈·해태, SSG 랜더스·SSG·랜더스·SK 와이번스·SK,
+             KT 위즈·KT·kt wiz·위즈, 키움 히어로즈·키움·히어로즈·넥센 …)
+splitTeamPrefixes(candidates, songs):
+  hits = 후보마다 teamPrefixOf(title)
+  접두어 줄이 2개 미만이거나 구단이 1개면 null (한 팀 영상, 지금처럼)
+  접두어 줄: teamId = 그 구단, title = rest,
+            kind가 상황이면(4.3에서 구분선·등장곡 규칙에 안 걸림) 그 구단 상황 곡 이름이면 상황, 선수 곡 이름이면 선수, 아니면 팀 응원가
+  접두어 없는 줄: teamId = null (지금 팀)
+  teams = songsPerTeam(접두어 줄)   // 팀 목록 순서, 안내에 쓰는 구단별 곡 수
+```
+
+- 평가는 `evaluateCandidates(candidates, video, teamSongs, scope)`로 한다. `scope = { teamId: 지금 팀, songs: 모든 곡, split }`이 있으면 후보마다 넣을 팀(`c.teamId ?? 지금 팀`)의 곡과 견준다(이미 있음, 같은 상황 곡 묶음, 같은 이름). 같은 상황 곡 묶음은 팀마다 따로라 두산·키움·NC의 「승리를 위하여」는 서로 겹치지 않는다. `split`이 false(이 팀 곡만)면 다른 구단 후보는 `otherTeam`이라 고를 수 없다.
+- 이 영상(처음 데이터 그대로)의 결과: 구단별 키움 8 · 한화 7 · 롯데 9 · SSG 8 · 두산 8 · NC 8 · KIA 7 · LG 7 · 삼성 8 · KT 7. 이 팀 곡만이면 삼성 8곡 중 7곡이 이름으로 이미 있음이라 「새 곡 1」(빅토리 라이온즈), 나눠 넣으면 60곡이 이미 있음이고 17곡이 새 곡이다. 단위 테스트(`teamPrefix.test.ts`)가 이 설명란 77줄을 픽스처(`__fixtures__/multi-team-description.json`)로 같은 수를 확인한다.
+- 종류 한꺼번에 바꾸기(`importReview.ts`): `kindTargets(rows, visible, scope)`는 고른 곡(`willSave` 전체) 또는 지금 필터에 보이는 곡의 key, `withKind(candidates, keys, kind)`는 그 후보의 종류만 바꾼다. 고른 상태(`selection`)는 두므로 `auto` 후보는 다시 평가한 결과를 따른다. 보이는 곡 대상은 고를 수 없는 후보(같은 상황 곡 중복, 다른 구단)도 바꾼다. 중복이라 고를 수 없던 상황 곡을 팀 응원가로 바꾸면 고를 수 있게 된다.
 
 ## 5. 화면 구성과 사용자 동선
 
@@ -974,6 +1004,37 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 - 휴대폰 재생 줄의 얇은 막대는 부드럽게 흐르기만 하고 옮기지 않는다. 누르면 지금 재생 시트를 연다(옮기기는 시트에서).
 - 측정(1440×900, 노시환 재생 중 1초, 프레임마다 채움의 `transform` 값을 읽음): 전 61프레임에 적힌 값 2가지(CSS 전환으로 그려진 값은 17가지), `getCurrentTime()`과 차이 최대 1.034초. 후 61프레임에 61가지, 차이 최대 0.001초.
 
+### 5.13 곡 관리 입력칸 규칙과 가져오기 일괄 바꾸기 [STEP 3-㉖]
+
+곡 관리 쪽 입력 화면(곡 수정, 가져오기 펼친 줄, 영상 하나 등록, 주소 입력)은 같은 칸 규칙을 쓴다. 이 규칙은 학생(김도훈)이 정했다.
+
+| 무엇 | 규칙 |
+| --- | --- |
+| 이름표 | 칸 위. 13px 굵기 600, 보조 글자(#ABA49A). 이름표와 칸 사이 4px. `label`을 칸과 잇거나(`htmlFor`), 버튼 묶음은 `aria-labelledby`로 잇는다 |
+| 칸 폭 | 칸은 자기 열의 폭을 다 채운다(`.field`가 열, 입력칸 `width: 100%`). 한 화면에서 폭이 제각각인 칸을 위아래로 쌓지 않는다 |
+| 칸 사이 | 위아래 16px(`.field` 아래 여백, 격자 안에서는 `gap: 16px`). 칸과 아래 버튼 줄 사이도 16px |
+| 종류 | 같은 폭 버튼 셋 「선수 · 상황 · 팀 응원가」(`KindToggle`, 고른 것은 반전). select를 쓰지 않는다 |
+| 시각 | `TimeField`: 입력칸 + −1초 + +1초. 미리 듣는 화면(곡 수정)만 「지금 위치로」를 붙인다(`onNow`가 없으면 그리지 않음) |
+| 읽기만 하는 값 | 칸이 아니라 칸 아래 13px 보조 글자(`.field-note`). 예: 펼친 줄의 「끝 01:32 · 다음 챕터 시각으로 정합니다」 |
+| 저장·취소 | 화면 아래에 붙는 줄(`.edit-actions`, 휴대폰은 독 위). 주 버튼이 남는 폭을 채운다. 곡 수정과 영상 하나 등록이 같다 |
+
+- 가져오기 펼친 줄(`.candidate-edit`): 목록 폭(컨테이너 쿼리, `.candidates`)이 720px 미만이면 한 열로 쌓아 세 칸 폭이 같고, 720px 이상이면 「종류 248px · 이름 나머지 · 시작 216px」 한 줄이다. 열 폭이 고정이라 어느 줄을 펼쳐도 칸 위치·폭이 같다. 화면 폭이 아니라 목록 폭을 보는 까닭은, 넓은 화면에서도 오른쪽 플레이어 열 때문에 목록 폭이 화면마다 달라서다. 측정(TC-151): 390×844 세 칸 모두 왼쪽 60px·폭 310px, 1280×800 248·296·216px 세 열이고 두 줄이 같다. 곡 수정 화면은 390에서 왼쪽 16px·폭 358px, 1280에서 왼쪽 473px·폭 391px로 네 칸(이름·종류·시작·끝)이 같다.
+- 바꾸기 전(`docs/screenshots/before-3-26/`)에는 펼친 줄이 이름표 없는 select(종류)·이름·시작 칸이 2열 격자에 섞여, 종류와 시작은 반쪽, 이름만 끝까지 늘어났다.
+- 영상 하나 등록(SongForm)도 종류 select와 시각 칸을 같은 부품으로 바꾸고, 「응원가 시작」은 곡 수정처럼 선수 곡일 때만 보인다. 영상 ID는 그대로 읽기만 하는 칸으로 둔다(이 화면의 첫 칸이고 기존 테스트가 쓴다).
+- 백업·초기화에는 입력칸이 없어(파일 칸은 숨김, 3-㉔) 바꾸지 않았다.
+
+종류 한꺼번에 바꾸기(FR-53)는 필터·「전체 선택」 줄 바로 아래 「종류 한꺼번에 바꾸기」 줄이다.
+
+- 대상: 「고른 곡 N」(저장할 곡 전체, 기본) / 「보이는 곡 N」(지금 필터). 바꾸기: 「선수로 · 상황으로 · 팀 응원가로」. 누르면 바로 바꾸고 「N곡을 선수로 바꿨습니다」를 알린다. 대상이 0곡이면 바꾸기 버튼이 비활성이다.
+- 이 자리에 둔 까닭: 대상(고른 곡, 보이는 곡)을 정하는 것이 바로 위 필터와 전체 선택·해제라, 고르고 거르고 바꾸는 일이 한곳에서 이어진다. 고른 곡이 있을 때만 나타나는 줄로 만들면 체크할 때마다 목록이 아래로 밀려, 늘 보이게 했다. 휴대폰은 이름표·대상·바꾸기를 세 줄로 쌓고, 900px 이상은 한 줄이다.
+
+여러 구단 영상 안내(FR-54, `TeamSplitNotice`)는 영상 요약 바로 아래, 「새 곡 N …」 위다.
+
+- 「10개 구단 곡이 섞인 영상입니다 · 77곡」, 한 줄 설명, 구단별 로고(TeamLogo 28)와 곡 수, 「<지금 팀> 곡만」/「구단별로 나눠 넣기」(같은 폭 두 버튼, 고른 것 반전, 넓은 화면은 최대 480px), 지금 고른 것의 결과 한 줄(「삼성 8곡만 넣습니다. 다른 구단 69곡은 목록에 보이지만 저장하지 않습니다」).
+- 1px 테두리(#4A4640) 판이다. 그림자·팀 색 바탕은 없다. 글자는 모두 바탕 #131211 위 본문·보조 글자라 대비는 5.4절 표(15.90, 7.58) 그대로다. 고른 버튼은 밝은 판 위 #171513(14.78)이다. 새 색 조합은 없다.
+- 후보 줄마다 이름 앞에 구단 로고 28(한 팀 영상은 그리지 않는다)과 화면 읽기용 구단 이름(`visually-hidden`), 다른 구단 후보에 「다른 구단(저장 안 함)」 표시, 「새 곡 N · 이미 있음 N · 경고 N」 뒤에 「· 다른 구단 N」.
+- 기본이 「이 팀 곡만」인 까닭은 BR-65.
+
 ## 6. 컴포넌트 구조
 
 ### 6.1 계층
@@ -1014,7 +1075,8 @@ App
               │ │   └ ImportPage
               │ │     ├ DataApiNotice
               │ │     ├ UrlInputForm / VideoSearchForm
-              │ │     ├ CandidateTable
+              │ │     ├ TeamSplitNotice        (여러 구단 영상일 때) [STEP 3-㉖]
+              │ │     ├ CandidateTable          (펼친 줄: KindToggle, 이름, TimeField)
               │ │     └ SongForm               (단일 영상 등록)
               │ └ (settings → SettingsRedirect)
               └ PlayerPanel
@@ -1066,7 +1128,9 @@ App
 | DataApiNotice | 키 없음·LAN 접속 안내(EX-06, EX-20) | `reason: 'noKey' \| 'lanHost'` | 없음 |
 | UrlInputForm | URL 입력, 형식 검사(EX-01) | `disabled: boolean`, `onSubmit(videoId: string): void` | 없음 |
 | VideoSearchForm | YouTube 검색어 입력, 결과 목록 | `disabled: boolean`, `onPick(videoId: string): void` | 없음 |
-| CandidateTable | 후보 표. 선택·종류·이름·시작 시각 고치기, 경고·이미 있음·중복·같은 이름 표시 | `rows: CandidateRow[]`, `videoId: string`, `onChange(key: number, patch: Partial<Pick<ImportCandidate, 'kind' \| 'title' \| 'startText' \| 'selection'>>): void`, `disabled: boolean` | 없음 |
+| KindToggle [STEP 3-㉖] | 「종류」 이름표와 같은 폭 버튼 셋(곡 수정·영상 하나 등록·가져오기 펼친 줄이 같이 씀) | `value: SongKind`, `onChange(kind: SongKind): void`, `disabled?: boolean` | 없음 |
+| TeamSplitNotice [STEP 3-㉖] | 여러 구단 영상 안내, 구단별 곡 수, 이 팀 곡만·나눠 넣기 | `teams: TeamCount[]`, `team: Team`, `split: boolean`, `onSplit(split: boolean): void`, `disabled: boolean` | 없음 |
+| CandidateTable | 후보 표. 선택·종류·이름·시작 시각 고치기, 경고·이미 있음·중복·같은 이름·다른 구단 표시, [STEP 3-㉖] 여러 구단 영상이면 줄마다 로고 | `rows: CandidateRow[]`, `allRows`, `videoId: string`, `videoDuration: number`, `teamId: TeamId \| null`, `open`, `onToggle`, `onChange(key: number, patch: Partial<Pick<ImportCandidate, 'kind' \| 'title' \| 'startText' \| 'selection'>>): void`, `disabled: boolean` | 없음 |
 | SongDataPage | 곡 관리 안 백업·초기화: 내보내기, 가져오기(확인), 되돌리기(확인), 접속 주소 표시, 위쪽 「곡 관리」 링크 [C-15, R-08, STEP 3-⑱] | 없음 | Songs, Notice |
 
 ```ts
@@ -1158,7 +1222,7 @@ interface SongsContextValue {
   addSong(draft: SongDraft): Song;          // id·order를 붙여 ADD_SONG
   updateSong(song: Song): void;
   deleteSong(id: string): void;
-  importSongs(drafts: SongDraft[]): number; // 저장한 곡 수. drafts의 teamId가 모두 같아야 한다 [R-28]
+  importSongs(drafts: SongDraft[]): number; // 저장한 곡 수. [STEP 3-㉖] 여러 팀 초안도 받고 팀마다 order를 잇는다(4.7) [R-28]
   replaceAll(songs: Song[]): void;
   resetToSeed(): void;                      // REPLACE_ALL(처음 데이터). 확인은 호출하는 화면이 받는다
 }
@@ -1607,7 +1671,8 @@ type ImportPhase =
   | { phase: 'input'; error: ImportError | null }
   | { phase: 'loading' }
   | { phase: 'review'; video: VideoInfo; candidates: ImportCandidate[]; saving: boolean;
-      filter: CandidateFilter; open: ReadonlySet<number> }        // filter·open [STEP 3-㉔]
+      filter: CandidateFilter; open: ReadonlySet<number>          // filter·open [STEP 3-㉔]
+      teams: TeamCount[] | null; split: boolean; kindScope: KindScope }  // [STEP 3-㉖] 4.8, 5.13
   | { phase: 'single'; video: VideoInfo; saving: boolean };
 ```
 
@@ -1623,9 +1688,13 @@ onSubmit(videoId):     // UrlInputForm(형식 검사 통과) 또는 VideoSearchF
   if (!video.embeddable)  { setPhase({ phase: 'input', error: 'notEmbeddable' }); return }
   if (video.duration === 0) { setPhase({ phase: 'input', error: 'live' }); return }          // [R-20]
   if (video.ageRestricted)  { setPhase({ phase: 'input', error: 'ageRestricted' }); return } // [R-20]
-  const candidates = parseDescription(video.description)
-  if (candidates.length === 0) setPhase({ phase: 'single', video, saving: false })   // EX-04, FR-13
-  else                         setPhase({ phase: 'review', video, candidates, saving: false })
+  const parsed = parseDescription(video.description)
+  if (parsed.length === 0) setPhase({ phase: 'single', video, saving: false })   // EX-04, FR-13
+  else {
+    const multi = splitTeamPrefixes(parsed, songs)                // [STEP 3-㉖] 여러 구단 영상이면 나눔(4.8)
+    setPhase({ phase: 'review', video, candidates: multi?.candidates ?? parsed, teams: multi?.teams ?? null,
+               split: false, kindScope: 'checked', saving: false, ... })
+  }
 
 // 화면을 떠나면
 useEffect(() => () => requestRef.current?.abort(), [])
@@ -1845,6 +1914,9 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 | FR-40 가사 | `build-lyrics.mjs`, `playerMediaPlugin.ts` `/lyrics/`, `__LYRICS__`(`LYRICS`), `useSongLyrics`, `parseLyricsFile`, LyricsBlock, PlayerPanel | 5.8 |
 | FR-41 마지막 곡 유지 | PlayerPanel(`history.recent[0]`, 「멈춤」, 「다시 재생」), PlayerCard | 5.8 |
 | FR-51~52 진행 막대 | ProgressBar(rAF, slider, 끌기·키보드), `lib/progress.ts`, PlayerContext `seek` | 5.12 |
+| FR-53 종류 한꺼번에 바꾸기 | ImportPage `.kind-bulk`, `kindTargets`, `withKind` | 4.8, 5.13 |
+| FR-54 여러 구단 영상 | `lib/teamPrefix.ts`(`teamPrefixOf`, `splitTeamPrefixes`), `evaluateCandidates`의 `TeamScope`, TeamSplitNotice, CandidateTable 로고, `importOrders`, `savedNotice` | 4.6~4.8, 5.13 |
+| FR-55 곡 관리 입력칸 | KindToggle, TimeField(`onNow` 없음, `note`), CandidateTable `.candidate-edit`, SongForm, SongEditPage | 5.13 |
 | FR-48~49 곡 추가 단계·확인 단계 | ImportPage(ImportSteps, filter·open), UrlInputForm `presetUrl`, CandidateTable, `importReview.ts` | 10.4 |
 | FR-50 백업·초기화 | SongDataPage(백업·초기화·저장 위치), `loadLastExport`/`saveLastExport`(`kboCheer.lastExport`), `songsPerTeam` | 3.1, 5.10 |
 | FR-43~45 곡 목록 | SongListPage(탭·검색·필터, 넓은 화면 Outlet), SongListItem, `songList.ts`, 라우터 자식 경로 | 5.1, 5.9 |
@@ -1904,6 +1976,7 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 | BR-43 같은 제목 상황 곡 폼 경고 | SongForm `isDuplicateSituationTitle` | 6.2 |
 | BR-44 접속 주소 표시 | SongDataPage | 5.2 |
 | BR-52~56 매치업 보드의 두 칸, 칸 바꾸기, 재생과 이동, 상황 칸 팀, 공통 정렬 [STEP 3-⑫] | `lib/matchup.ts`, MainPage, MatchupHeader, PrefsContext `assignTeam` | 5.6, 7.3 |
+| BR-64·65 여러 구단 영상 알아보기, 이 팀 곡만·나눠 넣기 [STEP 3-㉖] | `lib/teamPrefix.ts`, `evaluateCandidates` `TeamScope`, TeamSplitNotice, `importOrders` | 4.8, 5.13 |
 | EX-01 URL 형식 오류 | extractVideoId → null → 'badUrl' | 10.3, 10.4 |
 | EX-02~03, EX-06~09, EX-18 API 관련 | DataApiError 분류와 문구 | 10.2 |
 | EX-04 타임스탬프 없음 | phase 'single' | 10.4 |

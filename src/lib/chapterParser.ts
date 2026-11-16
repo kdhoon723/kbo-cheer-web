@@ -51,6 +51,7 @@ export function parseDescription(description: string): ImportCandidate[] {
       lineNo: c.lineNo,
       rawLine: c.rawLine,
       inTeamSection,
+      teamId: null,
       kind,
       title,
       startText: formatTime(c.start),
