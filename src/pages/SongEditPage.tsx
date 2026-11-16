@@ -148,7 +148,8 @@ function SongEditor({ song, listSearch }: EditorProps) {
     const merged = merge(result.fields)
     const at = previewStart(from, merged.start, merged.end, merged.cheerStart)
     if (at === null) return
-    play({ ...merged, start: at })
+    // 값을 맞추려고 듣는 것이라 튼 횟수·최근 곡(마지막 곡)에 넣지 않는다
+    play({ ...merged, start: at }, { record: false })
   }
 
   function submit(e: FormEvent) {

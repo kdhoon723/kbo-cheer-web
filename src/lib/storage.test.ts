@@ -7,11 +7,14 @@ import {
   SETTINGS_KEY,
   SONGS_KEY,
   TEAM_KEY,
+  LAST_EXPORT_KEY,
   loadHistory,
+  loadLastExport,
   loadSettings,
   loadSongs,
   loadTeamState,
   saveHistory,
+  saveLastExport,
   saveSettings,
   saveSongs,
   saveTeamState,
@@ -203,3 +206,21 @@ describe('history', () => {
     vi.restoreAllMocks()
   })
 })
+
+describe('last export', () => {
+  it('왕복한다', () => {
+    saveLastExport({ at: '2026-11-16T10:00:00.000Z', count: 507 })
+    expect(loadLastExport()).toEqual({ at: '2026-11-16T10:00:00.000Z', count: 507 })
+  })
+
+  it.each([
+    ['없음', null],
+    ['깨진 JSON', '{'],
+    ['날짜가 아님', JSON.stringify({ version: 1, at: 'x', count: 1 })],
+    ['곡 수가 소수', JSON.stringify({ version: 1, at: '2026-11-16T10:00:00.000Z', count: 1.5 })],
+  ])('%s이면 null', (_name, raw) => {
+    if (raw !== null) localStorage.setItem(LAST_EXPORT_KEY, raw)
+    expect(loadLastExport()).toBeNull()
+  })
+})
+

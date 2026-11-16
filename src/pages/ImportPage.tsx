@@ -13,7 +13,11 @@ import VideoSearchForm from '../components/VideoSearchForm.tsx'
 import { useNotice } from '../context/NoticeContext.tsx'
 import { useSongs } from '../context/SongsContext.tsx'
 import { useActiveTeam } from '../hooks/useActiveTeam.ts'
+import { useSeedSongs } from '../hooks/useSeedSongs.ts'
 import { evaluateCandidates } from '../lib/candidates.ts'
+import { CANDIDATE_FILTERS, bulkSelection, matchesFilter, reviewCounts, savedTab, teamVideoId } from '../lib/importReview.ts'
+import type { CandidateFilter } from '../lib/importReview.ts'
+import { songListPath } from '../lib/songList.ts'
 import { parseDescription } from '../lib/chapterParser.ts'
 import { normalize } from '../lib/hangul.ts'
 import { formatTime } from '../lib/time.ts'
@@ -22,7 +26,15 @@ import type { ImportCandidate, SongDraft, SongFields, SongKind, VideoInfo } from
 type ImportPhase =
   | { phase: 'input'; error: ImportError | null }
   | { phase: 'loading' }
-  | { phase: 'review'; video: VideoInfo; candidates: ImportCandidate[]; saving: boolean }
+  | {
+      phase: 'review'
+      video: VideoInfo
+      candidates: ImportCandidate[]
+      saving: boolean
+      filter: CandidateFilter
+      /** 펼친 후보. 처음에는 경고가 있는 후보 */
+      open: ReadonlySet<number>
+    }
   | { phase: 'single'; video: VideoInfo; saving: boolean }
 
 type Tab = 'url' | 'search'
@@ -37,6 +49,7 @@ export default function ImportPage() {
   const team = useActiveTeam()
   const navigate = useNavigate()
   const { songs, addSong, importSongs } = useSongs()
+  const seed = useSeedSongs()
   const { notify } = useNotice()
   const [phase, setPhase] = useState<ImportPhase>({ phase: 'input', error: null })
   const [tab, setTab] = useState<Tab>('url')
@@ -75,8 +88,13 @@ export default function ImportPage() {
       return
     }
     const candidates = parseDescription(video.description)
-    if (candidates.length === 0) setPhase({ phase: 'single', video, saving: false })
-    else setPhase({ phase: 'review', video, candidates, saving: false })
+    if (candidates.length === 0) {
+      setPhase({ phase: 'single', video, saving: false })
+      return
+    }
+    const first = evaluateCandidates(candidates, video, teamSongs)
+    const open = new Set(first.filter((r) => r.warning !== null || r.titleError !== null).map((r) => r.key))
+    setPhase({ phase: 'review', video, candidates, saving: false, filter: 'all', open })
   }
 
   // 확인 단계와 영상 하나 등록에서 취소하면 곡 관리 목록으로 돌아간다. 불러오는 중의 취소는 입력 단계로만 돌아간다
@@ -101,10 +119,31 @@ export default function ImportPage() {
     )
   }
 
+  function setSelections(changes: { key: number; selection: ImportCandidate['selection'] }[]) {
+    const byKey = new Map(changes.map((c) => [c.key, c.selection]))
+    setPhase((p) =>
+      p.phase === 'review'
+        ? { ...p, candidates: p.candidates.map((c) => (byKey.has(c.key) ? { ...c, selection: byKey.get(c.key) ?? c.selection } : c)) }
+        : p,
+    )
+  }
+
+  function toggleOpen(key: number) {
+    setPhase((p) => {
+      if (p.phase !== 'review') return p
+      const open = new Set(p.open)
+      if (open.has(key)) open.delete(key)
+      else open.add(key)
+      return { ...p, open }
+    })
+  }
+
   function renderReview(p: Extract<ImportPhase, { phase: 'review' }>) {
     const rows = evaluateCandidates(p.candidates, p.video, teamSongs)
     const saving = rows.filter((r) => r.willSave)
     const counts = KIND_ORDER.map(({ kind, label }) => `${label} ${saving.filter((r) => r.kind === kind).length}`)
+    const status = reviewCounts(rows)
+    const visible = rows.filter((r) => matchesFilter(r, p.filter))
 
     function save() {
       setPhase({ ...p, saving: true })
@@ -124,24 +163,64 @@ export default function ImportPage() {
       }
       const n = importSongs(drafts)
       notify(`${n}곡을 저장했습니다`)
-      navigate(`/team/${team?.id}/songs`)
+      // 새로 들어온 곡이 있는 탭을 보여 준다
+      if (team) navigate(songListPath(team.id, '', savedTab(drafts.map((d) => d.kind))))
     }
 
     return (
       <>
         <VideoSummary video={p.video} />
+        <p className="review-counts">
+          새 곡 {status.new} · 이미 있음 {status.existing} · 경고 {status.warning}
+        </p>
+        {status.new === 0 && (
+          <StatusMessage tone="empty">
+            {status.warning > 0
+              ? `새로 넣을 곡이 없습니다. 경고 ${status.warning}곡은 시각이나 이름을 고치면 다시 판단합니다`
+              : '새로 넣을 곡이 없습니다. 이 영상의 곡은 모두 이 팀에 이미 있습니다'}
+          </StatusMessage>
+        )}
+        <div className="review-tools">
+          <div className="filter-group" role="group" aria-label="후보 거르기">
+            {CANDIDATE_FILTERS.map((f) => (
+              <button
+                key={f.value}
+                type="button"
+                aria-pressed={p.filter === f.value}
+                onClick={() => setPhase({ ...p, filter: f.value })}
+              >
+                {f.label} <span className="count">{status[f.value]}</span>
+              </button>
+            ))}
+          </div>
+          <div className="bulk-actions">
+            <button type="button" className="plain-btn" disabled={p.saving} onClick={() => setSelections(bulkSelection(visible, true))}>
+              전체 선택
+            </button>
+            <button type="button" className="plain-btn" disabled={p.saving} onClick={() => setSelections(bulkSelection(visible, false))}>
+              전체 해제
+            </button>
+          </div>
+        </div>
         <p className="import-summary">
           {counts.join(' · ')} / 저장 {saving.length}곡
         </p>
-        <CandidateTable
-          rows={rows}
-          videoId={p.video.videoId}
-          disabled={p.saving}
-          onChange={changeCandidate}
-        />
-        <div className="button-row">
+        {visible.length === 0 ? (
+          <StatusMessage tone="empty">이 조건에 맞는 후보가 없습니다</StatusMessage>
+        ) : (
+          <CandidateTable
+            rows={visible}
+            allRows={rows}
+            videoId={p.video.videoId}
+            open={p.open}
+            onToggle={toggleOpen}
+            disabled={p.saving}
+            onChange={changeCandidate}
+          />
+        )}
+        <div className="review-actions">
           <button type="button" className="primary-btn" disabled={saving.length === 0 || p.saving} onClick={save}>
-            저장
+            {saving.length}곡 저장
           </button>
           <button type="button" disabled={p.saving} onClick={backToList}>
             취소
@@ -197,9 +276,13 @@ export default function ImportPage() {
 
   function renderInput(error: ImportError | null, loading: boolean) {
     const disabled = !availability.ok || loading
+    const videoId = team && seed ? teamVideoId(seed, team.id) : null
     return (
       <>
         {!availability.ok && <DataApiNotice reason={availability.error} />}
+        <p className="import-guide">
+          설명란에 곡마다 시각(챕터)이 적힌 모음 영상이면 곡별로 나눠 가져옵니다. 챕터가 없는 영상은 한 곡으로 넣습니다.
+        </p>
         <div className="tabs" role="tablist">
           <button type="button" role="tab" aria-selected={tab === 'url'} onClick={() => setTab('url')}>
             URL로 가져오기
@@ -210,7 +293,11 @@ export default function ImportPage() {
         </div>
         {error && <StatusMessage tone="error">{errorMessage(error)}</StatusMessage>}
         {tab === 'url' ? (
-          <UrlInputForm disabled={disabled} onSubmit={onSubmit} />
+          <UrlInputForm
+            disabled={disabled}
+            onSubmit={onSubmit}
+            presetUrl={videoId ? `https://www.youtube.com/watch?v=${videoId}` : null}
+          />
         ) : (
           <VideoSearchForm disabled={disabled} onPick={onSubmit} />
         )}
@@ -237,11 +324,31 @@ export default function ImportPage() {
         곡 관리
       </Link>
       <h2>곡 추가 · {team.fullName}</h2>
+      <ImportSteps current={phase.phase === 'input' || phase.phase === 'loading' ? 1 : phase.saving ? 3 : 2} />
       {phase.phase === 'input' && renderInput(phase.error, false)}
       {phase.phase === 'loading' && renderInput(null, true)}
       {phase.phase === 'review' && renderReview(phase)}
       {phase.phase === 'single' && renderSingle(phase)}
     </section>
+  )
+}
+
+const STEPS = ['주소', '확인', '저장'] as const
+
+/** 「1 주소 → 2 확인 → 3 저장」. 지금 단계는 반전, 지난 단계는 흐린 글자 */
+function ImportSteps({ current }: { current: 1 | 2 | 3 }) {
+  return (
+    <ol className="import-steps" aria-label="곡 추가 단계">
+      {STEPS.map((label, i) => {
+        const n = i + 1
+        return (
+          <li key={label} className={n === current ? 'is-current' : n < current ? 'is-done' : undefined} aria-current={n === current ? 'step' : undefined}>
+            <span className="step-no">{n}</span>
+            {label}
+          </li>
+        )
+      })}
+    </ol>
   )
 }
 

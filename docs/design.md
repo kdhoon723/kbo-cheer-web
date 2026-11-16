@@ -2,7 +2,7 @@
 
 - 과목: 2026-2학기 스크립트프로그래밍 / 작성: 20241476 김도훈 / 작성일: 2026-11-15
 - 단계: STEP 2 설계 (최종판, 설계 검토 반영)
-- 기준 문서: `docs/requirements.md` (FR-01~33, NFR-01~14, BR-01~51, EX-01~31). [STEP 3-⑪] FR-29~33, BR-45~51, EX-30·31, NFR-14는 5.5절. [STEP 3-⑲] FR-37~39, BR-57·58은 3.1·5.7·11절. [STEP 3-⑳] FR-40~42, BR-59~61은 3.1·5.8절. [STEP 3-㉑] BR-62·63은 8.6절. [STEP 3-㉓] FR-43~47은 5.9절
+- 기준 문서: `docs/requirements.md` (FR-01~33, NFR-01~14, BR-01~51, EX-01~31). [STEP 3-⑪] FR-29~33, BR-45~51, EX-30·31, NFR-14는 5.5절. [STEP 3-⑲] FR-37~39, BR-57·58은 3.1·5.7·11절. [STEP 3-⑳] FR-40~42, BR-59~61은 3.1·5.8절. [STEP 3-㉑] BR-62·63은 8.6절. [STEP 3-㉓] FR-43~47은 5.9절. [STEP 3-㉔] FR-48~50은 5.10·10.4절, NFR-16은 5.11절
 - 검토 문서: `docs/reviews/design-review-claude.md`(R-01~28), `docs/reviews/design-review-codex.md`(C-01~18). 본문에서 검토 때문에 바뀐 곳에는 `[R-xx]`, `[C-xx]`를 붙였다. 전체 반영 내역은 15절.
 - 배포: `https://kbocheer.kdhoon.me`(Cloudflare Workers 정적 자산, `wrangler.jsonc`의 `assets.directory: ./dist`, `not_found_handling: single-page-application`으로 모든 경로에 index.html을 돌려준다) [공개 배포]
 - 기술 환경: React, TypeScript, Vite(포트 5173 고정, LAN 접속 허용), React Router(`react-router-dom`), YouTube IFrame Player API, YouTube Data API v3, LocalStorage, CSS
@@ -61,6 +61,7 @@ src/
     lyrics.ts                 팀 가사 파일 검사, 곡 → 가사, 출처 글자, 라이선스 [STEP 3-⑳]
     teamOrder.ts              팀 순서 검사·옮기기, Alt+방향키 자리, 끌기 기준값 [STEP 3-⑳]
     songList.ts               곡 관리 탭·검색·필터, 목록 둘째 줄, 목록 주소 [STEP 3-㉓]
+    importReview.ts           가져오기 후보 분류·필터·전체 선택, 저장 뒤 탭, 팀 기본 영상, 파일의 팀별 곡 수 [STEP 3-㉔]
     songEdit.ts               ±1초, 「지금 위치로」, 바뀐 것 판정, 미리 듣기 시작점, YouTube 주소, 막대 비율 [STEP 3-㉓]
   api/
     youtubeData.ts            Data API 호출, 오류 분류
@@ -313,6 +314,7 @@ interface Window {
 | `kboCheer.songs` | `{ "version": 1, "seedRevision": 2, "songs": Song[] }`(`seedRevision`은 [STEP 3-⑲]부터, 2는 [STEP 3-㉒]부터) | 처음 데이터로 시작(알림 없음) | 원래 문자열을 `kboCheer.songs.broken`에 옮긴 뒤 처음 데이터로 복구, "저장 데이터가 손상되어 초기화했습니다" 1회 알림(EX-14) [R-16] |
 | `kboCheer.team` | `{ "version": 1, "currentTeamId": TeamId \| null, "prevTeamId": TeamId \| null }` | 둘 다 null → 팀 선택 화면(BR-28) | 둘 다 null로 시작 |
 | `kboCheer.settings` | `{ "version": 1, "volume": number, "gridSort": GridSort, "teamSort": TeamSongSort, "teamOrder": TeamId[] }` | 기본값 `{ volume: 100, gridSort: 'starters', teamSort: 'popular', teamOrder: 10개 팀 처음 순서 }` | 볼륨이 틀렸거나 version이 다르면 기본값으로 시작. 정렬만 알 수 없는 값('chapter' 포함)이면 정렬만 기본값으로 읽고 볼륨은 지킨다 [STEP 3-⑪]. 팀 응원가 정렬도 같다(빠진 예전 값은 인기순) [STEP 3-⑲]. 팀 순서는 10개 팀이 한 번씩 있지 않으면 처음 순서로 읽는다 [STEP 3-⑳] |
+| `kboCheer.lastExport` | `{ "version": 1, "at": ISO 시각, "count": number }` [STEP 3-㉔] | 「아직 내보낸 적이 없습니다」 | 없는 것으로 본다 |
 | `kboCheer.history` | `{ "version": 1, "counts": { [songId]: number }, "recent": string[] }` | 빈 기록 | 빈 기록으로 시작(알림 없음). 구조는 맞고 항목만 틀리면 그 항목만 버린다 [STEP 3-⑪] |
 
 - [STEP 3-⑪] 예전 정렬 값 'chapter'는 값 하나가 사라진 것이지 형식이 바뀐 것이 아니라 version을 올리지 않는다. 설정은 version 1 그대로 두고 `gridSort`를 읽을 때만 `parseGridSort(unknown)`으로 허용 값 세 가지 밖이면 기본값으로 바꾼다(처음에는 값 하나가 틀리면 설정 전체를 기본값으로 돌렸는데, 이러면 볼륨을 잃는다). 튼 기록(`kboCheer.history`)은 곡 목록과 키가 달라 JSON 가져오기·처음 데이터로 되돌리기(`kboCheer.songs`만 바꿈)가 기록을 지우지 않는다.
@@ -926,6 +928,34 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 - 맨 아래 「곡 삭제」(1px 선으로 나눈 구역, 무엇이 사라지는지 한 줄). 확인 문구는 예전과 같은 「'노시환'을(를) 삭제합니다」이고, 지운 뒤 목록의 그 곡 탭으로 간다.
 - 좁은 화면은 수정 화면을 열면 맨 위로 올린다(목록의 스크롤 위치를 이어받지 않게).
 - 비용: 데이터 라우터로 바꾸며 앱 묶음이 커졌다. 같은 코드를 `BrowserRouter`로 빌드하면 411.04 kB(gzip 111.16)이고 `createBrowserRouter`로는 465.29 kB(gzip 128.62)라, 라우터만으로 약 54 kB(gzip 17.5 kB)다. 이 단계 전(398.94 kB, gzip 107.52)과 견주면 새 화면 코드는 약 12 kB(gzip 3.6 kB)다. 이동 막기를 React Router 기능으로 하려면 데이터 라우터가 필요해 받아들였다.
+
+### 5.10 백업·초기화 [STEP 3-㉔]
+
+곡 관리 안 「백업·초기화」(5.1)를 세 구역으로 나눴다. 규칙(BR-37~39, EX-21·22)은 그대로다.
+
+- 「백업」: 한 줄 설명. 「JSON 내보내기」(Download 아이콘) 옆(좁으면 아래)에 「마지막으로 내보낸 때 2026-11-16 18:05 · 507곡」(없으면 「아직 내보낸 적이 없습니다」). 내보낸 때와 곡 수는 `kboCheer.lastExport`(`{ version: 1, at, count }`)에 두고, 깨졌으면 없는 것으로 본다(안내만 하는 값이라 알리지 않는다). 「JSON 파일 고르기」(FileUp)가 숨긴 `input[type=file]`을 연다. 브라우저 기본 파일 칸은 「Choose File」「No file chosen」 같은 영어 문구를 쓰므로 `hidden`으로 그리지 않고 버튼이 대신 연다(1×1로 숨기면 TC-57의 44px 검사에 걸렸다).
+- 파일을 고르면 바로 바꾸지 않고 미리 보기(`role="region"` 「가져올 파일」): 파일 이름, 「M곡 · 지금 곡 목록 N곡을 이 파일의 곡으로 바꿉니다(합치지 않습니다)」, 팀별 곡 수(`songsPerTeam`, 곡이 있는 팀만), 「이 파일로 바꾸기」(반전)·「취소」. 이 미리 보기가 BR-38의 확인이라 예전 `window.confirm`은 뺐다. 잘못된 파일 안내(EX-21·22)는 예전 알림 그대로다.
+- 「초기화」: 「되돌릴 수 없습니다. 필요하면 먼저 백업해 두세요」. 「처음 데이터로 되돌리기」(확인 창 그대로)와 「팀 순서 처음으로」(STEP 3-⑳에서 따로 있던 「팀 순서」 구역을 옮김)를 모으고, 버튼마다 무엇이 사라지고 무엇이 남는지 13px 한 줄.
+- 「저장 위치」 안내는 맨 아래(BR-44).
+
+### 5.11 곡 관리 화면과 처음 데이터를 나중에 받기 [STEP 3-㉔]
+
+3-㉓에서 데이터 라우터(`createBrowserRouter`)로 바꿔 응원 화면 첫 묶음이 커졌다. 응원 화면이 주된 길이고 곡 관리는 가끔 쓰므로, 곡 관리 쪽을 첫 묶음에서 뺐다(학생(김도훈)이 정함).
+
+- 라우트 단위 분할: `songs`(곡 목록), `songs/:songId/edit`(수정), `songs/add`(곡 추가), `songs/data`(백업·초기화)를 라우트 `lazy: () => import(...)`로 바꿨다. 데이터 라우터는 화면 파일을 받은 뒤에 화면을 바꾸므로, 응원 화면에서 「곡 관리」를 누르면 받는 동안 지금 화면(응원)이 그대로 남고 다 받으면 곡 관리로 바뀐다. 뼈대 화면이나 빈 화면이 끼지 않는다. 느린 네트워크 흉내(지연 400ms, 50 KB/s)에서 약 1초 동안 응원 화면이 그대로였다.
+- 곡 관리 주소로 바로 열면(새로고침 등) 그 화면 파일을 받는 동안 그 자리가 빈다. 각 라우트에 빈 `HydrateFallback`을 두어 머리말·플레이어·재생 줄은 먼저 그려진다(두지 않으면 앱 전체가 비고 React Router가 경고를 낸다).
+- 처음 데이터(`seed-songs.json`, 약 87 KB·gzip 15 KB)도 따로 받는다(`data/seedSongs.ts`의 `loadSeedSongs`, 한 번만 받음). 지금 차례(`seedRevision`)로 저장된 곡 목록이 있으면 받지 않고 바로 시작한다(`loadCurrentSongs`). 저장 목록이 없거나 깨졌거나 예전 차례면 받은 뒤 `loadSongs(seed)`로 시작하고, 받는 동안은 아무것도 그리지 않는다(첫 방문에 한 번). 「처음 데이터로 되돌리기」와 곡 추가의 「이 팀 기본 모음 영상」은 `useSeedSongs`로 받으며, 받기 전에는 되돌리기 버튼이 비활성이고 기본 영상 버튼이 없다.
+- 선수 기록(`players-2026.json`, 약 68 KB·gzip 9 KB)은 응원 화면 격자의 포지션과 주전순 정렬에 바로 쓰여 첫 묶음에 남겼다.
+- 크기(앱 JS, React 묶음 218.75 kB·gzip 68.27과 0.59 kB 런타임은 같음):
+
+| 때 | 응원 화면 첫 묶음 | gzip |
+| --- | --- | --- |
+| STEP 3-㉒(BrowserRouter) | index 398.94 kB | 107.52 kB |
+| STEP 3-㉓(데이터 라우터) | index 465.22 kB | 128.60 kB |
+| 3-㉔ 분할 뒤 | index 240.91 + 공유 111.41 = 352.32 kB | 66.29 + 37.43 = 103.72 kB |
+
+  나중에 받는 파일: 곡 목록 5.10 + 공통 1.30, 수정 9.61, 곡 추가 21.83 + 1.32, 백업·초기화 6.09, 처음 데이터 80.69 kB(gzip 14.81). 다시 방문하면 응원 화면은 index·공유·react·런타임만 받는다(preview에서 확인).
+- `react-router`는 패키지 `exports`가 개발용 빌드만 가리키지만, 배포용(`dist/production`)과 크기가 같아(376,650바이트) 바꾸지 않았다.
 
 ## 6. 컴포넌트 구조
 
@@ -1559,7 +1589,8 @@ type ImportError = DataApiError | 'badUrl' | 'notEmbeddable' | 'live' | 'ageRest
 type ImportPhase =
   | { phase: 'input'; error: ImportError | null }
   | { phase: 'loading' }
-  | { phase: 'review'; video: VideoInfo; candidates: ImportCandidate[]; saving: boolean }
+  | { phase: 'review'; video: VideoInfo; candidates: ImportCandidate[]; saving: boolean;
+      filter: CandidateFilter; open: ReadonlySet<number> }        // filter·open [STEP 3-㉔]
   | { phase: 'single'; video: VideoInfo; saving: boolean };
 ```
 
@@ -1597,6 +1628,17 @@ useEffect(() => () => requestRef.current?.abort(), [])
 - 경고 줄의 YouTube 링크는 앞 정상 후보의 시작 시각에서 연다(`https://www.youtube.com/watch?v=<ID>&t=<초>s`, 새 탭). EX-19 문구 "영상에서 확인해 고쳐 주세요"를 실제로 할 수 있게 하기 위해서다.
 - 「저장」을 누르면 먼저 `saving: true`로 바꿔 표와 버튼을 비활성화한 뒤 `importSongs`를 부르고 이동한다. 두 번 눌러 곡이 두 배로 들어가지 않는다. [R-21]
 - 단일 등록 폼 초기값: 이름 = 영상 제목 앞 30자, 종류 = 상황 곡, 시작 = 0, 끝 = 영상 길이.
+
+**[STEP 3-㉔] 곡 추가 단계와 확인 단계를 쓰기 쉽게.** 규칙(4절 평가, BR-11~15·42·43, EX-05·19)은 그대로이고 보이는 방법만 바꿨다. 이 배치는 학생(김도훈)이 정했다.
+
+- 맨 위 단계 표시 「1 주소 · 2 확인 · 3 저장」(`ol`, 지금 단계는 `aria-current="step"`과 반전). 입력·불러오는 중은 1, 확인·영상 하나 등록은 2, 저장 누른 뒤 이동 전은 3.
+- 주소 단계: 「설명란에 곡마다 시각(챕터)이 적힌 모음 영상이면 곡별로 나눠 가져옵니다. 챕터가 없는 영상은 한 곡으로 넣습니다.」 「이 팀 기본 모음 영상」은 처음 데이터에서 그 팀이 가장 많이 쓴 영상(`teamVideoId(seed, teamId)`, 처음 데이터를 만든 11절의 영상)의 주소를 칸에 넣는다(바로 불러오지 않는다). YouTube 검색 탭은 그대로.
+- 확인 단계 위: 「새 곡 N · 이미 있음 N · 경고 N」(`reviewCounts`). 이미 있음 = 이미 있는 곡 또는 같은 제목 상황 곡(저장 안 함), 경고 = 시각 이상 또는 이름 오류, 새 곡 = 둘 다 아닌 후보. 경고 후보는 시각을 고쳐야 새 곡인지 알 수 있어 새 곡에 넣지 않는다(두산 30:36 오타 줄). 새 곡이 0이면 맨 위에 「새로 넣을 곡이 없습니다. …」(경고가 있으면 「경고 N곡은 시각이나 이름을 고치면 다시 판단합니다」).
+- 필터(전체 / 새 곡 / 경고 / 이미 있음, 개수 함께, 고른 것 반전)와 「전체 선택」「전체 해제」. 둘 다 지금 필터에 보이는 후보에만 쓴다(`bulkSelection`). 고를 수 없는 후보는 건드리지 않고, 「전체 선택」은 이미 있는 곡을 빼서 같은 곡을 두 번 넣지 않게 한다(필요하면 하나씩 고른다). 그 아래 예전 요약 「선수 N · 상황 N · 팀 응원가 N / 저장 N곡」은 작은 글자로 남겼다.
+- 후보 한 줄(`CandidateTable`): 44px 체크박스, 그 옆 버튼 하나가 「종류(작게) 이름 / 시작 · 끝 · 상태 표시」이고 누르면 그 후보만 펼친다(`aria-expanded`, ChevronDown). 펼치면 종류·이름·시작 시각 칸과(경고면) 원래 설명란 줄·안내·「YouTube에서 그 시각 열기」. 경고가 있는 후보는 처음부터 펼친다(평가를 한 번 한 결과로 `open`을 정함). 상태 표시는 「시각 확인」, 이름 오류, 「같은 상황 곡 있음(저장 안 함)」, 「이미 있음」, 「같은 이름 있음」.
+- 「N곡 저장」과 「취소」는 아래에 붙인다(곡 수정의 저장 줄과 같은 방식, 휴대폰은 독 위). 0곡이면 비활성.
+- 저장 뒤 곡 관리로 갈 때 새 곡이 있는 탭(선수 → 상황 → 팀 응원가 순으로 앞의 것, `savedTab`)을 연다.
+- 측정(Playwright MCP): 두산 모음 영상(모두 이미 있음) 390×844 세로 11,024px → 4,483px, 입력칸(이름·시작·종류) 204개 → 3개(펼친 경고 줄). 360×640 11,067 → 4,524px, 1280×800 10,954 → 4,172px. 한화 곡 4개(노시환, 페라자, 행복송, 라인업송)를 지운 뒤 한화 영상은 390×844 9,792 → 3,668px, 「새 곡」 필터를 켜면 871px.
 
 ## 11. 처음 데이터 만드는 절차 (FR-18, D-01)
 
@@ -1765,7 +1807,7 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 | FR-18 처음 데이터 | `seed-songs.json`, loadSongs(seed), 11절 절차 | 3.2, 3.4, 11 |
 | FR-19 지금을 응원가 시작으로 | PlayerPanel onCheerHere, canCheerHere 주기 갱신 | 7.4 |
 | FR-20 JSON 내보내기 | createSongsFile, Blob 다운로드 | 3.4 |
-| FR-21 JSON 가져오기 | parseSongsFile, confirm, REPLACE_ALL | 3.4, 7.2 |
+| FR-21 JSON 가져오기 | parseSongsFile, 파일 미리 보기([STEP 3-㉔]부터, 전에는 confirm), REPLACE_ALL | 3.4, 5.10, 7.2 |
 | FR-22 처음 데이터로 되돌리기 | SongDataPage confirm, resetToSeed | 7.2 |
 | FR-23 키보드 단축키 | useKeyboardShortcuts | 12.5 |
 | FR-24 볼륨 조절 | VolumeSlider, Settings.volume, volumeRef | 7.3, 8.5 |
@@ -1785,6 +1827,8 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 | FR-38 응원가 시작 눈금 | PlayerPanel `.progress-cheer`, `cheerTarget` | 5.7 |
 | FR-40 가사 | `build-lyrics.mjs`, `playerMediaPlugin.ts` `/lyrics/`, `__LYRICS__`(`LYRICS`), `useSongLyrics`, `parseLyricsFile`, LyricsBlock, PlayerPanel | 5.8 |
 | FR-41 마지막 곡 유지 | PlayerPanel(`history.recent[0]`, 「멈춤」, 「다시 재생」), PlayerCard | 5.8 |
+| FR-48~49 곡 추가 단계·확인 단계 | ImportPage(ImportSteps, filter·open), UrlInputForm `presetUrl`, CandidateTable, `importReview.ts` | 10.4 |
+| FR-50 백업·초기화 | SongDataPage(백업·초기화·저장 위치), `loadLastExport`/`saveLastExport`(`kboCheer.lastExport`), `songsPerTeam` | 3.1, 5.10 |
 | FR-43~45 곡 목록 | SongListPage(탭·검색·필터, 넓은 화면 Outlet), SongListItem, `songList.ts`, 라우터 자식 경로 | 5.1, 5.9 |
 | FR-46~47 곡 수정 | SongEditPage(SongEditor), SegmentBar, TimeField, `songEdit.ts`, `useBlocker`, `--dock-h` | 5.9 |
 | FR-42 팀 순서 바꾸기 | TeamGrid(pointer 끌기·길게 누르기·Alt+방향키), `teamOrder.ts`, Settings.teamOrder, SongDataPage 「팀 순서 처음으로」 | 3.1, 5.8 |

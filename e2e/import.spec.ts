@@ -31,10 +31,11 @@ interface RowView {
 async function candidateRows(page: Page): Promise<RowView[]> {
   return page.locator('.candidate').evaluateAll((items) =>
     items.map((li) => {
-      const input = (label: string) => li.querySelector<HTMLInputElement>(`input[aria-label="${label}"]`)?.value ?? ''
+      // [STEP 3-㉔] 후보는 접힌 한 줄 요약이라 이름·시작은 요약 줄에서 읽는다(펼친 줄의 입력칸과 같은 값)
+      const text = (sel: string) => li.querySelector(sel)?.textContent ?? ''
       return {
-        title: input('이름'),
-        startText: input('시작 시각'),
+        title: text('.candidate-name'),
+        startText: text('.candidate-time'),
         endText: li.querySelector('.candidate-end')?.textContent ?? '',
         warning: li.classList.contains('candidate-warning'),
         checked: li.querySelector<HTMLInputElement>('input[type="checkbox"]')?.checked ?? false,
@@ -86,7 +87,7 @@ test.describe('5. 곡 등록', () => {
     await expect(page.locator('.import-summary')).toHaveText('선수 22 · 상황 4 · 팀 응원가 18 / 저장 44곡', {
       timeout: 15_000,
     })
-    await page.getByRole('button', { name: '저장', exact: true }).click()
+    await page.getByRole('button', { name: '44곡 저장', exact: true }).click()
     await expect(page).toHaveURL(/\/team\/hanwha\/songs$/)
     await expect(toast(page)).toHaveText(/44곡을 저장했습니다/)
     const hanwha = (await storedSongs(page)).filter((s) => s.teamId === 'hanwha')
@@ -144,7 +145,7 @@ test.describe('5. 곡 등록', () => {
     await expect(page.locator('.import-summary')).toHaveText('선수 0 · 상황 0 · 팀 응원가 0 / 저장 0곡', {
       timeout: 15_000,
     })
-    await expect(page.getByRole('button', { name: '저장', exact: true })).toBeDisabled()
+    await expect(page.getByRole('button', { name: '0곡 저장', exact: true })).toBeDisabled()
     const rows = await candidateRows(page)
     const existing = rows.filter((r) => r.badges.includes('이미 있음'))
     const duplicate = rows.filter((r) => r.badges.includes('같은 상황 곡 있음(저장 안 함)'))
@@ -246,7 +247,7 @@ test.describe('5-1. 곡 관리 안의 곡 추가 [STEP 3-⑰]', () => {
     await expect(page.locator('.import-summary')).toHaveText('선수 22 · 상황 4 · 팀 응원가 18 / 저장 44곡', {
       timeout: 15_000,
     })
-    await page.getByRole('button', { name: '저장', exact: true }).click()
+    await page.getByRole('button', { name: '44곡 저장', exact: true }).click()
     await expect(page).toHaveURL(/\/team\/hanwha\/songs$/)
     await expect(page.getByRole('heading', { name: /^곡 관리/ })).toBeVisible()
     // [STEP 3-㉓] 목록은 종류마다 탭이라 44줄 대신 탭 숫자와 선수 탭 줄을 본다

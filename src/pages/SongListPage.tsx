@@ -85,7 +85,8 @@ export default function SongListPage() {
   function preview(song: Song) {
     const playing = nowPlaying?.songId === song.id && status !== 'idle' && status !== 'paused'
     if (playing) stop()
-    else play(song)
+    // 값을 맞추려고 듣는 것이라 튼 횟수·최근 곡에 넣지 않는다
+    else play(song, { record: false })
   }
 
   const head = (

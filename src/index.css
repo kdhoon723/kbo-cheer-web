@@ -181,7 +181,6 @@ kbd {
 .count,
 .now-meta,
 .volume-value,
-.import-summary,
 .candidate-end,
 .song-line-no {
   font-variant-numeric: tabular-nums;
@@ -1716,27 +1715,55 @@ kbd {
   margin-top: 8px;
 }
 
-.data-block .field {
-  margin: 16px 0 0;
+/* 백업 줄: 버튼과 그 옆(좁으면 아래) 한 줄 설명 [STEP 3-㉔] */
+.data-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin-top: 12px;
 }
 
-.data-block input[type='file'] {
-  max-width: 100%;
-  min-height: var(--tap);
+.data-note {
+  font-size: 13px;
   color: var(--text-2);
 }
 
-.data-block input[type='file']::file-selector-button {
-  min-height: var(--tap);
-  margin-right: 12px;
-  padding: 0 16px;
-  font: inherit;
-  font-weight: 600;
-  color: var(--text);
-  background: transparent;
+.file-preview {
+  margin-top: 12px;
+  padding: 12px;
   border: 1px solid var(--edge);
-  border-radius: var(--r-control);
-  cursor: pointer;
+  border-radius: var(--r-plate);
+}
+
+.data-block .file-preview p {
+  color: var(--text);
+}
+
+.data-block .file-preview-name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.file-preview-teams {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 8px 0 0;
+  padding: 0;
+  font-size: 13px;
+  color: var(--text-2);
+  list-style: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.reset-item {
+  margin-top: 12px;
+}
+
+.data-block .reset-item p {
+  margin-top: 4px;
+  font-size: 13px;
 }
 
 /* 곡 관리 머리: 제목과 「곡 추가」 [STEP 3-⑰] */
@@ -1848,9 +1875,92 @@ kbd {
   color: var(--text-2);
 }
 
+/* 곡 추가 단계와 확인 단계 [STEP 3-㉔] */
+.import-steps {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.import-steps li {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-plate);
+}
+
+.import-steps .step-no {
+  font-variant-numeric: tabular-nums;
+}
+
+.import-steps .is-current {
+  color: var(--ink);
+  background: var(--plate);
+  border-color: var(--plate);
+}
+
+.import-guide {
+  margin-bottom: 16px;
+  font-size: 15px;
+  color: var(--text-2);
+}
+
+.review-counts {
+  margin: 8px 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.review-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.filter-group button,
+.plain-btn {
+  padding: 0 10px;
+  color: var(--text-2);
+  border-color: var(--line);
+}
+
+.filter-group button[aria-pressed='true'] {
+  color: var(--ink);
+  background: var(--plate);
+  border-color: var(--plate);
+}
+
+.filter-group button[aria-pressed='true'] .count {
+  color: var(--ink);
+}
+
+.bulk-actions {
+  display: flex;
+  gap: 4px;
+}
+
 .import-summary {
   margin-bottom: 8px;
-  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-2);
 }
 
 .candidates {
@@ -1861,56 +1971,110 @@ kbd {
 }
 
 .candidate {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
-  padding: 12px 0;
   border-bottom: 1px solid var(--line);
 }
 
-.candidate input[type='text'],
-.candidate select {
-  width: 100%;
-  min-width: 0;
-  padding: 0 8px;
+.candidate-line {
+  display: flex;
+  align-items: center;
 }
 
 .candidate-check {
   display: flex;
+  flex: none;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  width: var(--tap);
   min-height: var(--tap);
 }
 
 .candidate-check input {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
+}
+
+.candidate-toggle {
+  flex: 1;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 2px 8px;
+  min-width: 0;
+  padding: 6px 4px;
+  font-weight: 400;
+  text-align: left;
+  border: 0;
+  border-radius: 0;
+}
+
+.candidate-main {
+  display: flex;
+  flex: 1 1 100%;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.candidate-kind {
+  flex: none;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.candidate-name {
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.candidate-sub {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.candidate-time,
+.candidate-end {
+  font-variant-numeric: tabular-nums;
+}
+
+.candidate-chevron {
+  margin-left: auto;
+  color: var(--text-2);
+}
+
+.candidate.is-open .candidate-chevron {
+  transform: rotate(180deg);
+}
+
+.candidate-edit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+  padding: 4px 4px 12px var(--tap);
+}
+
+.candidate-edit input[type='text'],
+.candidate-edit select {
+  width: 100%;
+  min-width: 0;
+  padding: 0 8px;
 }
 
 .candidate-title {
   grid-column: 1 / -1;
 }
 
-.candidate-end {
-  font-size: 13px;
-  color: var(--text-2);
-}
-
-.candidate-notes,
 .candidate-warn-detail {
   grid-column: 1 / -1;
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 8px;
-}
-
-.candidate-notes:empty {
-  display: none;
-}
-
-.candidate-warn-detail {
   flex-direction: column;
+  gap: 4px 8px;
 }
 
 .candidate-warn-detail code {
@@ -1929,8 +2093,24 @@ kbd {
 }
 
 .candidate-warning {
-  padding: 12px;
   background: var(--pressed);
+}
+
+/* 저장·취소는 아래에 붙인다. 휴대폰은 독 위(곡 수정의 저장 줄과 같다) */
+.review-actions {
+  position: sticky;
+  bottom: var(--dock-h, 0px);
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  margin: 16px calc(-1 * var(--gutter)) 0;
+  padding: 12px var(--gutter);
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+}
+
+.review-actions .primary-btn {
+  flex: 1;
 }
 
 .badge {
@@ -2353,7 +2533,8 @@ kbd {
 
 /* 곡 관리: 1200px 이상은 목록과 수정 칸을 나란히 둔다 [STEP 3-㉓] */
 @media (min-width: 900px) {
-  .edit-actions {
+  .edit-actions,
+  .review-actions {
     bottom: 0;
     margin-inline: 0;
     padding-inline: 0;

@@ -8,9 +8,11 @@ import StatusMessage from './StatusMessage.tsx'
 interface Props {
   disabled: boolean
   onSubmit: (videoId: string) => void
+  /** 처음 데이터에 쓴 이 팀 모음 영상 주소. 있으면 「이 팀 기본 모음 영상」 버튼이 칸에 넣는다 */
+  presetUrl: string | null
 }
 
-export default function UrlInputForm({ disabled, onSubmit }: Props) {
+export default function UrlInputForm({ disabled, onSubmit, presetUrl }: Props) {
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
 
@@ -39,9 +41,16 @@ export default function UrlInputForm({ disabled, onSubmit }: Props) {
         />
       </label>
       {error && <StatusMessage tone="error">{error}</StatusMessage>}
-      <button type="submit" className="primary-btn" disabled={disabled}>
-        불러오기
-      </button>
+      <div className="button-row">
+        <button type="submit" className="primary-btn" disabled={disabled}>
+          불러오기
+        </button>
+        {presetUrl && (
+          <button type="button" disabled={disabled} onClick={() => setText(presetUrl)}>
+            이 팀 기본 모음 영상
+          </button>
+        )}
+      </div>
     </form>
   )
 }

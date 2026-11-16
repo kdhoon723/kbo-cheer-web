@@ -11,6 +11,7 @@ export const TEAM_KEY = 'kboCheer.team'
 export const SETTINGS_KEY = 'kboCheer.settings'
 export const HISTORY_KEY = 'kboCheer.history'
 export const BROKEN_KEY = 'kboCheer.songs.broken'
+export const LAST_EXPORT_KEY = 'kboCheer.lastExport'
 
 export type LoadStatus = 'ok' | 'missing' | 'corrupt' | 'unavailable'
 export interface LoadResult<T> {
@@ -97,6 +98,18 @@ export function loadSongs(seed: Song[]): LoadResult<Song[]> {
   return { value: seed, status: 'corrupt' }
 }
 
+/**
+ * 처음 데이터 없이 바로 쓸 수 있는 저장 목록. 지금 차례로 저장된 목록이면 그 곡들, 아니면 null이다.
+ * null이면 처음 데이터를 받아 loadSongs로 읽는다(없음·깨짐·예전 차례·저장소 못 씀) [STEP 3-㉔]
+ */
+export function loadCurrentSongs(): Song[] | null {
+  const read = readRaw(SONGS_KEY)
+  if (read.kind !== 'ok') return null
+  const data = parseJson(read.raw)
+  if (!isRecord(data) || data.version !== 1 || data.seedRevision !== SEED_REVISION || !isSongArray(data.songs)) return null
+  return data.songs
+}
+
 export function saveSongs(songs: Song[]): boolean {
   return write(SONGS_KEY, { version: 1, seedRevision: SEED_REVISION, songs })
 }
@@ -152,4 +165,26 @@ export function loadHistory(): LoadResult<PlayHistory> {
 
 export function saveHistory(history: PlayHistory): boolean {
   return write(HISTORY_KEY, { version: 1, ...history })
+}
+
+/** 마지막으로 JSON을 내보낸 때와 곡 수 [STEP 3-㉔]. 없거나 틀리면 null(안내만 하는 값이라 알리지 않는다) */
+export interface LastExport {
+  at: string
+  count: number
+}
+
+export function loadLastExport(): LastExport | null {
+  const read = readRaw(LAST_EXPORT_KEY)
+  if (read.kind !== 'ok') return null
+  const data = parseJson(read.raw)
+  if (!isRecord(data) || data.version !== 1) return null
+  const { at, count } = data
+  if (typeof at !== 'string' || Number.isNaN(Date.parse(at)) || typeof count !== 'number' || !Number.isInteger(count)) {
+    return null
+  }
+  return { at, count }
+}
+
+export function saveLastExport(value: LastExport): boolean {
+  return write(LAST_EXPORT_KEY, { version: 1, ...value })
 }

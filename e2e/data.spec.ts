@@ -92,19 +92,19 @@ test.describe('7. JSON과 처음 데이터', () => {
     await page.getByRole('button', { name: '처음 데이터로 되돌리기' }).click()
     expect((await storedSongs(page)).some((s) => s.title === '노시환(수정)')).toBe(false)
 
-    const messages: string[] = []
-    page.once('dialog', (d) => {
-      messages.push(d.message())
-      void d.accept()
-    })
+    // [STEP 3-㉔] 확인 창 대신 파일 미리 보기의 「이 파일로 바꾸기」가 확인이다
     await page.locator('input[type="file"]').setInputFiles(filePath)
+    const preview = page.getByRole('region', { name: '가져올 파일' })
+    await expect(preview).toContainText('507곡 · 지금 곡 목록 507곡을 이 파일의 곡으로 바꿉니다(합치지 않습니다)')
+    await preview.getByRole('button', { name: '이 파일로 바꾸기' }).click()
     await expect(toast(page)).toHaveText(/507곡을 가져왔습니다/)
-    expect(messages).toEqual(['지금 곡 목록 507곡을 파일의 507곡으로 바꿉니다'])
     expect(await storedSongs(page)).toEqual(exported)
   })
 
   test('TC-48 잘못된 JSON 파일', async ({ page }, testInfo) => {
     await page.goto('/team/hanwha/songs/data')
+    // [STEP 3-㉔] 첫 방문은 처음 데이터를 받은 뒤 저장하므로 화면이 뜬 뒤에 읽는다
+    await expect(page.getByText('현재 곡 507곡')).toBeVisible()
     const before = await storedSongs(page)
     const dialogs: string[] = []
     page.on('dialog', (d) => {

@@ -20,7 +20,8 @@ interface PlayerContextValue {
   status: PlaybackStatus
   nowPlaying: NowPlaying | null
   canControlVolume: boolean
-  play: (song: Song) => void
+  /** record false: 곡 관리의 미리 듣기. 튼 횟수·최근 곡(마지막 곡)에 넣지 않는다 [STEP 3-㉔] */
+  play: (song: Song, options?: { record?: boolean }) => void
   stop: () => void
   /** 일시정지한 곡을 멈춘 자리부터 다시 튼다 */
   resume: () => void
@@ -175,13 +176,13 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }, [loadSegment])
 
   const play = useCallback(
-    (song: Song) => {
+    (song: Song, options?: { record?: boolean }) => {
       cancelFade()
       clearAutoplayCheck()
       pendingRef.current = null
       bufferingSinceRef.current = null
       bufferingNoticedRef.current = false
-      recordPlay(song.id)
+      if (options?.record !== false) recordPlay(song.id)
       const seg: NowPlaying = { songId: song.id, videoId: song.videoId, start: song.start, end: song.end }
       segRef.current = seg
       setNowPlaying(seg)
