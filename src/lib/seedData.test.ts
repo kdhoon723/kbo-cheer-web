@@ -47,13 +47,29 @@ describe('fillCheerStarts', () => {
 })
 
 describe('upgradeSavedSongs', () => {
-  const saved = [makeSong({ start: 10, end: 60 })]
+  // 처음 데이터: 한화(차례 1에 넣은 값)와 삼성(차례 2에 넣은 값)
+  const seed2 = [
+    makeSong({ id: 'h', teamId: 'hanwha', start: 10, end: 60, cheerStart: 30 }),
+    makeSong({ id: 's1', teamId: 'samsung', start: 100, end: 160, cheerStart: 120 }),
+    makeSong({ id: 's2', teamId: 'samsung', start: 200, end: 260, cheerStart: 230 }),
+  ]
+  const blank = seed2.map((s) => ({ ...s, cheerStart: null }))
 
-  it('차례 0이면 응원가 시작을 채운다', () => {
-    expect(upgradeSavedSongs(saved, seed, 0)[0].cheerStart).toBe(30)
+  it('차례 0(예전 목록)이면 모든 팀을 채운다', () => {
+    expect(upgradeSavedSongs(blank, seed2, 0).map((s) => s.cheerStart)).toEqual([30, 120, 230])
   })
 
-  it('차례 1이면 그대로 둔다', () => {
-    expect(upgradeSavedSongs(saved, seed, 1)).toBe(saved)
+  it('차례 1이면 삼성만 새로 채우고, 사용자가 지운 한화 값은 되살리지 않으며 사용자 값은 지킨다', () => {
+    // 차례 1 목록: 한화는 채워졌다가 사용자가 지움, 삼성 s2는 사용자가 직접 정함
+    const rev1 = [blank[0], blank[1], { ...blank[2], cheerStart: 210 }]
+    expect(upgradeSavedSongs(rev1, seed2, 1).map((s) => s.cheerStart)).toEqual([null, 120, 210])
+  })
+
+  it('지금 차례(2)면 같은 배열을 돌려준다', () => {
+    expect(upgradeSavedSongs(blank, seed2, 2)).toBe(blank)
+  })
+
+  it('only를 주면 그 곡의 처음 데이터 값만 쓴다', () => {
+    expect(fillCheerStarts(blank, seed2, (s) => s.id === 's2').map((s) => s.cheerStart)).toEqual([null, null, 230])
   })
 })

@@ -1,5 +1,6 @@
 //20241476-김도훈-(2026-11-15)
 import { describe, expect, it } from 'vitest'
+import { SONGS_KEY, loadSongs } from '../lib/storage.ts'
 import { normalize } from '../lib/hangul.ts'
 import { parseSongsFile } from '../lib/songsFile.ts'
 import type { Song, SongKind, TeamId } from '../types.ts'
@@ -57,18 +58,21 @@ describe('처음 데이터(seed-songs.json)', () => {
     expect(champion && [champion.start, champion.end]).toEqual([2355, 2436])
   })
 
-  it('응원가 시작 지점은 선수곡 120곡에 있고 모두 시작과 끝 사이다', () => {
+  it('응원가 시작 지점은 선수곡 146곡에 있고 모두 시작과 끝 사이다', () => {
     const songs = loadSeed()
     const withCheer = songs.filter((s) => s.cheerStart !== null)
-    expect(withCheer).toHaveLength(120)
+    expect(withCheer).toHaveLength(146)
     expect(withCheer.every((s) => s.kind === 'player')).toBe(true)
     for (const s of withCheer) {
       expect(s.cheerStart !== null && s.start < s.cheerStart && s.cheerStart < s.end, s.title).toBe(true)
     }
     const byTeam = Object.fromEntries(TEAM_IDS.map((t) => [t, withCheer.filter((s) => s.teamId === t).length]))
     expect(byTeam).toEqual({
-      kiwoom: 18, hanwha: 10, lotte: 1, ssg: 17, doosan: 18, nc: 22, kia: 1, lg: 12, samsung: 0, kt: 21,
+      kiwoom: 18, hanwha: 10, lotte: 1, ssg: 17, doosan: 18, nc: 22, kia: 1, lg: 12, samsung: 26, kt: 21,
     })
+    // 삼성에서 비어 있는 곡은 기준 녹음에 없던 두 곡뿐이다 [STEP 3-㉒]
+    const samsungBlank = songs.filter((s) => s.teamId === 'samsung' && s.kind === 'player' && s.cheerStart === null)
+    expect(samsungBlank.map((s) => s.title).sort()).toEqual(['김상준', '장승현'])
   })
 
   it('팀마다 같은 제목의 상황 곡이 없다', () => {
@@ -128,3 +132,21 @@ describe('팀 응원가 순위(team-song-ranks.json)', () => {
     expect(sortTeamSongs(team, 'popular', TEAM_SONG_RANKS).slice(0, 3).map((s) => s.title)).toEqual(top3)
   })
 })
+
+describe('이미 저장한 브라우저의 응원가 시작 채우기 [STEP 3-㉒]', () => {
+  it('차례 1 목록(120곡 채움 + 사용자가 지운 곡 하나)에서는 삼성 26곡만 새로 채우고 지운 곡은 그대로 둔다', () => {
+    const seed = loadSeed()
+    const cleared = seed.find((s) => s.teamId === 'nc' && s.title === '권희동')
+    if (!cleared) throw new Error('권희동 없음')
+    // 차례 1 때의 목록: 삼성은 아직 비어 있고, 사용자가 권희동 값을 지웠다
+    const rev1 = seed.map((s) => (s.teamId === 'samsung' || s.id === cleared.id ? { ...s, cheerStart: null } : s))
+    localStorage.setItem(SONGS_KEY, JSON.stringify({ version: 1, seedRevision: 1, songs: rev1 }))
+    const { value, status } = loadSongs(seed)
+    expect(status).toBe('ok')
+    expect(value.filter((s) => s.teamId === 'samsung' && s.cheerStart !== null)).toHaveLength(26)
+    expect(value.find((s) => s.id === cleared.id)?.cheerStart).toBeNull()
+    expect(value.filter((s) => s.cheerStart !== null)).toHaveLength(145)
+    localStorage.clear()
+  })
+})
+

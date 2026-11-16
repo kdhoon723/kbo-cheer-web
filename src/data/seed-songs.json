@@ -4715,7 +4715,7 @@
       "videoDuration": 3876,
       "start": 163,
       "end": 218,
-      "cheerStart": null,
+      "cheerStart": 179,
       "id": "mwhtez1raxprce0h",
       "order": 1
     },
@@ -4739,7 +4739,7 @@
       "videoDuration": 3876,
       "start": 231,
       "end": 289,
-      "cheerStart": null,
+      "cheerStart": 256,
       "id": "mwhtez1razvjkhiv",
       "order": 3
     },
@@ -4751,7 +4751,7 @@
       "videoDuration": 3876,
       "start": 358,
       "end": 447,
-      "cheerStart": null,
+      "cheerStart": 392,
       "id": "mwhtez1rb0tuiwpu",
       "order": 4
     },
@@ -4763,7 +4763,7 @@
       "videoDuration": 3876,
       "start": 447,
       "end": 509,
-      "cheerStart": null,
+      "cheerStart": 475,
       "id": "mwhtez1rb1y6samo",
       "order": 5
     },
@@ -4799,7 +4799,7 @@
       "videoDuration": 3876,
       "start": 558,
       "end": 607,
-      "cheerStart": null,
+      "cheerStart": 576,
       "id": "mwhtez1rb460zynx",
       "order": 8
     },
@@ -4811,7 +4811,7 @@
       "videoDuration": 3876,
       "start": 607,
       "end": 666,
-      "cheerStart": null,
+      "cheerStart": 632,
       "id": "mwhtez1rb5k3dznw",
       "order": 9
     },
@@ -4823,7 +4823,7 @@
       "videoDuration": 3876,
       "start": 705,
       "end": 790,
-      "cheerStart": null,
+      "cheerStart": 732,
       "id": "mwhtez1rb6cvf4le",
       "order": 10
     },
@@ -4835,7 +4835,7 @@
       "videoDuration": 3876,
       "start": 790,
       "end": 861,
-      "cheerStart": null,
+      "cheerStart": 823,
       "id": "mwhtez1rb7uj5kvj",
       "order": 11
     },
@@ -4847,7 +4847,7 @@
       "videoDuration": 3876,
       "start": 861,
       "end": 915,
-      "cheerStart": null,
+      "cheerStart": 886,
       "id": "mwhtez1rb8yqlw53",
       "order": 12
     },
@@ -4859,7 +4859,7 @@
       "videoDuration": 3876,
       "start": 915,
       "end": 1001,
-      "cheerStart": null,
+      "cheerStart": 945,
       "id": "mwhtez1rb9ltefdt",
       "order": 13
     },
@@ -4871,7 +4871,7 @@
       "videoDuration": 3876,
       "start": 1001,
       "end": 1048,
-      "cheerStart": null,
+      "cheerStart": 1016,
       "id": "mwhtez1rbays5ifg",
       "order": 14
     },
@@ -4883,7 +4883,7 @@
       "videoDuration": 3876,
       "start": 1048,
       "end": 1094,
-      "cheerStart": null,
+      "cheerStart": 1063,
       "id": "mwhtez1rbb99rux7",
       "order": 15
     },
@@ -4895,7 +4895,7 @@
       "videoDuration": 3876,
       "start": 1094,
       "end": 1153,
-      "cheerStart": null,
+      "cheerStart": 1124,
       "id": "mwhtez1rbc8n7d07",
       "order": 16
     },
@@ -4907,7 +4907,7 @@
       "videoDuration": 3876,
       "start": 1153,
       "end": 1212,
-      "cheerStart": null,
+      "cheerStart": 1179,
       "id": "mwhtez1rbd4l8o0b",
       "order": 17
     },
@@ -4919,7 +4919,7 @@
       "videoDuration": 3876,
       "start": 1212,
       "end": 1262,
-      "cheerStart": null,
+      "cheerStart": 1230,
       "id": "mwhtez1rbeq4jhcd",
       "order": 18
     },
@@ -4931,7 +4931,7 @@
       "videoDuration": 3876,
       "start": 1262,
       "end": 1321,
-      "cheerStart": null,
+      "cheerStart": 1290,
       "id": "mwhtez1rbfk5i940",
       "order": 19
     },
@@ -4943,7 +4943,7 @@
       "videoDuration": 3876,
       "start": 1321,
       "end": 1370,
-      "cheerStart": null,
+      "cheerStart": 1337,
       "id": "mwhtez1rbgw4bddu",
       "order": 20
     },
@@ -4955,7 +4955,7 @@
       "videoDuration": 3876,
       "start": 1370,
       "end": 1422,
-      "cheerStart": null,
+      "cheerStart": 1389,
       "id": "mwhtez1rbh2rvyaw",
       "order": 21
     },
@@ -4967,7 +4967,7 @@
       "videoDuration": 3876,
       "start": 1422,
       "end": 1484,
-      "cheerStart": null,
+      "cheerStart": 1458,
       "id": "mwhtez1rbijwe8o6",
       "order": 22
     },
@@ -4979,7 +4979,7 @@
       "videoDuration": 3876,
       "start": 1484,
       "end": 1546,
-      "cheerStart": null,
+      "cheerStart": 1514,
       "id": "mwhtez1rbjvj1g0o",
       "order": 23
     },
@@ -4991,7 +4991,7 @@
       "videoDuration": 3876,
       "start": 1546,
       "end": 1597,
-      "cheerStart": null,
+      "cheerStart": 1565,
       "id": "mwhtez1rbk5kvt3f",
       "order": 24
     },
@@ -5015,7 +5015,7 @@
       "videoDuration": 3876,
       "start": 1627,
       "end": 1675,
-      "cheerStart": null,
+      "cheerStart": 1643,
       "id": "mwhtez1rbm5glmgw",
       "order": 26
     },
@@ -5027,7 +5027,7 @@
       "videoDuration": 3876,
       "start": 1675,
       "end": 1752,
-      "cheerStart": null,
+      "cheerStart": 1691,
       "id": "mwhtez1rbnohwnph",
       "order": 27
     },
@@ -5039,7 +5039,7 @@
       "videoDuration": 3876,
       "start": 1752,
       "end": 1805,
-      "cheerStart": null,
+      "cheerStart": 1776,
       "id": "mwhtez1rboufzihw",
       "order": 28
     },
@@ -5063,7 +5063,7 @@
       "videoDuration": 3876,
       "start": 1855,
       "end": 1926,
-      "cheerStart": null,
+      "cheerStart": 1872,
       "id": "mwhtez1rbqd7hh9b",
       "order": 30
     },
@@ -5075,7 +5075,7 @@
       "videoDuration": 3876,
       "start": 1926,
       "end": 1985,
-      "cheerStart": null,
+      "cheerStart": 1949,
       "id": "mwhtez1rbrb5tyic",
       "order": 31
     },

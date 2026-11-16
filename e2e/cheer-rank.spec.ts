@@ -52,10 +52,11 @@ test.describe('15. 응원가 시작 지점과 팀 응원가 정렬 [STEP 3-⑲]'
     const songs = await storedSongs(page)
     const filled = songs.filter((s) => s.cheerStart !== null)
     note(testInfo, '채워진 곡 수', filled.length)
-    expect(filled).toHaveLength(120)
+    // [STEP 3-㉒] 처음 데이터가 146곡이 되어, 차례가 없는 예전 목록은 146곡(사용자가 정한 김주원 포함)이 채워진다
+    expect(filled).toHaveLength(146)
     expect(songs.find((s) => s.id === kim.id)?.cheerStart).toBe(kim.start + 3)
     const raw = JSON.parse((await page.evaluate((key) => localStorage.getItem(key), SONGS_KEY)) ?? '{}')
-    expect(raw.seedRevision).toBe(1)
+    expect(raw.seedRevision).toBe(2)
 
     // 채운 뒤 사용자가 한 곡의 값을 지우면 새로고침해도 되살아나지 않는다
     const pwk = seedSong('nc', '권희동')
@@ -79,6 +80,8 @@ test.describe('15. 응원가 시작 지점과 팀 응원가 정렬 [STEP 3-⑲]'
       ['nc', '박건우'],
       ['doosan', '박찬호'],
       ['doosan', '양의지'],
+      ['samsung', '디아즈'],
+      ['samsung', '구자욱'],
     ]
     for (const [teamId, title] of picks) {
       const song = seedSong(teamId, title)

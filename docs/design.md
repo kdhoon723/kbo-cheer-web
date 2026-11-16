@@ -307,13 +307,14 @@ interface Window {
 
 | 키 | 값 형식 | 없을 때 | 깨졌을 때 |
 | --- | --- | --- | --- |
-| `kboCheer.songs` | `{ "version": 1, "seedRevision": 1, "songs": Song[] }`(`seedRevision`은 [STEP 3-⑲]부터) | 처음 데이터로 시작(알림 없음) | 원래 문자열을 `kboCheer.songs.broken`에 옮긴 뒤 처음 데이터로 복구, "저장 데이터가 손상되어 초기화했습니다" 1회 알림(EX-14) [R-16] |
+| `kboCheer.songs` | `{ "version": 1, "seedRevision": 2, "songs": Song[] }`(`seedRevision`은 [STEP 3-⑲]부터, 2는 [STEP 3-㉒]부터) | 처음 데이터로 시작(알림 없음) | 원래 문자열을 `kboCheer.songs.broken`에 옮긴 뒤 처음 데이터로 복구, "저장 데이터가 손상되어 초기화했습니다" 1회 알림(EX-14) [R-16] |
 | `kboCheer.team` | `{ "version": 1, "currentTeamId": TeamId \| null, "prevTeamId": TeamId \| null }` | 둘 다 null → 팀 선택 화면(BR-28) | 둘 다 null로 시작 |
 | `kboCheer.settings` | `{ "version": 1, "volume": number, "gridSort": GridSort, "teamSort": TeamSongSort, "teamOrder": TeamId[] }` | 기본값 `{ volume: 100, gridSort: 'starters', teamSort: 'popular', teamOrder: 10개 팀 처음 순서 }` | 볼륨이 틀렸거나 version이 다르면 기본값으로 시작. 정렬만 알 수 없는 값('chapter' 포함)이면 정렬만 기본값으로 읽고 볼륨은 지킨다 [STEP 3-⑪]. 팀 응원가 정렬도 같다(빠진 예전 값은 인기순) [STEP 3-⑲]. 팀 순서는 10개 팀이 한 번씩 있지 않으면 처음 순서로 읽는다 [STEP 3-⑳] |
 | `kboCheer.history` | `{ "version": 1, "counts": { [songId]: number }, "recent": string[] }` | 빈 기록 | 빈 기록으로 시작(알림 없음). 구조는 맞고 항목만 틀리면 그 항목만 버린다 [STEP 3-⑪] |
 
 - [STEP 3-⑪] 예전 정렬 값 'chapter'는 값 하나가 사라진 것이지 형식이 바뀐 것이 아니라 version을 올리지 않는다. 설정은 version 1 그대로 두고 `gridSort`를 읽을 때만 `parseGridSort(unknown)`으로 허용 값 세 가지 밖이면 기본값으로 바꾼다(처음에는 값 하나가 틀리면 설정 전체를 기본값으로 돌렸는데, 이러면 볼륨을 잃는다). 튼 기록(`kboCheer.history`)은 곡 목록과 키가 달라 JSON 가져오기·처음 데이터로 되돌리기(`kboCheer.songs`만 바꿈)가 기록을 지우지 않는다.
-- [STEP 3-⑲] 처음 데이터를 고친 차례 `seedRevision`. 처음 데이터에 응원가 시작 120곡을 넣었지만 이미 곡 목록을 저장한 브라우저는 처음 데이터를 다시 읽지 않는다. 그래서 곡 목록을 저장할 때 지금 차례(`SEED_REVISION = 1`)를 함께 적고, 읽을 때 차례가 없거나(0으로 본다) 작으면 `upgradeSavedSongs(saved, seed, 차례)`로 그 사이의 고침을 적용한다. 차례 1의 고침은 `fillCheerStarts`다: 응원가 시작이 null인 선수곡만, 처음 데이터에서 같은 열쇠(`songKey` = 팀·영상 ID·시작 시각)의 값을 찾아 그 곡의 시작 < 값 < 끝일 때 채운다. 바뀐 목록은 SongsProvider가 처음 렌더 뒤 저장하면서 차례 1이 적혀 다음부터는 채우지 않는다.
+- [STEP 3-⑲] 처음 데이터를 고친 차례 `seedRevision`. 처음 데이터에 응원가 시작 120곡을 넣었지만 이미 곡 목록을 저장한 브라우저는 처음 데이터를 다시 읽지 않는다. 그래서 곡 목록을 저장할 때 지금 차례(`SEED_REVISION = 1`)를 함께 적고, 읽을 때 차례가 없거나(0으로 본다) 작으면 `upgradeSavedSongs(saved, seed, 차례)`로 그 사이의 고침을 적용한다. 차례 1의 고침은 `fillCheerStarts`다: 응원가 시작이 null인 선수곡만, 처음 데이터에서 같은 열쇠(`songKey` = 팀·영상 ID·시작 시각)의 값을 찾아 그 곡의 시작 < 값 < 끝일 때 채운다. 바뀐 목록은 SongsProvider가 처음 렌더 뒤 저장하면서 지금 차례가 적혀 다음부터는 채우지 않는다.
+  - [STEP 3-⑲·㉒] 차례 표(`REVISIONS`, `lib/seedData.ts`): 차례마다 "이 차례에 응원가 시작을 새로 넣은 곡"을 고르는 함수를 둔다. 1은 모든 곡(120곡), 2는 삼성 곡(26곡)이다. `upgradeSavedSongs`는 저장된 차례보다 뒤 차례만 차례대로 적용하고, 각 차례는 `fillCheerStarts(saved, seed, 그 차례의 곡)`로 그 곡들의 값만 쓴다. 차례 1 목록은 삼성만 채우므로, 사용자가 지운 120곡의 값은 되살아나지 않는다(차례 2는 삼성 값이 처음 데이터에 없던 때와 겹치지 않는다. 차례 1 때 삼성은 0곡이었다). 곡 열쇠 목록 대신 팀으로 고른 이유는 이번 고침이 "삼성 선수곡 전체"라 팀 하나로 정확히 가려지고, 열쇠 26개를 코드에 다시 적지 않아도 되기 때문이다. 다음에 다른 곡을 고치면 그 곡을 고르는 함수와 함께 차례 3을 더한다.
   - 열쇠로 id를 쓰지 않은 이유: 처음 데이터를 지우고 같은 모음 영상을 다시 가져오면 id는 새로 생기지만 영상·시각은 같다. 제목은 사용자가 고칠 수 있어 쓰지 않는다.
   - "한 번만"이 필요한 이유: 사용자는 수정 화면에서 응원가 시작을 지울 수 있다(BR-21). 읽을 때마다 null을 채우면 지운 값이 되살아난다.
   - version을 올리지 않은 이유: 필드 하나를 더한 것이라 예전 앱이 읽어도 깨지지 않고(모르는 필드는 무시), 형식 검사(`isSongArray`)도 그대로다. version 2로 올리면 예전 앱에서는 곡 목록 전체가 깨진 데이터가 된다.
@@ -349,7 +350,7 @@ loadSongs(seed):
   catch → backupBroken(raw); { value: seed, status: 'corrupt' }
   if !(isObject(data) && data.version === 1 && isSongArray(data.songs))
     → backupBroken(raw); { value: seed, status: 'corrupt' }
-  revision = typeof data.seedRevision === 'number' ? data.seedRevision : 0   // [STEP 3-⑲]
+  revision = typeof data.seedRevision === 'number' ? data.seedRevision : 0   // [STEP 3-⑲], 지금 차례는 2 [STEP 3-㉒]
   → { value: upgradeSavedSongs(data.songs, seed, revision), status: 'ok' }
 ```
 
@@ -857,7 +858,7 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 
 ### 5.7 응원가 시작 지점·진행 막대 눈금·팀 응원가 정렬 [STEP 3-⑲]
 
-**처음 데이터의 응원가 시작(FR-37).** 120곡의 값은 11절, 이미 저장한 브라우저에 한 번 채우는 방식은 3.1절이다.
+**처음 데이터의 응원가 시작(FR-37).** 146곡([STEP 3-㉒] 삼성 26곡 포함)의 값은 11절, 이미 저장한 브라우저에 한 번 채우는 방식은 3.1절이다.
 
 **진행 막대 눈금(FR-38).** 진행 막대(`.progress`, 재생 줄 위 2px, 지금 재생 시트 4px)는 하나의 요소를 두 자리에 그린다. 응원가 시작이 지금 재생 구간 안에 있는 선수곡이면(`cheerTarget`, BR-04와 같은 조건) 막대 위에 2×10px(시트는 4px 막대에 맞춰 위로 3px) 눈금(`.progress-cheer`, 글자색 #F1ECE3)을 `left: (응원가 시작 − 시작) ÷ (끝 − 시작)`에 둔다. 눈금은 디자인 개편 때 만들어 두었지만 처음 데이터에 응원가 시작이 없어 지금까지 보인 적이 없었다. 이번에 120곡에 값이 생겨 처음 보이게 됐고, 코드는 바꾸지 않았다. 넓은 화면의 선수 카드에는 따로 막대가 없고 카드 바로 아래 재생 줄의 막대가 그 곡의 막대다. 눈금은 transform·opacity 어느 것도 움직이지 않고, 채워지는 막대(`scaleX`)만 250ms 간격으로 바뀐다.
 
@@ -1598,7 +1599,7 @@ useEffect(() => () => requestRef.current?.abort(), [])
 5. 10개 팀 저장 후 `/settings`에서 내보내기 → 받은 파일을 `src/data/seed-songs.json`으로 바꿔 넣는다.
 6. 검증: LocalStorage를 비우고 다시 열어 10개 팀 곡 수를 확인한다. 선수 수는 1.5절 조사 결과(합계 235명)와 같아야 하고, 두산 `서울 두산 승리하리라`는 40:36이어야 한다(FR-18 수용 기준). seed 파일이 `parseSongsFile`을 통과하는지 단위 테스트로도 확인한다(R-18).
 
-- 응원가 시작 지점(cheerStart)은 처음 데이터에서 모두 null이었다. [STEP 3-⑲] 저장소 밖 `data/cheer-starts.json`(학생이 정리한 120곡: 들으며 표시 10곡, 등장곡 뒤 응원가 시작을 추정한 110곡)을 `scripts/import-song-data.mjs`로 넣었다. 스크립트는 곡을 (팀, 영상 ID, 시작 시각)으로 찾고 제목까지 맞는 선수곡이 정확히 하나가 아니면 아무것도 쓰지 않는다. 값은 초 단위로 내림한다(앱이 시각을 정수 초로만 다루고, 응원가 앞을 1초 안쪽 더 듣는 쪽이 첫 박을 놓치는 쪽보다 낫다). 나머지 115곡은 사용자가 쓰면서 FR-19로 채운다. 이미 저장한 브라우저는 3.1절의 `seedRevision`으로 한 번 채운다.
+- 응원가 시작 지점(cheerStart)은 처음 데이터에서 모두 null이었다. [STEP 3-⑲] 저장소 밖 `data/cheer-starts.json`(학생이 정리한 120곡: 들으며 표시 10곡, 등장곡 뒤 응원가 시작을 추정한 110곡)을 `scripts/import-song-data.mjs`로 넣었다. 스크립트는 곡을 (팀, 영상 ID, 시작 시각)으로 찾고 제목까지 맞는 선수곡이 정확히 하나가 아니면 아무것도 쓰지 않는다. 값은 초 단위로 내림한다(앱이 시각을 정수 초로만 다루고, 응원가 앞을 1초 안쪽 더 듣는 쪽이 첫 박을 놓치는 쪽보다 낫다). 나머지 115곡은 사용자가 쓰면서 FR-19로 채운다. 이미 저장한 브라우저는 3.1절의 `seedRevision`으로 한 번 채운다. [STEP 3-㉒] 삼성 26곡을 더해 146곡이 되었다. 스크립트를 다시 돌린 결과 바뀐 줄은 삼성 26곡의 `cheerStart`(null → 값)뿐이고, 다른 팀 값과 순위 파일은 그대로였다. 비어 있는 곡은 89곡이다.
 - 이 절차는 가져오기·확인·내보내기 기능이 모두 구현된 뒤(STEP 3 후반)에 한다.
 
 ### 11.1 응원가 시작·인기 순위·가사의 출처 [STEP 3-⑲·⑳]
@@ -1607,7 +1608,7 @@ useEffect(() => () => requestRef.current?.abort(), [])
 
 | 자료 | 곡 수 | 만든 방법 | 저장소에 들어가는 곳 |
 | --- | --- | --- | --- |
-| 응원가 시작 지점(`cheer-starts.json`) | 선수곡 120 | 110곡: AI 에이전트가 만든 정렬 도구. 구단 공식 사이트의 응원가만 있는 녹음(KT·LG·NC·키움)과 구단 공식 YouTube 플레이리스트의 녹음(두산·SSG)을 모음 영상 선수 구간(등장곡 + 응원가) 안에서 찾았다. 3초 창 여러 개의 정규화 상호상관으로 찾고, 창 3개 이상이 50ms 안에서 일치할 때만 값을 정했다. 그래서 공식 녹음이 없는 한화·삼성·KIA·롯데는 거의 없다. 10곡(한화): 학생이 직접 들으며 표시했다 | `seed-songs.json`의 `cheerStart`(내림한 정수 초) |
+| 응원가 시작 지점(`cheer-starts.json`) | 선수곡 146 | [STEP 3-㉒] 삼성 26곡: 같은 정렬 도구에 기준 녹음만 다르다. 삼성은 구단 사이트에 선수 응원가가 없고 구단 공식 플레이리스트(LionsTV)는 등장곡까지 붙어 있어, 응원가만 담긴 팬 모음 영상 두 편(rv6XIhllsEk, 5-EOJWvK9z0, 등장곡과 응원가가 챕터로 나뉨)의 선수 챕터를 기준으로 썼다. 기준 녹음 앞 3초 창 8개를 처음 데이터 삼성 영상(bZb6y4beRUQ)의 선수 구간 앞 90초에서 찾고, 창 3개 이상이 50ms 안에서 일치하고 첫 창 점수 0.5 이상일 때만 정했다. 직접 표시해 둔 4곡(강민호·류지혁·전병우·김도환)으로 검증한 차이는 -0.06~+0.02초다. 기준 녹음에 없는 장승현·김상준은 비웠다. 스펙트럼 변화로 찾는 방법은 다른 팀 120곡에서 1초 안 적중이 46%라 쓰지 않았다. 110곡: AI 에이전트가 만든 정렬 도구. 구단 공식 사이트의 응원가만 있는 녹음(KT·LG·NC·키움)과 구단 공식 YouTube 플레이리스트의 녹음(두산·SSG)을 모음 영상 선수 구간(등장곡 + 응원가) 안에서 찾았다. 3초 창 여러 개의 정규화 상호상관으로 찾고, 창 3개 이상이 50ms 안에서 일치할 때만 값을 정했다. 그래서 공식 녹음이 없는 한화·삼성·KIA·롯데는 거의 없다. 10곡(한화): 학생이 직접 들으며 표시했다 | `seed-songs.json`의 `cheerStart`(내림한 정수 초) |
 | 팀 응원가 인기 순위(`team-song-ranks.json`) | 팀 응원가 223 | AI 에이전트가 공개 신호 네 가지로 점수를 냈다. 다른 팀 팬이 만든 모음 영상 4편에 뽑혔는지(0.45), 「<구단> <곡> 응원가」 YouTube 검색 상위 단일곡 영상의 조회수(0.30, 구단 안 정규화), 나무위키 응원가 문서가 대표곡으로 적었는지(0.15), 구단 2026 공식 플레이리스트 수록 여부(0.10). 같은 녹음이 아니어도 같은 곡이면 순위를 잇는다 | `src/data/team-song-ranks.json` |
 | 가사(`lyrics.json`) | 413(팀 응원가 192, 선수 189, 상황 32) | AI 에이전트가 나무위키 구단별 응원가 문서에서 모았다. CC BY-NC-SA 2.0 KR이고 곡마다 문서 주소를 둔다 | 들어가지 않는다(`media-build/lyrics`, 배포의 `dist/lyrics`만) |
 
