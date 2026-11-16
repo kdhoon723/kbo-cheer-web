@@ -27,8 +27,8 @@ KBO 응원가 즉시 재생 웹서비스. 2026-2학기 스크립트프로그래�
 
 ## 선수 정보와 사진 규칙
 
-- 선수 사진(구단·KBO)은 저장소, `public/`, 제출 소스 어디에도 넣지 않는다. 저장소 밖 `../kbo-cheer-web-media/`에 있고 읽기만 한다. 개발 서버는 `.env.local`의 `KBO_MEDIA_DIR`(VITE_ 접두사 없음)로 `/players/*`를 내주고, 배포는 `npm run build:deploy`가 `dist/players/`로 복사한다.
-- 사진이 있다고 표시된(`photo !== null`) 선수만 `/players/<팀ID>/<선수ID>.jpg`를 요청한다. 없거나 실패하면 구단 기본 아바타(`public/avatars/<팀ID>.webp`, 원본은 `assets/avatars-original/`, `node scripts/optimize-avatars.mjs`)를 쓴다.
+- 선수 사진(구단·KBO)은 저장소, `public/`, 제출 소스 어디에도 넣지 않는다. 저장소 밖 `../kbo-cheer-web-media/`에 있고 읽기만 한다. `npm run media`가 `.env.local`의 `KBO_MEDIA_DIR`(VITE_ 접두사 없음)에 있는 원본으로 쓰는 자리에 맞춘 WebP를 `media-build/`(gitignore)에 만들고, 개발 서버는 그 폴더에서 `/players/*`를 내주며, 배포는 `npm run build:deploy`가 다시 만들어 `dist/players/`로 복사한다.
+- 사진이 있다고 표시된(`photo !== null`) 선수만 `/players/<팀ID>/<선수ID>.webp`(카드는 `card/`)를 요청한다. 사진과 누끼는 원래 비율대로 그린다(누끼는 높이만 정하고 너비는 그림 비율, 격자는 `object-fit: cover`). 없거나 실패하면 구단 기본 아바타(`public/avatars/<팀ID>.webp`, 원본은 `assets/avatars-original/`, `node scripts/optimize-avatars.mjs`)를 쓴다.
 - 튼 횟수와 최근 곡은 곡 목록과 별도 키 `kboCheer.history`에 둔다. 정렬 기본값은 주전순이다.
 
 ## 모션 규칙

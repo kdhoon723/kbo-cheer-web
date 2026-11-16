@@ -52,13 +52,16 @@ VITE_YOUTUBE_API_KEY=발급받은_API_키
   KBO_MEDIA_DIR=../kbo-cheer-web-media
   ```
 
+  그다음 `npm run media`로 쓰는 자리에 맞춘 WebP를 `media-build/`(저장소에 올리지 않음)에 한 번 만든다. 개발 서버는 이 폴더의 파일을 내준다.
+
 - 개발 서버에 휴대폰이 `http://<노트북 LAN 주소>:5173`으로 접속하면 재생과 곡 관리는 되지만, 키의 리퍼러 제한 때문에 곡 가져오기는 꺼지고 안내 문구가 나온다.
 
 | 명령 | 하는 일 |
 | --- | --- |
 | `npm run dev` | 개발 서버 |
 | `npm run build` | 타입 검사와 배포용 빌드(`dist/`). 선수 사진은 들어가지 않는다 |
-| `npm run build:deploy` | `build` + 사진 폴더(`KBO_MEDIA_DIR`, 없으면 `../kbo-cheer-web-media`)의 `players/`를 `dist/players/`로 복사한다. 폴더가 없으면 안내하고 실패한다 |
+| `npm run media` | 사진 원본(`KBO_MEDIA_DIR`, 없으면 `../kbo-cheer-web-media`)으로 썸네일 120×150, 카드 240×300, 누끼 WebP를 `media-build/players/`에 만든다 |
+| `npm run build:deploy` | `media` + `build` + 최적화 WebP만 `dist/players/`로 복사한다. 원본 폴더가 없으면 안내하고 실패한다 |
 | `npm test` | 단위 테스트(Vitest) |
 | `npm run test:e2e` | E2E 테스트(Playwright, 실제 YouTube 재생) |
 | `npm run lint` | 린트(oxlint) |
@@ -68,12 +71,12 @@ VITE_YOUTUBE_API_KEY=발급받은_API_키
 `wrangler.jsonc`가 `dist/`를 정적 자산으로 올리고, 없는 경로는 모두 `index.html`을 돌려준다(SPA). Cloudflare 계정 로그인이 필요하다.
 
 ```bash
-npm run build:deploy          # 빌드 + 선수 사진을 dist/players/로 복사. .env.local의 키가 빌드 결과에 들어간다
+npm run build:deploy          # 사진 최적화 + 빌드 + 최적화 사진을 dist/players/로 복사. .env.local의 키가 빌드 결과에 들어간다
 npx wrangler deploy           # 처음에는 npx wrangler login
 ```
 
 - 사진을 빼고 올리려면(모두 구단 기본 아바타로 보인다) `npm run build`만 돌린다. 사진 폴더 없이 `build:deploy`를 돌리면 빌드 전에 멈추고 폴더 위치를 알려 준다.
-- 사진은 `dist/players/`에만 들어가므로 저장소와 `public/`에는 사진이 없다. 구단 기본 아바타(`public/avatars/<팀ID>.webp`)는 `assets/avatars-original/`의 원본에서 `node scripts/optimize-avatars.mjs`로 만든다.
+- 사진은 `dist/players/`에만 들어가므로 저장소와 `public/`에는 사진이 없다. `media-build/`도 저장소에 올리지 않는다. 과제 제출용 소스 묶음은 `git archive`처럼 저장소에 있는 파일만 담는 방법으로 만든다. 구단 기본 아바타(`public/avatars/<팀ID>.webp`)는 `assets/avatars-original/`의 원본에서 `node scripts/optimize-avatars.mjs`로 만든다.
 
 - Vite는 `VITE_`로 시작하는 환경 변수를 빌드한 자바스크립트에 그대로 넣는다. 배포된 키는 누구나 볼 수 있으므로 반드시 위의 리퍼러 제한을 걸어 둔다.
 

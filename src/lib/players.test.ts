@@ -60,7 +60,9 @@ describe('findPlayer', () => {
 describe('사진 주소', () => {
   it('사진이 있다고 표시된 선수만 주소를 만든다', () => {
     const p = parsePlayers({ teams: { kt: [player('가'), player('나', { photo: null })] } }).kt
-    expect(photoUrl('kt', p[0])).toBe('/players/kt/가-id.jpg')
+    expect(photoUrl('kt', p[0])).toBe('/players/kt/가-id.webp')
+    expect(photoUrl('kt', p[0], 'card')).toBe('/players/kt/card/가-id.webp')
+    expect(photoUrl('kt', p[1], 'card')).toBeNull()
     expect(photoUrl('kt', p[1])).toBeNull()
     expect(photoUrl('kt', null)).toBeNull()
   })

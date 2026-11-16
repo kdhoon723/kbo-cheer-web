@@ -24,7 +24,7 @@ function cellOf(page: Page, title: string): Locator {
 }
 
 async function mediaAvailable(page: Page): Promise<boolean> {
-  const res = await page.request.get(`/players/hanwha/${playerId('hanwha', '노시환')}.jpg`)
+  const res = await page.request.get(`/players/hanwha/${playerId('hanwha', '노시환')}.webp`)
   return res.ok() && (res.headers()['content-type'] ?? '').startsWith('image/')
 }
 
@@ -180,7 +180,7 @@ test.describe('12. 선수 정보와 사진 [STEP 3-⑪]', () => {
       expect(s.avatarOk).toBe(true)
       expect(s.avatarSrc).toBe('/avatars/hanwha.webp')
     }
-    expect(photoRequests.every((p) => p.startsWith('/players/hanwha/') && p.endsWith('.jpg'))).toBe(true)
+    expect(photoRequests.every((p) => p.startsWith('/players/hanwha/') && p.endsWith('.webp'))).toBe(true)
   })
 
   test('TC-82 사진이 없는 선수와 이어지지 않은 곡은 사진 주소를 요청하지 않는다', async ({ page }) => {
@@ -206,9 +206,9 @@ test.describe('12. 선수 정보와 사진 [STEP 3-⑪]', () => {
   })
 
   test('TC-83 사진이 있으면 칸·검색 결과·재생 줄에 선수 사진이 나온다', async ({ page }) => {
-    test.skip(!(await mediaAvailable(page)), '사진 폴더(KBO_MEDIA_DIR)가 없어 건너뜀')
+    test.skip(!(await mediaAvailable(page)), '최적화한 사진(media-build, npm run media)이 없어 건너뜀')
     await gotoHanwha(page)
-    const url = `/players/hanwha/${playerId('hanwha', '노시환')}.jpg`
+    const url = `/players/hanwha/${playerId('hanwha', '노시환')}.webp`
     await expect(cellOf(page, '노시환').locator('.portrait-photo.is-loaded')).toHaveAttribute('src', url)
 
     await page.getByRole('searchbox', { name: '곡 검색' }).fill('노시환')
@@ -288,5 +288,35 @@ test.describe('12. 선수 정보와 사진 [STEP 3-⑪]', () => {
     }
     await page.reload()
     await expect(page.getByRole('button', { name: /^선수 정렬: / })).toHaveText('주전순')
+  })
+
+  test('TC-97 누끼와 격자 사진은 원래 비율로 그린다', async ({ page }) => {
+    test.skip(!(await mediaAvailable(page)), '최적화한 사진(media-build, npm run media)이 없어 건너뜀')
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await presetStorage(page, 'kboCheer.team', JSON.stringify({ version: 1, currentTeamId: 'hanwha', prevTeamId: 'samsung' }))
+    await gotoHanwha(page)
+    // 류지혁 누끼는 300×260(가로/세로 1.15)이라, 4:5로 고정하던 예전 자리에서는 가로로 눌렸다
+    await page.locator('.board-column').nth(1).locator('.player-grid button', { hasText: '류지혁' }).click()
+    const cutout = page.locator('.card-cutout.is-loaded')
+    await expect(cutout).toHaveCount(1)
+    const shapes = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLImageElement>('.card-cutout.is-loaded, .portrait-cell .portrait-photo.is-loaded')].map((img) => ({
+        cls: img.className,
+        fit: getComputedStyle(img).objectFit,
+        natural: img.naturalWidth / img.naturalHeight,
+        box: img.clientWidth / img.clientHeight,
+      })),
+    )
+    const card = shapes.filter((s) => s.cls.startsWith('card-cutout'))
+    const grid = shapes.filter((s) => s.cls.startsWith('portrait-photo'))
+    expect(card).toHaveLength(1)
+    expect(grid.length).toBeGreaterThan(10)
+    // 누끼는 상자가 그림 비율을 따르고, 격자 사진은 4:5 자리를 잘라 채운다(cover). 어느 쪽도 늘이지(fill) 않는다
+    expect(card[0].fit).toBe('contain')
+    expect(Math.abs(card[0].box - card[0].natural) / card[0].natural).toBeLessThan(0.01)
+    for (const g of grid) {
+      expect(g.fit).toBe('cover')
+      expect(Math.abs(g.box - g.natural) / g.natural).toBeLessThan(0.01)
+    }
   })
 })

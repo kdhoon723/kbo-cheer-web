@@ -14,7 +14,7 @@ interface Props {
  * 사진이 없거나 못 받아도 깨진 그림 표시 없이 아바타가 그대로 남는다
  */
 export default function PlayerPortrait({ teamId, player, size }: Props) {
-  const url = photoUrl(teamId, player)
+  const url = photoUrl(teamId, player, size === 'card' ? 'card' : 'thumb')
   const [loaded, setLoaded] = useState<string | null>(null)
   const [failed, setFailed] = useState<string | null>(null)
   return (

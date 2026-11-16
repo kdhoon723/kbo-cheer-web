@@ -56,9 +56,15 @@ export function findPlayer(index: PlayerIndex, song: Pick<Song, 'kind' | 'teamId
   return index[song.teamId].get(normalize(song.title)) ?? null
 }
 
-/** 사진 파일 주소. 사진이 있다고 표시된 선수만 요청해 없는 파일로 404가 쌓이지 않게 한다 */
-export function photoUrl(teamId: TeamId, player: PlayerInfo | null): string | null {
-  return player?.photo ? `/players/${teamId}/${player.playerId}.jpg` : null
+export type PhotoVariant = 'thumb' | 'card'
+
+/**
+ * 사진 파일 주소. 사진이 있다고 표시된 선수만 요청해 없는 파일로 404가 쌓이지 않게 한다.
+ * 격자·검색·재생 줄은 120×150 썸네일, 선수 카드는 240×300을 쓴다(scripts/optimize-player-media.mjs)
+ */
+export function photoUrl(teamId: TeamId, player: PlayerInfo | null, variant: PhotoVariant = 'thumb'): string | null {
+  if (!player?.photo) return null
+  return variant === 'card' ? `/players/${teamId}/card/${player.playerId}.webp` : `/players/${teamId}/${player.playerId}.webp`
 }
 
 /** 누끼(배경을 뺀 상반신) 주소. 누끼가 있다고 표시된 선수만 요청한다 */

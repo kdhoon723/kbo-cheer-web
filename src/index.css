@@ -1038,8 +1038,12 @@ kbd {
   position: absolute;
   left: 50%;
   bottom: 0;
+  /* 누끼는 비율이 제각각이라(가로/세로 0.80~1.25) 높이만 정하고 너비는 그림 비율을 따른다. 넘쳐도 줄어들 뿐 늘어나지 않는다 */
+  width: auto;
+  max-width: 100%;
   height: 100%;
-  aspect-ratio: 4 / 5;
+  object-fit: contain;
+  object-position: center bottom;
   opacity: 0;
   transform: translateX(-50%);
 }

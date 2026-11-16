@@ -10,7 +10,7 @@ const PREFIX = '/players/'
 type Next = () => void
 
 /**
- * 개발 서버에서 /players/*를 저장소 밖 사진 폴더(mediaDir/players)에서 내준다.
+ * 개발 서버에서 /players/*를 최적화한 사진 폴더(mediaDir/players, npm run media가 만듦)에서 내준다.
  * 폴더가 없거나 파일이 없으면 404로 끝내, 화면은 구단 아바타로 내려간다.
  * 사진은 저장소와 public/에 넣지 않는다(배포 빌드 때만 dist/players로 복사, scripts/build-deploy.mjs)
  */
