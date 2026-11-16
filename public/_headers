@@ -1,0 +1,16 @@
+# Cloudflare Workers 정적 자산 캐시 정책(빌드하면 dist/_headers로 들어간다). 설명은 docs/design.md "캐시 정책"
+# 여기 없는 경로(index.html, /team/... 같은 앱 주소)는 Cloudflare 기본값 public, max-age=0, must-revalidate로 매번 확인한다
+
+# 이름에 내용 해시가 붙은 JS·CSS·글꼴: 내용이 바뀌면 이름이 바뀌므로 1년 두고 다시 확인하지 않는다
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# 이름이 고정인 그림: 하루 두고, 그 뒤에는 ETag로 다시 확인한다
+/teams/*
+  Cache-Control: public, max-age=86400, must-revalidate
+/avatars/*
+  Cache-Control: public, max-age=86400, must-revalidate
+/players/*
+  Cache-Control: public, max-age=86400, must-revalidate
+/favicon.svg
+  Cache-Control: public, max-age=86400, must-revalidate

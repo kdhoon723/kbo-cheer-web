@@ -68,7 +68,7 @@ VITE_YOUTUBE_API_KEY=발급받은_API_키
 
 ### 배포(Cloudflare Workers 정적 자산)
 
-`wrangler.jsonc`가 `dist/`를 정적 자산으로 올리고, 없는 경로는 모두 `index.html`을 돌려준다(SPA). Cloudflare 계정 로그인이 필요하다.
+`wrangler.jsonc`가 `dist/`를 정적 자산으로 올리고, 없는 경로는 모두 `index.html`을 돌려준다(SPA). 캐시 정책은 `public/_headers`(해시 붙은 `/assets`는 1년, 그림은 하루, 앱 주소는 매번 확인)다. Cloudflare 계정 로그인이 필요하다.
 
 ```bash
 npm run build:deploy          # 사진 최적화 + 빌드 + 최적화 사진을 dist/players/로 복사. .env.local의 키가 빌드 결과에 들어간다

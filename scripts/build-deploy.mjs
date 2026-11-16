@@ -20,7 +20,8 @@ if ((await readdir(optimized.out)).length === 0) {
   process.exit(1)
 }
 
-const build = spawnSync('npm', ['run', 'build'], { stdio: 'inherit' })
+// 사진을 함께 올리는 빌드라 앱이 사진을 요청하게 한다(vite.config.ts의 __PLAYER_PHOTOS__)
+const build = spawnSync('npm', ['run', 'build'], { stdio: 'inherit', env: { ...process.env, KBO_PLAYER_PHOTOS: '1' } })
 if (build.status !== 0) process.exit(build.status ?? 1)
 
 let copied = 0

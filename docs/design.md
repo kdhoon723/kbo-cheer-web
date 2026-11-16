@@ -762,6 +762,27 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 - 개발: `.env.local`의 `KBO_MEDIA_DIR`(VITE_ 접두사가 없어 브라우저 번들에 들어가지 않음)는 원본 폴더 위치이고 `npm run media`만 읽는다. `vite.config.ts`의 `playerMedia` 플러그인(`playerMediaPlugin.ts`)은 `/players/*`를 `media-build/players/` 아래에서 내준다. 확장자는 `.jpg`·`.webp`만, 경로가 폴더 밖으로 나가는 요청은 막는다. `npm run media`를 한 번도 돌리지 않았거나 파일이 없으면 404이고 화면은 아바타로 내려간다. `vite preview`에도 같은 플러그인이 붙는다.
 - 배포: `npm run build:deploy`(`scripts/build-deploy.mjs`)가 원본 폴더로 최적화 파일을 다시 만들고 → `npm run build` → `media-build/players/`의 `.webp`만 `dist/players/`로 복사한다(원본 JPEG는 배포에 넣지 않는다). 원본 폴더가 없으면 빌드 전에 안내를 쓰고 실패한다. 폴더 위치는 `KBO_MEDIA_DIR`, 없으면 `../kbo-cheer-web-media`다. 그다음 `npx wrangler deploy`는 기존과 같다. 공개 주소는 없는 경로를 `index.html`로 돌려주므로(SPA), 사진이 없는 선수를 요청하면 HTML이 오는데, 이 경우에도 `img`가 그림이 아니라서 `onError`가 불려 아바타로 내려간다. 사진이 있다고 표시된 선수만 요청하므로 이런 일은 거의 없다.
 
+**사진이 없는 빌드 [STEP 3-⑯].** 사진 파일이 없는 실행(제출 소스로 `npm run dev`, `npm run build`)에서는 사진 주소를 아예 요청하지 않고 구단 아바타를 바로 쓴다. `vite.config.ts`가 `__PLAYER_PHOTOS__`를 정한다. 개발 서버는 `media-build/players`가 있을 때, 빌드는 `npm run build:deploy`가 `KBO_PLAYER_PHOTOS=1`을 줄 때만 true다. `KBO_PLAYER_PHOTOS`(0·1)를 직접 주면 그 값을 따른다. `src/lib/media.ts`의 `PLAYER_PHOTOS`를 PlayerPortrait와 PlayerCard가 보고, false면 `photoUrl`·`cutoutUrl`을 부르지 않는다. 처음에는 사진 없는 개발 서버에서도 한화 화면 하나에 사진을 요청해 모두 404였다(학생 확인 81건).
+
+**캐시 정책 [STEP 3-⑯].** 배포판은 Cloudflare Workers 정적 자산이고, `public/_headers`(빌드하면 `dist/_headers`)가 경로별 `Cache-Control`을 정한다.
+
+| 경로 | Cache-Control | 이유 |
+| --- | --- | --- |
+| `/assets/*` | `public, max-age=31536000, immutable` | Vite가 이름에 내용 해시를 붙여, 내용이 바뀌면 이름도 바뀐다. 다시 확인할 필요가 없다 |
+| `/teams/*`, `/avatars/*`, `/players/*`, `/favicon.svg` | `public, max-age=86400, must-revalidate` | 이름이 고정이라 바꿔 다시 배포하면 같은 주소에 새 파일이 들어간다. 이미 받은 브라우저는 길어야 하루 동안 옛 그림을 보고, 그 뒤 ETag로 확인해 새 그림을 받는다. 2026 시즌 로스터가 열리면 사진을 바꿀 예정이고(사진 폴더 README), 경기 중 화면 그림이 하루 늦게 바뀌는 것은 문제가 없지만 몇 주씩 남으면 곤란해 하루로 정했다. 하루 안에 다시 열면 그림마다 확인 요청(304)도 보내지 않는다 |
+| 그 밖(`/`, `/index.html`, `/team/...` 같은 앱 주소) | 정하지 않음 → Cloudflare 기본 `public, max-age=0, must-revalidate` | 새 배포가 바로 보여야 한다. index.html이 새 해시 이름의 `/assets`를 가리키므로 앱 코드도 바로 바뀐다 |
+
+- `/*` 규칙은 두지 않았다. 여러 규칙이 겹치면 같은 헤더가 합쳐지므로 경로별 규칙과 섞이지 않게 하기 위해서다.
+- 로컬 확인(`npx wrangler@4.162.0 dev`, build:deploy 결과): `/`·`/team/hanwha`는 `max-age=0, must-revalidate`, `/assets/index-*.js`는 `max-age=31536000, immutable`, `/teams/hanwha.webp`·`/avatars/hanwha.webp`·`/players/hanwha/50704.webp`·`/favicon.svg`는 `max-age=86400, must-revalidate`였다.
+- 한계: 없는 `/players/...` 주소는 SPA 설정 때문에 index.html(200)이 오고 이 하루 캐시 헤더가 붙는다. 앱은 사진이 있다고 표시된 선수만 요청하므로 실제로는 생기지 않는다.
+
+**연결 미리 열기와 지연 로딩은 넣지 않았다 [STEP 3-⑯].** 배포 빌드(`vite preview`, 사진 포함, YouTube 쿠키 있는 새 창)에서 세 가지를 번갈아 12번씩 쟀다.
+- 비교한 판: 지금 판, `www.youtube.com`·`www.google.com`·`i.ytimg.com` preconnect를 더한 판, 격자 사진의 `loading="lazy"`를 뺀 판.
+- 플레이어 준비까지(중앙값): 휴대폰 360×640 삼성은 지금 695ms, preconnect 699.5ms였다. 보드 1440×900은 지금 658ms, preconnect 667ms였다.
+- 첫 재생까지(중앙값): 휴대폰은 지금 326ms, preconnect 328ms였다. 보드는 지금 331ms, preconnect 332.5ms였다.
+- preconnect 차이는 측정 잡음 안이다. IFrame API 스크립트는 앱이 뜨자마자 요청해 연결이 이미 일찍 열리고, 첫 재생에 드는 영상 서버(`*.googlevideo.com`)는 영상마다 주소가 달라 미리 열 수 없다.
+- 지연 로딩도 이득이 없었다. 첫 화면 사진 전송량은 lazy가 있을 때와 없을 때 모두 휴대폰 삼성 28장 87.5 KB, 보드 50장 144.5 KB로 같았다. 한 팀 격자(가장 많은 팀 29명, 높이 약 850px)가 브라우저의 지연 로딩 거리 안에 다 들어가 미뤄지는 사진이 없다. 그래서 있던 `loading="lazy"`도 뺐다.
+
 ### 5.6 매치업 보드와 선수 카드 [STEP 3-⑫]
 
 넓은 화면은 휴대폰 화면을 옆으로 늘인 것이라 빈 곳만 많았다. 실제 경기(친구와 MLB The Show)에는 늘 두 팀이 있으므로, 넓은 화면은 두 팀의 선수를 나란히 두고 「전 팀」 없이 어느 팀이든 바로 누르게 했다. 재생 자리에는 지금 곡의 선수를 크게 보이는 선수 카드를 더했다. 이 배치는 학생(김도훈)이 정했다.
