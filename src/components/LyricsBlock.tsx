@@ -111,3 +111,17 @@ export function CardLyrics({ song, lyric, onClose, ...focus }: CardProps) {
     </section>
   )
 }
+
+/**
+ * 넓은 화면에서 가사를 접었을 때 선수 카드 자리 오른쪽 위에 두는 「가사」 버튼 [STEP 3-㉛].
+ * 여는 곳과 열리는 곳이 같은 자리여야 해서 맨 아래 한 줄 대신 여기에 둔다. 팀 색 판(카드 아래 30%)보다 위라 판 위에 글자가 없다
+ */
+export function CardLyricsButton({ onOpen, ...focus }: ToggleFocus & { onOpen: () => void }) {
+  const toggleRef = useToggleFocus(focus)
+  return (
+    <button ref={toggleRef} type="button" className="card-lyrics-open" aria-expanded="false" onClick={onOpen}>
+      가사
+      <ChevronDown size={18} strokeWidth={1.75} aria-hidden="true" />
+    </button>
+  )
+}

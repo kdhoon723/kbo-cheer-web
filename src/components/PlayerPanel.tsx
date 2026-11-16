@@ -19,7 +19,7 @@ import type { NowPlaying } from '../types.ts'
 import { TapButton } from '../ui/Press.tsx'
 import { distance, ease, quick, row, rowTextDelay, swap } from '../ui/motionTokens.ts'
 import { bandStyle } from './band.ts'
-import LyricsBlock, { CardLyrics } from './LyricsBlock.tsx'
+import LyricsBlock, { CardLyrics, CardLyricsButton } from './LyricsBlock.tsx'
 import PlayerCard from './PlayerCard.tsx'
 import PlayerHost from './PlayerHost.tsx'
 import PlayerPortrait from './PlayerPortrait.tsx'
@@ -58,7 +58,7 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   const { nowPlaying, status, playerReady, canControlVolume, play, stop, resume, skipToCheer, seek, getCurrentTime } =
     usePlayer()
   const { songs, updateSong } = useSongs()
-  const { settings, setVolume, setLyricsOpen } = usePrefs()
+  const { settings, setVolume } = usePrefs()
   const { history } = useHistory()
   const [tick, setTick] = useState<Tick>({ seg: null, elapsed: 0, canCheerHere: false })
   // 이번에 연 뒤 실제로 튼 적이 있는가. 휴대폰은 그때까지 플레이어 자리를 접어 둔다
@@ -66,6 +66,7 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   const [toolsOpen, setToolsOpen] = useState(false)
   // 넓은 화면은 접기·펼치기로 가사 버튼 자리가 바뀌어(카드 자리 ↔ 맨 아래) 새 버튼에 포커스를 옮긴다
   const [lyricsFocus, setLyricsFocus] = useState(false)
+  const [collapsedSongId, setCollapsedSongId] = useState<string | null>(null)
   const clearLyricsFocus = useCallback(() => setLyricsFocus(false), [])
   const [nowOpen, setNowOpen] = useState(false)
   const narrow = useMediaQuery(NARROW_QUERY)
@@ -94,9 +95,13 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   const live = nowPlaying !== null && playing !== undefined
   const lyric = useSongLyrics(song, live)
 
-  function toggleWideLyrics() {
-    setLyricsOpen(!settings.lyricsOpen)
-    setLyricsFocus(true)
+  // 가사는 늘 펼친 채로 시작한다. 접기는 지금 곡에만 적용되고, 다른 곡을 틀거나 새로고침하면 다시 펼쳐진다 [STEP 3-㉛]
+  const lyricsOpen = song === undefined || collapsedSongId !== song.id
+
+  function toggleLyrics() {
+    setCollapsedSongId(lyricsOpen && song ? song.id : null)
+    // 카드 자리에서는 여닫을 때 버튼이 바뀌어 새 버튼으로 포커스를 옮긴다. 시트와 맨 아래 칸은 같은 버튼이 남는다
+    if (hasCardArea) setLyricsFocus(true)
   }
 
   useEffect(() => {
@@ -232,10 +237,13 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
         <PlayerHost />
       </div>
       <div className="player-card-area">
-        {song && lyric && settings.lyricsOpen && hasCardArea ? (
-          <CardLyrics song={song} lyric={lyric} onClose={toggleWideLyrics} focusToggle={lyricsFocus} onFocused={clearLyricsFocus} />
+        {song && lyric && lyricsOpen && hasCardArea ? (
+          <CardLyrics song={song} lyric={lyric} onClose={toggleLyrics} focusToggle={lyricsFocus} onFocused={clearLyricsFocus} />
         ) : (
-          <PlayerCard song={song ?? null} />
+          <>
+            <PlayerCard song={song ?? null} />
+            {lyric && hasCardArea && <CardLyricsButton onOpen={toggleLyrics} focusToggle={lyricsFocus} onFocused={clearLyricsFocus} />}
+          </>
         )}
       </div>
       <div className="player-tools">{tools}</div>
@@ -307,16 +315,10 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
         </div>
         <div className="dock-situations" ref={situationSlotRef} />
       </div>
-      {/* 1200px 이상에서 접은 가사는 맨 아래 「가사 보기」 한 줄이고, 펼치면 선수 카드 자리(CardLyrics)로 간다. 휴대폰은 시트 안에만 있다 */}
-      {lyric && !narrow && !(settings.lyricsOpen && hasCardArea) && (
-        <div className={settings.lyricsOpen ? 'player-lyrics is-open' : 'player-lyrics'}>
-          <LyricsBlock
-            lyric={lyric}
-            open={settings.lyricsOpen}
-            onToggle={toggleWideLyrics}
-            focusToggle={lyricsFocus}
-            onFocused={clearLyricsFocus}
-          />
+      {/* 선수 카드가 없는 900~1199px만 맨 아래 칸이다. 1200px 이상은 카드 자리, 휴대폰은 시트 안에 있다 */}
+      {lyric && !narrow && !hasCardArea && (
+        <div className={lyricsOpen ? 'player-lyrics is-open' : 'player-lyrics'}>
+          <LyricsBlock lyric={lyric} open={lyricsOpen} onToggle={toggleLyrics} />
         </div>
       )}
       <Sheet
@@ -334,7 +336,7 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
           <span>{status === 'paused' ? `${STATUS_LABELS.paused} · ${timeText}` : timeText}</span>
           {cheerOffset !== null && <span className="now-sheet-cheer">응원가 {formatTime(cheerOffset)}</span>}
         </p>
-        {lyric && <LyricsBlock lyric={lyric} open={settings.lyricsOpen} onToggle={() => setLyricsOpen(!settings.lyricsOpen)} />}
+        {lyric && <LyricsBlock lyric={lyric} open={lyricsOpen} onToggle={toggleLyrics} />}
       </Sheet>
       <Sheet open={toolsOpen} title="재생 도구" titleId="tools-sheet-title" onClose={() => setToolsOpen(false)}>
         <div className="sheet-tools">{tools}</div>

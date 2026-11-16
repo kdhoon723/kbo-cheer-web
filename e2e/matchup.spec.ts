@@ -49,9 +49,9 @@ async function expectSamePlayerFrame(page: Page, why: string): Promise<void> {
 
 test.describe('13. 매치업 보드와 선수 카드 [STEP 3-⑫]', () => {
   test.use({ viewport: { width: 1280, height: 800 } })
-  // 선수 카드를 보는 테스트다. [STEP 3-㉙] 가사를 펼쳐 두면 카드 자리에 가사가 들어가므로 접어 둔다
+  // 선수 카드를 보는 테스트다. 가사가 있는 곡은 카드 자리에 가사가 펼쳐지므로(3-㉙·㉛) 가사를 받지 않게 한다
   test.beforeEach(async ({ page }) => {
-    await presetStorage(page, 'kboCheer.settings', JSON.stringify({ version: 1, volume: 100, lyricsOpen: false }))
+    await page.route((url) => url.pathname.startsWith('/lyrics/'), (route) => route.abort())
   })
 
   test('TC-89 두 열에서 차례로 재생 [YT]', async ({ page }) => {

@@ -62,8 +62,6 @@ export interface Settings {
   teamSort: TeamSongSort
   /** 팀 고르기 로고 순서. 10개 팀이 한 번씩 [STEP 3-⑳] */
   teamOrder: TeamId[]
-  /** 가사 칸을 펼쳐 둘지. 처음에는 펼침, 사용자가 접거나 펼친 것을 기억한다 [STEP 3-㉗] */
-  lyricsOpen: boolean
 }
 
 export interface VideoInfo {
