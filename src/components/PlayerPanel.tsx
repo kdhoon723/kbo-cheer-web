@@ -23,6 +23,7 @@ import LyricsBlock from './LyricsBlock.tsx'
 import PlayerCard from './PlayerCard.tsx'
 import PlayerHost from './PlayerHost.tsx'
 import PlayerPortrait from './PlayerPortrait.tsx'
+import ProgressBar from './ProgressBar.tsx'
 import Sheet from './Sheet.tsx'
 import TeamLogo from './TeamLogo.tsx'
 import Toast from './Toast.tsx'
@@ -54,7 +55,7 @@ interface Props {
 }
 
 export default function PlayerPanel({ situationSlotRef }: Props) {
-  const { nowPlaying, status, playerReady, canControlVolume, play, stop, resume, skipToCheer, getCurrentTime } =
+  const { nowPlaying, status, playerReady, canControlVolume, play, stop, resume, skipToCheer, seek, getCurrentTime } =
     usePlayer()
   const { songs, updateSong } = useSongs()
   const { settings, setVolume } = usePrefs()
@@ -159,7 +160,6 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   const duration = seg ? seg.end - seg.start : 0
   const elapsed = current?.elapsed ?? 0
   const cheerAt = cheerTarget(song, seg)
-  const ratio = (sec: number) => (duration > 0 ? sec / duration : 0)
   const panelClass = ['player-panel', live && 'is-live', hasPlayed && 'has-played'].filter(Boolean).join(' ')
 
   // 노트북은 오른쪽 열에 늘 두고, 휴대폰은 경기 중에 쓰지 않으니 더보기 시트로 옮긴다
@@ -176,12 +176,17 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   const cheerOffset = cheerAt !== null && seg ? cheerAt - seg.start : null
   const timeText = song ? `${formatTime(live ? elapsed : 0)} / ${formatTime(duration)}` : '--:-- / --:--'
   const label = live ? STATUS_LABELS[status] : song ? STOPPED_LABEL : STATUS_LABELS.idle
-  const progress = (
-    <div className="progress" aria-hidden="true">
-      <div className="progress-fill" style={{ transform: `scaleX(${live ? ratio(elapsed) : 0})` }} />
-      {cheerOffset !== null && <div className="progress-cheer" style={{ left: `${ratio(cheerOffset) * 100}%` }} />}
-    </div>
-  )
+  // 진행 막대 [STEP 3-㉕]: 재생 중에는 부드럽게 흐르고, 넓은 화면 막대와 지금 재생 시트 막대는 눌러서 옮긴다.
+  // 휴대폰 재생 줄의 얇은 막대는 옮기지 않는다(누르면 지금 재생 시트를 연다. 시트에서 옮긴다)
+  const canSeek = live && (status === 'playing' || status === 'starting' || status === 'paused')
+  const barProps = {
+    seg,
+    cheerAt,
+    live,
+    running: live && (status === 'playing' || status === 'fading'),
+    getCurrentTime,
+    elapsed,
+  }
 
   const nowFace = (
     <>
@@ -223,7 +228,13 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
       <div className="player-tools">{tools}</div>
       <div className="dock" ref={dockRef}>
         <Toast />
-        {progress}
+        {narrow ? (
+          <div className="dock-progress" onClick={() => song && setNowOpen(true)}>
+            <ProgressBar {...barProps} />
+          </div>
+        ) : (
+          <ProgressBar {...barProps} onSeek={canSeek ? seek : undefined} className="dock-progress" />
+        )}
         <div className="play-row" ref={rowRef}>
           {/* 곡이 없을 때도 같은 버튼으로 두어야 곡을 멈추고 틀 때마다 글자가 다시 만들어지지 않는다 */}
           {narrow ? (
@@ -296,7 +307,9 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
         onClose={() => setNowOpen(false)}
       >
         <PlayerCard song={song ?? null} />
-        <div className="now-sheet-progress">{progress}</div>
+        <div className="now-sheet-progress">
+          <ProgressBar {...barProps} onSeek={canSeek ? seek : undefined} />
+        </div>
         <p className="now-sheet-time">
           <span>{status === 'paused' ? `${STATUS_LABELS.paused} · ${timeText}` : timeText}</span>
           {cheerOffset !== null && <span className="now-sheet-cheer">응원가 {formatTime(cheerOffset)}</span>}

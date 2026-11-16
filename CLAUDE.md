@@ -36,7 +36,7 @@ KBO 응원가 즉시 재생 웹서비스. 2026-2학기 스크립트프로그래�
 
 - 움직임은 누른 일을 확인하고 어디서 왔는지 보여 줄 뿐이다. 소리를 기다리게 하지 않는다(누른 순간 재생과 재생 중 표시가 바뀌고, 움직임이 끝나기를 기다리는 일은 없다). 거리는 24px 이하, 들어오는 것은 200ms 안에 읽힌다. 장식으로 움직이는 것은 없다.
 - 시간, 이징, 스프링, 거리, 눌림 크기는 모두 `src/ui/motionTokens.ts`에서 가져다 쓴다. 컴포넌트에 숫자를 직접 쓰지 않는다. 라이브러리는 `motion@14.14.0`만 쓴다. 컴포넌트는 `motion/react-m`의 `m.*`로 그리고(App의 `LazyMotion strict`가 `motion.*`을 막는다), 높이처럼 직접 움직일 때는 `motion/react-mini`의 `useAnimate`를 쓴다.
-- transform과 opacity만 움직인다. 예외는 첫 곡에 재생 줄이 한 번 자라는 높이 하나다. 진행 막대는 `scaleX`로 그린다. 프레임마다 React 상태를 바꾸지 않는다.
+- transform과 opacity만 움직인다. 예외는 첫 곡에 재생 줄이 한 번 자라는 높이 하나다. 진행 막대는 `scaleX`로 그린다(`ProgressBar`가 requestAnimationFrame으로 요소의 transform만 바꾼다). 프레임마다 React 상태를 바꾸지 않는다.
 - YouTube iframe(PlayerHost)은 옮기거나, 움직이는 요소로 감싸거나, 다시 마운트하지 않는다. 재생 중 칸의 반전과 진행 막대도 움직이지 않는다.
 - 앱 전체를 `<MotionConfig reducedMotion="user">`로 감싼다. 동작 줄이기가 켜지면 옮기기·크기·스프링은 꺼지고 페이드만 남는다. 누름(`TapButton`, `PressCell`)과 닫을 때의 옮기기는 동작 줄이기에서 아예 빠진다.
 

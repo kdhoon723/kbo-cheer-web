@@ -2,7 +2,7 @@
 
 - 과목: 2026-2학기 스크립트프로그래밍 / 작성: 20241476 김도훈 / 작성일: 2026-11-15
 - 단계: STEP 2 설계 (최종판, 설계 검토 반영)
-- 기준 문서: `docs/requirements.md` (FR-01~33, NFR-01~14, BR-01~51, EX-01~31). [STEP 3-⑪] FR-29~33, BR-45~51, EX-30·31, NFR-14는 5.5절. [STEP 3-⑲] FR-37~39, BR-57·58은 3.1·5.7·11절. [STEP 3-⑳] FR-40~42, BR-59~61은 3.1·5.8절. [STEP 3-㉑] BR-62·63은 8.6절. [STEP 3-㉓] FR-43~47은 5.9절. [STEP 3-㉔] FR-48~50은 5.10·10.4절, NFR-16은 5.11절
+- 기준 문서: `docs/requirements.md` (FR-01~33, NFR-01~14, BR-01~51, EX-01~31). [STEP 3-⑪] FR-29~33, BR-45~51, EX-30·31, NFR-14는 5.5절. [STEP 3-⑲] FR-37~39, BR-57·58은 3.1·5.7·11절. [STEP 3-⑳] FR-40~42, BR-59~61은 3.1·5.8절. [STEP 3-㉑] BR-62·63은 8.6절. [STEP 3-㉓] FR-43~47은 5.9절. [STEP 3-㉔] FR-48~50은 5.10·10.4절, NFR-16은 5.11절. [STEP 3-㉕] FR-51·52는 5.12절
 - 검토 문서: `docs/reviews/design-review-claude.md`(R-01~28), `docs/reviews/design-review-codex.md`(C-01~18). 본문에서 검토 때문에 바뀐 곳에는 `[R-xx]`, `[C-xx]`를 붙였다. 전체 반영 내역은 15절.
 - 배포: `https://kbocheer.kdhoon.me`(Cloudflare Workers 정적 자산, `wrangler.jsonc`의 `assets.directory: ./dist`, `not_found_handling: single-page-application`으로 모든 경로에 index.html을 돌려준다) [공개 배포]
 - 기술 환경: React, TypeScript, Vite(포트 5173 고정, LAN 접속 허용), React Router(`react-router-dom`), YouTube IFrame Player API, YouTube Data API v3, LocalStorage, CSS
@@ -61,6 +61,7 @@ src/
     lyrics.ts                 팀 가사 파일 검사, 곡 → 가사, 출처 글자, 라이선스 [STEP 3-⑳]
     teamOrder.ts              팀 순서 검사·옮기기, Alt+방향키 자리, 끌기 기준값 [STEP 3-⑳]
     songList.ts               곡 관리 탭·검색·필터, 목록 둘째 줄, 목록 주소 [STEP 3-㉓]
+    progress.ts               진행 막대 비율·옮길 시각·키보드·보간 [STEP 3-㉕]
     importReview.ts           가져오기 후보 분류·필터·전체 선택, 저장 뒤 탭, 팀 기본 영상, 파일의 팀별 곡 수 [STEP 3-㉔]
     songEdit.ts               ±1초, 「지금 위치로」, 바뀐 것 판정, 미리 듣기 시작점, YouTube 주소, 막대 비율 [STEP 3-㉓]
   api/
@@ -93,7 +94,7 @@ src/
     PlayerPanel.tsx, PlayerHost.tsx, VolumeSlider.tsx, band.ts,
     SearchBox.tsx, SearchResults.tsx, PlayerGrid.tsx, PlayerPortrait.tsx, TeamSongList.tsx,
     SituationGrid.tsx, EmptyState.tsx, SongForm.tsx(곡 추가의 영상 하나 등록),
-    SongListItem.tsx, SegmentBar.tsx, TimeField.tsx [STEP 3-㉓],
+    SongListItem.tsx, SegmentBar.tsx, TimeField.tsx [STEP 3-㉓], ProgressBar.tsx [STEP 3-㉕],
     UrlInputForm.tsx, VideoSearchForm.tsx, CandidateTable.tsx, DataApiNotice.tsx,
     StatusMessage.tsx,
     TeamColumn.tsx, MatchupHeader.tsx, SituationTeamTabs.tsx, PlayerCard.tsx [STEP 3-⑫]
@@ -956,6 +957,22 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 
   나중에 받는 파일: 곡 목록 5.10 + 공통 1.30, 수정 9.61, 곡 추가 21.83 + 1.32, 백업·초기화 6.09, 처음 데이터 80.69 kB(gzip 14.81). 다시 방문하면 응원 화면은 index·공유·react·런타임만 받는다(preview에서 확인).
 - `react-router`는 패키지 `exports`가 개발용 빌드만 가리키지만, 배포용(`dist/production`)과 크기가 같아(376,650바이트) 바꾸지 않았다.
+
+### 5.12 진행 막대 부드럽게, 눌러서 옮기기 [STEP 3-㉕]
+
+세 자리의 진행 막대(넓은 화면 플레이어 열의 2px 막대, 휴대폰 재생 줄의 얇은 막대, 지금 재생 시트의 4px 막대)를 한 컴포넌트 `ProgressBar`로 모았다. 계산은 `lib/progress.ts`의 순수 함수다.
+
+- 그리기: 전에는 PlayerPanel이 250ms마다 정수 초를 React 상태(`tick`)로 두고 그 값으로 `scaleX`를 그려 막대가 1초에 한 번 뛰었다(250ms 전환으로 조금 부드럽게 보였을 뿐). 이제 `ProgressBar`가 `requestAnimationFrame`으로 매 프레임 `getCurrentTime()`을 읽어 채움 요소의 `transform: scaleX()`만 바꾼다. React 상태는 바꾸지 않는다. 시간 글자와 「지금을 응원가 시작으로」 활성은 예전 `tick`(초 단위) 그대로다.
+- 보간(`nextShownTime`): 마지막으로 받은 위치에 그 뒤 흐른 시간을 더해 그린다. 다만 0.6초까지만 더해(버퍼링처럼 위치가 멈췄는데 재생 상태가 그대로일 때 혼자 앞서 달리지 않게), 새 위치가 앞서 그린 값보다 조금(1초 이하) 뒤면 그 값에 머물러 뒤로 튀지 않게 하고, 1초 넘게 뒤면(옮기기·다시 틀기) 따라간다. 재생 중(`playing`, `fading`)이 아니면 더하지 않는다. 이 컴퓨터의 Chrome에서는 YouTube가 재생 중 위치를 거의 매 프레임(약 17ms) 새로 알려 줘 보간은 주로 안전장치다.
+- 탭이 안 보이면(`visibilitychange`) 루프를 멈추고, 다시 보이면 잇는다. 불러오기·옮기기 직후 구간에서 1초 넘게 벗어난 위치는 버린다(예전 `segmentElapsed`와 같은 기준).
+- 옮기기(`onSeek`가 있을 때): 넓은 화면 막대와 지금 재생 시트 막대. 보이는 두께는 그대로이고 누르는 영역을 44px로 넓혔다(`.progress-hit.is-seekable`, 음수 여백으로 위아래 이웃과 겹쳐 배치를 밀지 않음). `role="slider"`, `aria-label="재생 위치"`, `aria-valuemin 0`·`max 구간 길이`·`now 경과`·`valuetext "00:34 / 01:01"`.
+  - 누르면(`pointerdown`, 포인터 잡기) 그 자리로 채움을 옮기고 위에 시각 꼬리표(구간 처음부터, 밝은 판에 어두운 글자)를 보인다. 끄는 동안 따라오고 놓을 때(`pointerup`) `seek`한다. 끄는 동안은 그리기 루프가 채움을 건드리지 않는다. 터치는 `touch-action: none`.
+  - 키보드: 막대에 포커스가 있을 때만 ←/→(↓/↑) 5초, Home 시작, End 끝 바로 앞(`keySeekTime`). 이벤트를 막대에서 멈춰 다른 단축키와 겹치지 않는다. 기준은 화면 경과(초 단위)가 아니라 플레이어의 지금 위치다. 방금 끌어 옮긴 직후에는 화면 경과가 옮기기 전 값이라 그 기준으로 5초를 더해 E2E가 실패했다.
+  - 옮길 수 있는 범위(`seekRange`): 시작 ~ 끝 2초 전. 끝 1초 전부터 페이드가 시작되므로(8.5) 옮긴 뒤 적어도 1초는 들린다.
+  - 옮긴 직후 YouTube가 잠깐 옮기기 전 위치를 돌려줘도 막대가 되돌아가지 않게, 옮긴 곳 ±1.5초 안의 위치가 올 때까지(최대 1.5초) 옮긴 자리에 둔다.
+  - `PlayerContext.seek(sec)`: 재생 중·준비 중·일시정지에만 범위로 자른 뒤 `seekTo(sec, true)`. 일시정지 중이면 YouTube가 일시정지를 지켜 「이어서」로 그 자리부터 튼다. 「응원가로」(`skipToCheer`)와 같이 옮긴 때를 기록해 감시 타이머가 옮기기 전 위치를 무시한다. 멈추는 중(`fading`)·대기·멈춤에서는 막대가 slider가 아니다.
+- 휴대폰 재생 줄의 얇은 막대는 부드럽게 흐르기만 하고 옮기지 않는다. 누르면 지금 재생 시트를 연다(옮기기는 시트에서).
+- 측정(1440×900, 노시환 재생 중 1초, 프레임마다 채움의 `transform` 값을 읽음): 전 61프레임에 적힌 값 2가지(CSS 전환으로 그려진 값은 17가지), `getCurrentTime()`과 차이 최대 1.034초. 후 61프레임에 61가지, 차이 최대 0.001초.
 
 ## 6. 컴포넌트 구조
 
@@ -1827,6 +1844,7 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 | FR-38 응원가 시작 눈금 | PlayerPanel `.progress-cheer`, `cheerTarget` | 5.7 |
 | FR-40 가사 | `build-lyrics.mjs`, `playerMediaPlugin.ts` `/lyrics/`, `__LYRICS__`(`LYRICS`), `useSongLyrics`, `parseLyricsFile`, LyricsBlock, PlayerPanel | 5.8 |
 | FR-41 마지막 곡 유지 | PlayerPanel(`history.recent[0]`, 「멈춤」, 「다시 재생」), PlayerCard | 5.8 |
+| FR-51~52 진행 막대 | ProgressBar(rAF, slider, 끌기·키보드), `lib/progress.ts`, PlayerContext `seek` | 5.12 |
 | FR-48~49 곡 추가 단계·확인 단계 | ImportPage(ImportSteps, filter·open), UrlInputForm `presetUrl`, CandidateTable, `importReview.ts` | 10.4 |
 | FR-50 백업·초기화 | SongDataPage(백업·초기화·저장 위치), `loadLastExport`/`saveLastExport`(`kboCheer.lastExport`), `songsPerTeam` | 3.1, 5.10 |
 | FR-43~45 곡 목록 | SongListPage(탭·검색·필터, 넓은 화면 Outlet), SongListItem, `songList.ts`, 라우터 자식 경로 | 5.1, 5.9 |

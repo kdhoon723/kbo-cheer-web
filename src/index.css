@@ -934,7 +934,51 @@ kbd {
   height: 100%;
   background: var(--text);
   transform-origin: left;
-  transition: transform 250ms linear;
+  transform: scaleX(0);
+}
+
+/* 옮길 수 있는 막대 [STEP 3-㉕]: 보이는 두께는 그대로, 누르는 영역은 44px. 위아래 이웃을 밀지 않게 음수 여백으로 겹친다 */
+.progress-hit {
+  position: relative;
+}
+
+.progress-hit.is-seekable {
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  height: var(--tap);
+  margin: calc((var(--tap) - 2px) / -2) 0;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.progress-hit.is-seekable .progress {
+  flex: 1;
+}
+
+.progress-hit:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: -2px;
+}
+
+/* 끄는 동안 그 자리의 시각(구간 처음부터) */
+.progress-label {
+  position: absolute;
+  bottom: calc(50% + 10px);
+  display: none;
+  padding: 2px 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--plate);
+  border-radius: var(--r-plate);
+  transform: translateX(-50%);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.progress-hit.is-dragging .progress-label {
+  display: block;
 }
 
 .progress-cheer {
@@ -1133,6 +1177,10 @@ kbd {
 
 .now-sheet-progress .progress {
   height: 4px;
+}
+
+.now-sheet-progress .progress-hit.is-seekable {
+  margin: calc((var(--tap) - 4px) / -2) 0;
 }
 
 .now-sheet-progress .progress-cheer {

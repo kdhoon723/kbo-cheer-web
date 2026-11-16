@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { ReactNode } from 'react'
 import { isIOS } from '../lib/env.ts'
 import { cheerTarget, isLeftoverStop, isStalePosition, pauseCause, playerErrorMessage } from '../lib/playback.ts'
+import { seekRange } from '../lib/progress.ts'
 import { loadYouTubeIframeApi } from '../player/youtubeIframe.ts'
 import type { NowPlaying, Song } from '../types.ts'
 import { useHistory } from './historyState.ts'
@@ -26,6 +27,8 @@ interface PlayerContextValue {
   /** 일시정지한 곡을 멈춘 자리부터 다시 튼다 */
   resume: () => void
   skipToCheer: () => void
+  /** 진행 막대로 지금 곡의 sec로 옮긴다. 재생 중·준비 중·일시정지에만 되고, 일시정지면 옮긴 뒤에도 일시정지다 [STEP 3-㉕] */
+  seek: (sec: number) => void
   getCurrentTime: () => number | null
   attachHost: (el: HTMLDivElement | null) => void
 }
@@ -234,6 +237,17 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     if (statusRef.current === 'paused') resume()
   }, [resume])
 
+  const seek = useCallback((sec: number) => {
+    const seg = segRef.current
+    const p = playerRef.current
+    const status = statusRef.current
+    if (!seg || !readyRef.current || !p || (status !== 'playing' && status !== 'starting' && status !== 'paused')) return
+    const { min, max } = seekRange(seg)
+    seekAtRef.current = performance.now()
+    // YouTube는 일시정지 중에 seekTo하면 일시정지를 유지한다
+    p.seekTo(Math.min(max, Math.max(min, sec)), true)
+  }, [])
+
   const getCurrentTime = useCallback(
     () => (readyRef.current && playerRef.current ? playerRef.current.getCurrentTime() : null),
     [],
@@ -427,10 +441,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       stop,
       resume,
       skipToCheer,
+      seek,
       getCurrentTime,
       attachHost: setHostEl,
     }),
-    [apiState, playerReady, status, nowPlaying, canControlVolume, play, stop, resume, skipToCheer, getCurrentTime],
+    [apiState, playerReady, status, nowPlaying, canControlVolume, play, stop, resume, skipToCheer, seek, getCurrentTime],
   )
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>
 }
