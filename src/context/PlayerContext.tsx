@@ -2,7 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { isIOS } from '../lib/env.ts'
-import { cheerTarget, isLeftoverStop, isStalePosition, playerErrorMessage } from '../lib/playback.ts'
+import { cheerTarget, isLeftoverStop, isStalePosition, pauseCause, playerErrorMessage } from '../lib/playback.ts'
 import { loadYouTubeIframeApi } from '../player/youtubeIframe.ts'
 import type { NowPlaying, Song } from '../types.ts'
 import { useHistory } from './historyState.ts'
@@ -11,7 +11,8 @@ import { usePrefs } from './PrefsContext.tsx'
 import { useSongs } from './SongsContext.tsx'
 
 type PlayerApiState = 'loading' | 'loaded' | 'failed'
-type PlaybackStatus = 'idle' | 'starting' | 'playing' | 'fading'
+// paused: 플레이어를 직접 눌렀거나 전화 등으로 멈춘 상태. 곡 구간을 그대로 두고 「이어서」로 멈춘 자리부터 튼다
+type PlaybackStatus = 'idle' | 'starting' | 'playing' | 'fading' | 'paused'
 
 interface PlayerContextValue {
   apiState: PlayerApiState
@@ -21,6 +22,8 @@ interface PlayerContextValue {
   canControlVolume: boolean
   play: (song: Song) => void
   stop: () => void
+  /** 일시정지한 곡을 멈춘 자리부터 다시 튼다 */
+  resume: () => void
   skipToCheer: () => void
   getCurrentTime: () => number | null
   attachHost: (el: HTMLDivElement | null) => void
@@ -37,7 +40,6 @@ const STOP_FADE_SEC = 1
 const LOAD_FAILED = '플레이어를 불러오지 못했습니다'
 const AUTOPLAY_BLOCKED = '영상을 한 번 직접 눌러 재생을 허용해 주세요'
 const SLOW_NETWORK = '네트워크가 느려 재생이 늦어지고 있습니다'
-const PAUSED_OUTSIDE = '재생이 멈췄습니다'
 
 const PlayerContext = createContext<PlayerContextValue | null>(null)
 
@@ -202,12 +204,22 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const stop = useCallback(() => {
     pendingRef.current = null
     if (!segRef.current) return
-    if (fadingRef.current || !canControlVolume || !readyRef.current) {
+    // 일시정지 중에는 소리가 없어 줄일 것이 없다. 바로 끝낸다
+    if (fadingRef.current || !canControlVolume || !readyRef.current || statusRef.current === 'paused') {
       finish()
       return
     }
     startFade(STOP_FADE_SEC)
   }, [canControlVolume, finish, startFade])
+
+  const resume = useCallback(() => {
+    const seg = segRef.current
+    const p = playerRef.current
+    if (!seg || statusRef.current !== 'paused' || !readyRef.current || !p) return
+    setStatusBoth('starting')
+    p.playVideo()
+    startAutoplayCheck(seg)
+  }, [setStatusBoth, startAutoplayCheck])
 
   const skipToCheer = useCallback(() => {
     const seg = segRef.current
@@ -217,7 +229,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     if (target === null) return
     seekAtRef.current = performance.now()
     p.seekTo(target, true)
-  }, [])
+    // 일시정지 중에 누르면 응원가를 듣겠다는 뜻이라 그 자리에서 이어 튼다
+    if (statusRef.current === 'paused') resume()
+  }, [resume])
 
   const getCurrentTime = useCallback(
     () => (readyRef.current && playerRef.current ? playerRef.current.getCurrentTime() : null),
@@ -241,15 +255,17 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
           if (seg && !leftover) finish()
           break
         case YT.PlayerState.PAUSED: {
-          if (pausingByAppRef.current) {
-            pausingByAppRef.current = false
-            break
+          const byApp = pausingByAppRef.current
+          pausingByAppRef.current = false
+          if (!seg) break
+          const cause = pauseCause(byApp, t, seg, performance.now() - loadedAtRef.current, playedSinceLoadRef.current)
+          // 끝 시각에 닿은 것과 끝으로 줄이던 중에 멈춘 것은 곡이 끝난 것이다
+          if (cause === 'end' || (cause === 'outside' && fadingRef.current)) {
+            finish()
+          } else if (cause === 'outside') {
+            clearAutoplayCheck()
+            setStatusBoth('paused')
           }
-          if (!seg || leftover) break
-          // endSeconds에 닿아 PAUSED가 온 경우는 정상 종료라 안내하지 않는다
-          const atEnd = t >= seg.end - 1
-          finish()
-          if (!atEnd) notify(PAUSED_OUTSIDE)
           break
         }
         case YT.PlayerState.BUFFERING:
@@ -257,7 +273,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
           break
       }
     },
-    [clearAutoplayCheck, finish, notify, setStatusBoth],
+    [clearAutoplayCheck, finish, setStatusBoth],
   )
 
   const handleError = useCallback(
@@ -311,7 +327,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     const p = new YT.Player(inner, {
       width: '100%',
       height: '100%',
-      playerVars: { playsinline: 1, controls: 0, disablekb: 1, rel: 0, origin: location.origin },
+      // 공식 플레이어 매개변수 중 화면 요소를 줄이는 값만 쓴다. fs: 전체 화면 버튼, iv_load_policy 3: 주석 숨김.
+      // 제목·채널·YouTube 로고는 매개변수로 끌 수 없다(modestbranding·showinfo는 효과 없음)
+      playerVars: { playsinline: 1, controls: 0, disablekb: 1, rel: 0, fs: 0, iv_load_policy: 3, origin: location.origin },
       events: {
         onReady: () => {
           if (!alive) return
@@ -406,11 +424,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       canControlVolume,
       play,
       stop,
+      resume,
       skipToCheer,
       getCurrentTime,
       attachHost: setHostEl,
     }),
-    [apiState, playerReady, status, nowPlaying, canControlVolume, play, stop, skipToCheer, getCurrentTime],
+    [apiState, playerReady, status, nowPlaying, canControlVolume, play, stop, resume, skipToCheer, getCurrentTime],
   )
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>
 }

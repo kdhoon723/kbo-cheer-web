@@ -2,7 +2,7 @@
 
 - 과목: 2026-2학기 스크립트프로그래밍 / 작성: 20241476 김도훈 / 작성일: 2026-11-15
 - 단계: STEP 2 설계 (최종판, 설계 검토 반영)
-- 기준 문서: `docs/requirements.md` (FR-01~33, NFR-01~14, BR-01~51, EX-01~31). [STEP 3-⑪] FR-29~33, BR-45~51, EX-30·31, NFR-14는 5.5절. [STEP 3-⑲] FR-37~39, BR-57·58은 3.1·5.7·11절. [STEP 3-⑳] FR-40~42, BR-59~61은 3.1·5.8절
+- 기준 문서: `docs/requirements.md` (FR-01~33, NFR-01~14, BR-01~51, EX-01~31). [STEP 3-⑪] FR-29~33, BR-45~51, EX-30·31, NFR-14는 5.5절. [STEP 3-⑲] FR-37~39, BR-57·58은 3.1·5.7·11절. [STEP 3-⑳] FR-40~42, BR-59~61은 3.1·5.8절. [STEP 3-㉑] BR-62·63은 8.6절
 - 검토 문서: `docs/reviews/design-review-claude.md`(R-01~28), `docs/reviews/design-review-codex.md`(C-01~18). 본문에서 검토 때문에 바뀐 곳에는 `[R-xx]`, `[C-xx]`를 붙였다. 전체 반영 내역은 15절.
 - 배포: `https://kbocheer.kdhoon.me`(Cloudflare Workers 정적 자산, `wrangler.jsonc`의 `assets.directory: ./dist`, `not_found_handling: single-page-application`으로 모든 경로에 index.html을 돌려준다) [공개 배포]
 - 기술 환경: React, TypeScript, Vite(포트 5173 고정, LAN 접속 허용), React Router(`react-router-dom`), YouTube IFrame Player API, YouTube Data API v3, LocalStorage, CSS
@@ -1120,7 +1120,7 @@ visitTeam(x):
 
 ```ts
 type PlayerApiState = 'loading' | 'loaded' | 'failed';        // 스크립트 상태
-type PlaybackStatus = 'idle' | 'starting' | 'playing' | 'fading';
+type PlaybackStatus = 'idle' | 'starting' | 'playing' | 'fading' | 'paused';   // paused [STEP 3-㉑]
 
 interface PlayerContextValue {
   apiState: PlayerApiState;
@@ -1129,7 +1129,8 @@ interface PlayerContextValue {
   nowPlaying: NowPlaying | null;       // 곡 ID와 시작 당시 구간 [R-28]
   canControlVolume: boolean;           // iOS면 false(NFR-10)
   play(song: Song): void;
-  stop(): void;                        // 페이드아웃 후 정지(BR-41)
+  stop(): void;                        // 페이드아웃 후 정지(BR-41). 일시정지 중이면 바로 끝냄(BR-63)
+  resume(): void;                      // 일시정지한 곡을 멈춘 자리부터(BR-62) [STEP 3-㉑]
   skipToCheer(): void;                 // FR-06
   getCurrentTime(): number | null;
   attachHost(el: HTMLDivElement | null): void;
@@ -1223,7 +1224,7 @@ useEffect(() => {
   let alive = true
   const p = new YT.Player(inner, {
     width: '100%', height: '100%',
-    playerVars: { playsinline: 1, controls: 0, disablekb: 1, rel: 0, origin: location.origin },
+    playerVars: { playsinline: 1, controls: 0, disablekb: 1, rel: 0, fs: 0, iv_load_policy: 3, origin: location.origin },  // fs·iv_load_policy [STEP 3-㉑]
     events: {
       onReady:           () => { if (!alive) return; readyRef.current = true; setPlayerReady(true); runPending() },
       onStateChange:     e => { if (alive) handleStateChange(e.data) },
@@ -1348,8 +1349,11 @@ finish():
 handleStateChange(state):
   PLAYING   → if !fadingRef.current: setStatusBoth('playing')
   ENDED     → finish()                                         // endSeconds 도달 또는 영상 끝
-  PAUSED    → if pausingByAppRef.current: pausingByAppRef.current = false   // 앱이 멈춘 것
-              else if segRef.current: finish(); notify('재생이 멈췄습니다')  // 전화 수신 등 외부 요인 [R-11]
+  PAUSED    → cause = pauseCause(앱이 멈춤?, t, seg, 불러온 뒤 ms, 불러온 뒤 재생됨?)   // lib/playback.ts [STEP 3-㉑]
+              app·leftover → 무시
+              end, 또는 페이드 중의 outside → finish()
+              outside → clearAutoplayCheck(); setStatusBoth('paused')   // 곡 구간을 두고 알림 없음(BR-62)
+              (처음에는 outside도 finish(); notify('재생이 멈췄습니다')였다 [R-11])
   BUFFERING → bufferingSinceRef.current ??= performance.now()
 
 trackBuffering(state):   // tick에서
@@ -1357,6 +1361,14 @@ trackBuffering(state):   // tick에서
   if performance.now() - bufferingSinceRef.current > 8000 and 아직 안내 안 함:
     notify('네트워크가 느려 재생이 늦어지고 있습니다')           // 멈추지는 않는다 [C-13]
 ```
+
+**플레이어를 직접 눌렀을 때 [STEP 3-㉑].** 플레이어 앞을 덮거나(`pointer-events: none`, 투명 덮개) 누르지 못하게 하지 않는다. YouTube 정책이 플레이어 앞에 다른 요소를 두는 것(Required Minimum Functionality "Overlays and frames")과 플레이어 기능을 막는 것(Developer Policies)을 금지하기 때문이다. 대신 앱이 플레이어 상태를 따라간다.
+
+- 상태 `paused`를 더했다. PAUSED가 오면 `pauseCause`가 이유를 가른다. 앱이 멈춘 것(`pausingByAppRef`), 불러온 직후 남은 신호(`isLeftoverStop`), 끝 시각 1초 안(`end`), 그 밖(`outside`)이다. `outside`만 일시정지로 받는다. 곡 구간(`segRef`, `nowPlaying`)과 감시 타이머가 그대로 남아, 플레이어를 다시 눌러 PLAYING이 오면 기존 PLAYING 처리가 `playing`으로 돌려놓고, 끝 시각 1초 전 페이드와 끝 시각 정지도 그대로 일한다.
+- `resume()`은 `paused`일 때만 `playVideo()`를 부르고 바로 `starting`으로 바꾼다(누른 순간 버튼이 「정지」로 바뀜). 자동 재생 확인 타이머도 다시 건다. `skipToCheer()`는 일시정지 중이면 옮긴 뒤 `resume()`한다.
+- `stop()`은 일시정지 중이면 페이드 없이 바로 끝낸다(소리가 없다).
+- 화면: 상태 글자 「일시정지」(넓은 화면 재생 줄 위 줄), 휴대폰은 상태 줄이 없어 재생 줄과 지금 재생 시트의 시간 앞에 「일시정지 · 」를 쓴다. 정지(00:00, 「다시 재생」)와 구별되어야 멈춘 자리부터 이어 틀 수 있음을 안다. 정지 버튼 자리는 「이어서」(lucide Play)이다. 격자의 재생 중 반전은 일시정지 중에도 그 곡에 남는다(곡 구간이 살아 있음).
+- 플레이어 화면 요소: 공식 매개변수 중 화면 요소를 줄이는 `fs: 0`(전체 화면 버튼)과 `iv_load_policy: 3`(주석)을 더했다. `controls: 0`이라 전체 화면 버튼은 원래 조작 막대와 함께 보이지 않았다. 두 값을 넣은 뒤 일시정지 화면에 전체 화면 버튼과 주석은 없다(넣기 전 화면과 따로 견주지는 않았다). `modestbranding`(2023-08 폐지, 효과 없음)과 `showinfo`(2018-09 폐지)는 쓰지 않는다. 일시정지 화면에 남는 것은 영상 제목, 채널 아이콘·이름, 공유, 재생목록 썸네일 단추, YouTube 로고, 가운데 재생 단추다(`docs/screenshots/paused-1440.png`). 문서에 따르면 채널 아이콘과 제목은 재생 전·일시정지·끝에 늘 보이고, `rel: 0`이어도 같은 채널의 관련 영상은 끌 수 없다.
 
 `endSeconds` 도달 때 플레이어가 PAUSED나 ENDED 중 무엇을 보내든 둘 다 `finish()`로 끝나므로 결과가 같다.
 

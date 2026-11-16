@@ -49,8 +49,10 @@ test.describe('11. 오류 수정 회귀', () => {
     })
     note(testInfo, '재생 확인까지(ms)', played.waitedMs)
     note(testInfo, '일시정지 시각(performance.now)', Math.round(sinceLoad))
-    await expect(toast(page)).toHaveText('재생이 멈췄습니다')
-    await expect(nowLabel(page)).toHaveText('멈춤')
+    // [STEP 3-㉑] 밖에서 멈춘 것은 곡을 끝내지 않고 일시정지로 받는다. 버리지 않고 알아본다는 K-02의 뜻은 그대로다
+    await expect(nowLabel(page)).toHaveText('일시정지')
+    await expect(page.getByRole('button', { name: '이어서' })).toBeEnabled()
+    await expect(toast(page)).toHaveCount(0)
   })
 
   test('TC-63 설정 저장 실패 알림(K-03)', async ({ page }) => {

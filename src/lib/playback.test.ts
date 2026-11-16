@@ -5,6 +5,7 @@ import {
   cheerTarget,
   isLeftoverStop,
   isStalePosition,
+  pauseCause,
   playerErrorMessage,
   segmentElapsed,
 } from './playback.ts'
@@ -110,5 +111,29 @@ describe('segmentElapsed', () => {
     expect(segmentElapsed(seg, null)).toBe(0)
     expect(segmentElapsed(seg, 1800)).toBe(0)
     expect(segmentElapsed(seg, 3)).toBe(0)
+  })
+})
+
+describe('pauseCause', () => {
+  const seg = { end: 475 }
+
+  it('앱이 멈춘 PAUSED는 다른 조건보다 먼저 app', () => {
+    expect(pauseCause(true, 420, seg, 5000, true)).toBe('app')
+    expect(pauseCause(true, 474.5, seg, 100, false)).toBe('app')
+  })
+
+  it('불러온 직후 이 곡 끝 근처가 아닌 PAUSED는 이전 로드에서 남은 신호', () => {
+    expect(pauseCause(false, 200, seg, 300, false)).toBe('leftover')
+  })
+
+  it('끝 시각 1초 안에서 온 PAUSED는 끝', () => {
+    expect(pauseCause(false, 474.2, seg, 5000, true)).toBe('end')
+    expect(pauseCause(false, 475, seg, 5000, true)).toBe('end')
+  })
+
+  it('한 번 재생된 뒤 구간 중간의 PAUSED는 밖에서 멈춘 일시정지', () => {
+    expect(pauseCause(false, 420, seg, 5000, true)).toBe('outside')
+    // 불러온 지 1.5초 안이어도 이미 재생됐으면 진짜 일시정지다(K-02)
+    expect(pauseCause(false, 416, seg, 800, true)).toBe('outside')
   })
 })

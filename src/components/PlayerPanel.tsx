@@ -39,6 +39,7 @@ const STATUS_LABELS: Record<PlaybackStatus, string> = {
   starting: '재생 준비 중',
   playing: '지금 재생',
   fading: '멈추는 중',
+  paused: '일시정지',
 }
 
 // 어느 재생에서 읽은 값인지 함께 둬서, 새 곡을 눌렀을 때 직전 곡의 값이 잠깐 남아 보이지 않게 한다
@@ -53,7 +54,8 @@ interface Props {
 }
 
 export default function PlayerPanel({ situationSlotRef }: Props) {
-  const { nowPlaying, status, playerReady, canControlVolume, play, stop, skipToCheer, getCurrentTime } = usePlayer()
+  const { nowPlaying, status, playerReady, canControlVolume, play, stop, resume, skipToCheer, getCurrentTime } =
+    usePlayer()
   const { songs, updateSong } = useSongs()
   const { settings, setVolume } = usePrefs()
   const { history } = useHistory()
@@ -188,6 +190,8 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
             <span className="now-sep"> · </span>
           </>
         )}
+        {/* 휴대폰은 상태 글자 줄이 없어, 일시정지만 시간 앞에 쓴다. 정지 뒤(00:00)와 구별해야 이어서 틀 수 있음을 안다 */}
+        {status === 'paused' && <span className="now-state">{STATUS_LABELS.paused} · </span>}
         <span className="now-time">{timeText}</span>
         {cheerOffset !== null && <span className="now-cheer"> · 응원가 {formatTime(cheerOffset)}</span>}
       </NowText>
@@ -228,7 +232,13 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
               <ChevronsRight className="wide-only" size={18} strokeWidth={1.75} aria-hidden="true" />
               응원가로
             </TapButton>
-            {status === 'idle' && song ? (
+            {status === 'paused' ? (
+              // 플레이어를 직접 눌러 멈춘 곡은 멈춘 자리부터 이어 튼다
+              <TapButton type="button" className="stop-btn" aria-label="이어서" onClick={resume}>
+                <Play size={16} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
+                <span className="wide-only">이어서</span>
+              </TapButton>
+            ) : status === 'idle' && song ? (
               <TapButton type="button" className="stop-btn" aria-label="다시 재생" onClick={() => play(song)}>
                 <Play size={16} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
                 <span className="wide-only">다시 재생</span>
@@ -274,7 +284,7 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
         <PlayerCard song={song ?? null} />
         <div className="now-sheet-progress">{progress}</div>
         <p className="now-sheet-time">
-          <span>{timeText}</span>
+          <span>{status === 'paused' ? `${STATUS_LABELS.paused} · ${timeText}` : timeText}</span>
           {cheerOffset !== null && <span className="now-sheet-cheer">응원가 {formatTime(cheerOffset)}</span>}
         </p>
         {lyric && <LyricsBlock lyric={lyric} open={lyricsOpen} onToggle={() => setLyricsOpen((o) => !o)} />}

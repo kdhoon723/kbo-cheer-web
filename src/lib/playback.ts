@@ -46,6 +46,25 @@ export function isStalePosition(t: number, seg: Pick<NowPlaying, 'start' | 'end'
   return msSinceSeek < SEEK_GUARD_MS && (t < seg.start - 1 || t > seg.end + 1)
 }
 
+export type PauseCause = 'app' | 'leftover' | 'end' | 'outside'
+
+/**
+ * 플레이어가 보낸 PAUSED가 무엇인가.
+ * app: 앱이 멈춘 것(정지·곡 바꾸기). leftover: 불러온 직후 이전 로드에서 남은 신호.
+ * end: 끝 시각(endSeconds)에 닿아 멈춘 것. outside: 사용자가 플레이어를 눌렀거나 전화 등으로 멈춘 것(일시정지로 본다)
+ */
+export function pauseCause(
+  byApp: boolean,
+  t: number,
+  seg: Pick<NowPlaying, 'end'>,
+  msSinceLoad: number,
+  playedSinceLoad: boolean,
+): PauseCause {
+  if (byApp) return 'app'
+  if (isLeftoverStop(t, seg, msSinceLoad, playedSinceLoad)) return 'leftover'
+  return t >= seg.end - 1 ? 'end' : 'outside'
+}
+
 /**
  * 불러온 직후 플레이어가 이전 로드에서 남은 ENDED·PAUSED를 보낸 것인가.
  * 새 곡이 한 번이라도 재생됐으면 그 뒤의 정지는 진짜다. 이 곡의 끝 근처가 아니면(구간 앞이든 뒤든) 남은 신호로 본다

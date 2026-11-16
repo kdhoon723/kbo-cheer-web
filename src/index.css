@@ -965,6 +965,10 @@ kbd {
   display: none;
 }
 
+.now-state {
+  color: var(--text);
+}
+
 .now-title {
   overflow: hidden;
   font-size: 17px;
@@ -1818,6 +1822,10 @@ kbd {
 
   .now:first-child {
     grid-column: 1 / -1;
+  }
+
+  .now-state {
+    display: none;
   }
 
   .now-label {
