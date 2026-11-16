@@ -24,6 +24,7 @@ export const DEFAULT_SETTINGS: Settings = {
   gridSort: 'starters',
   teamSort: 'popular',
   teamOrder: defaultTeamOrder(),
+  lyricsOpen: true,
 }
 const DEFAULT_TEAM_STATE: TeamState = { currentTeamId: null, prevTeamId: null }
 
@@ -144,6 +145,7 @@ export function loadSettings(): LoadResult<Settings> {
       gridSort: parseGridSort(data.gridSort),
       teamSort: parseTeamSort(data.teamSort),
       teamOrder: parseTeamOrder(data.teamOrder),
+      lyricsOpen: typeof data.lyricsOpen === 'boolean' ? data.lyricsOpen : DEFAULT_SETTINGS.lyricsOpen,
     }
     return { value: settings, status: 'ok' }
   }

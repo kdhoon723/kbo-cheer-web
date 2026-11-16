@@ -4,7 +4,7 @@ import { ChevronDown } from 'lucide-react'
 import * as m from 'motion/react-m'
 import { LYRICS_LICENSE, sourceLabel } from '../lib/lyrics.ts'
 import type { Lyric } from '../lib/lyrics.ts'
-import { quick } from '../ui/motionTokens.ts'
+import { distance, swap } from '../ui/motionTokens.ts'
 
 interface Props {
   lyric: Lyric
@@ -12,7 +12,10 @@ interface Props {
   onToggle: () => void
 }
 
-/** 지금 곡의 가사. 길어서 처음에는 접어 두고, 펼치면 가사 아래에 출처 문서와 라이선스를 쓴다 */
+/**
+ * 지금 곡의 가사. 처음에는 펼쳐 두고, 접거나 펼친 것은 설정에 남아 다음 곡에도 이어진다 [STEP 3-㉗].
+ * 가사 아래에 출처 문서와 라이선스를 쓴다
+ */
 export default function LyricsBlock({ lyric, open, onToggle }: Props) {
   const bodyId = useId()
   return (
@@ -22,7 +25,7 @@ export default function LyricsBlock({ lyric, open, onToggle }: Props) {
         <ChevronDown className="lyrics-chevron" size={18} strokeWidth={1.75} aria-hidden="true" />
       </button>
       {open && (
-        <m.div id={bodyId} className="lyrics-body" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={quick}>
+        <m.div id={bodyId} className="lyrics-body" initial={{ opacity: 0, y: -distance.row }} animate={{ opacity: 1, y: 0 }} transition={swap}>
           <p className="lyrics-text">{lyric.lyrics}</p>
           <p className="lyrics-source">
             출처:{' '}

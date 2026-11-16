@@ -58,12 +58,11 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   const { nowPlaying, status, playerReady, canControlVolume, play, stop, resume, skipToCheer, seek, getCurrentTime } =
     usePlayer()
   const { songs, updateSong } = useSongs()
-  const { settings, setVolume } = usePrefs()
+  const { settings, setVolume, setLyricsOpen } = usePrefs()
   const { history } = useHistory()
   const [tick, setTick] = useState<Tick>({ seg: null, elapsed: 0, canCheerHere: false })
   // 이번에 연 뒤 실제로 튼 적이 있는가. 휴대폰은 그때까지 플레이어 자리를 접어 둔다
   const [hasPlayed, setHasPlayed] = useState(false)
-  const [lyricsOpen, setLyricsOpen] = useState(false)
   const [toolsOpen, setToolsOpen] = useState(false)
   const [nowOpen, setNowOpen] = useState(false)
   const narrow = useMediaQuery(NARROW_QUERY)
@@ -295,8 +294,8 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
         <div className="dock-situations" ref={situationSlotRef} />
       </div>
       {lyric && (
-        <div className="player-lyrics">
-          <LyricsBlock lyric={lyric} open={lyricsOpen} onToggle={() => setLyricsOpen((o) => !o)} />
+        <div className={settings.lyricsOpen ? 'player-lyrics is-open' : 'player-lyrics'}>
+          <LyricsBlock lyric={lyric} open={settings.lyricsOpen} onToggle={() => setLyricsOpen(!settings.lyricsOpen)} />
         </div>
       )}
       <Sheet
@@ -314,7 +313,7 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
           <span>{status === 'paused' ? `${STATUS_LABELS.paused} · ${timeText}` : timeText}</span>
           {cheerOffset !== null && <span className="now-sheet-cheer">응원가 {formatTime(cheerOffset)}</span>}
         </p>
-        {lyric && <LyricsBlock lyric={lyric} open={lyricsOpen} onToggle={() => setLyricsOpen((o) => !o)} />}
+        {lyric && <LyricsBlock lyric={lyric} open={settings.lyricsOpen} onToggle={() => setLyricsOpen(!settings.lyricsOpen)} />}
       </Sheet>
       <Sheet open={toolsOpen} title="재생 도구" titleId="tools-sheet-title" onClose={() => setToolsOpen(false)}>
         <div className="sheet-tools">{tools}</div>

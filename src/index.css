@@ -2370,7 +2370,7 @@ kbd {
   }
 
   .player-tools {
-    order: 3;
+    order: 2;
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
@@ -2378,15 +2378,40 @@ kbd {
     border: 0;
   }
 
-  /* 상황 칸 아래에 둔다. 펼쳐도 경기 중에 누르는 상황 칸이 밀리지 않는다 */
+  /*
+   * 가사는 맨 아래, 재생 도구 밑이다 [STEP 3-㉗]. 펼치면 높이를 280px(남는 높이가 더 있으면 그만큼)로 두고 가사 칸 안에서 스크롤한다.
+   * 가사 길이만큼 열이 길어지면 끝까지 읽으려 내릴 때 「응원가로」와 상황 칸이 화면 위로 사라진다
+   */
   .player-lyrics {
     display: block;
-    order: 2;
+    order: 3;
     flex: none;
   }
 
   .player-lyrics .lyrics {
     margin-top: 0;
+  }
+
+  .player-lyrics.is-open {
+    display: flex;
+    flex: 1 0 280px;
+    flex-direction: column;
+    min-height: 280px;
+  }
+
+  .player-lyrics.is-open .lyrics {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .player-lyrics.is-open .lyrics-body {
+    flex: 1;
+    min-height: 0;
+    padding-right: 8px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .toast-region {
