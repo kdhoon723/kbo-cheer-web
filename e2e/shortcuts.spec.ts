@@ -24,6 +24,8 @@ const CHEER_AT = 440
 test.describe('8. 키보드 단축키', () => {
   test('TC-49 단축키 동작', async ({ page }, testInfo) => {
     test.setTimeout(120_000)
+    // [STEP 3-⑫] T가 전 팀으로 가는 것은 한 팀 화면(1199px 이하)이다. 보드에서 T는 상황 칸의 팀을 바꾼다(TC-90)
+    await page.setViewportSize({ width: 1024, height: 768 })
     await presetSongs(
       page,
       seedSongs().map((s) => (s.id === NOH.id ? { ...s, cheerStart: CHEER_AT } : s)),

@@ -5,16 +5,18 @@ import TeamGrid from './TeamGrid.tsx'
 
 interface Props {
   open: boolean
-  currentTeamId: TeamId
+  /** 창 제목. 넓은 화면의 오른쪽 칸은 「상대 팀 고르기」다 */
+  title?: string
+  currentTeamId: TeamId | null
   onClose: () => void
   onPick: (teamId: TeamId) => void
 }
 
-export default function TeamSheet({ open, currentTeamId, onClose, onPick }: Props) {
+export default function TeamSheet({ open, title = '팀 고르기', currentTeamId, onClose, onPick }: Props) {
   return (
     <Sheet
       open={open}
-      title="팀 고르기"
+      title={title}
       titleId="team-sheet-title"
       className="team-sheet"
       focusSelector='[aria-current="true"]'

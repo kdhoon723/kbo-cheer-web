@@ -10,12 +10,14 @@ import { getTeam } from '../data/teams.ts'
 import { usePlayer } from '../context/PlayerContext.tsx'
 import { usePrefs } from '../context/PrefsContext.tsx'
 import { useSongs } from '../context/SongsContext.tsx'
+import { NARROW_QUERY, useMediaQuery } from '../hooks/useMediaQuery.ts'
 import { cheerHereSecond, cheerTarget, segmentElapsed } from '../lib/playback.ts'
 import { formatTime } from '../lib/time.ts'
 import type { NowPlaying } from '../types.ts'
 import { TapButton } from '../ui/Press.tsx'
 import { distance, ease, quick, row, rowTextDelay, swap } from '../ui/motionTokens.ts'
 import { bandStyle } from './band.ts'
+import PlayerCard from './PlayerCard.tsx'
 import PlayerHost from './PlayerHost.tsx'
 import PlayerPortrait from './PlayerPortrait.tsx'
 import Sheet from './Sheet.tsx'
@@ -52,6 +54,10 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   const [tick, setTick] = useState<Tick>({ seg: null, elapsed: 0, canCheerHere: false })
   const [hasPlayed, setHasPlayed] = useState(false)
   const [toolsOpen, setToolsOpen] = useState(false)
+  const [nowOpen, setNowOpen] = useState(false)
+  const narrow = useMediaQuery(NARROW_QUERY)
+  // 지금 재생 시트는 휴대폰 배치에서만 쓴다. 넓어지면 닫아 두어 다시 좁힐 때 저절로 열리지 않게 한다
+  if (nowOpen && !narrow) setNowOpen(false)
   const [rowRef, animate] = useAnimate<HTMLDivElement>()
   const idleHeight = useRef(0)
   // mini의 useAnimate는 MotionConfig를 읽지 않으므로 동작 줄이기는 여기서 직접 본다
@@ -133,47 +139,71 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
     </>
   )
 
+  const cheerOffset = live && cheerAt !== null && nowPlaying ? cheerAt - nowPlaying.start : null
+  const timeText = live ? `${formatTime(elapsed)} / ${formatTime(duration)}` : '--:-- / --:--'
+  const progress = (
+    <div className="progress" aria-hidden="true">
+      <div className="progress-fill" style={{ transform: `scaleX(${live ? ratio(elapsed) : 0})` }} />
+      {cheerOffset !== null && <div className="progress-cheer" style={{ left: `${ratio(cheerOffset) * 100}%` }} />}
+    </div>
+  )
+
+  const nowFace = (
+    <>
+      {song &&
+        (song.kind === 'player' ? (
+          <PlayerPortrait teamId={song.teamId} player={playerOf(song)} size="dock" />
+        ) : (
+          <TeamLogo teamId={song.teamId} size={36} />
+        ))}
+      <NowText
+        key={hasPlayed ? 'live' : 'idle'}
+        rise={hasPlayed}
+        label={live ? STATUS_LABELS[status] : STATUS_LABELS.idle}
+        titleKey={song?.id ?? null}
+        title={song ? song.title : '선택한 곡 없음'}
+      >
+        {song && (
+          <>
+            <span className="now-team">{getTeam(song.teamId).name}</span>
+            <span className="now-sep"> · </span>
+          </>
+        )}
+        <span className="now-time">{timeText}</span>
+        {cheerOffset !== null && <span className="now-cheer"> · 응원가 {formatTime(cheerOffset)}</span>}
+      </NowText>
+    </>
+  )
+
   return (
     <aside className={panelClass} style={song ? bandStyle(song.teamId) : undefined} aria-label="재생 상태">
       <div className="player-stage">
         <PlayerHost />
       </div>
+      <div className="player-card-area">
+        <PlayerCard song={song ?? null} />
+      </div>
       <div className="player-tools">{tools}</div>
       <div className="dock">
         <Toast />
-        <div className="progress" aria-hidden="true">
-          <div className="progress-fill" style={{ transform: `scaleX(${live ? ratio(elapsed) : 0})` }} />
-          {live && cheerAt !== null && nowPlaying && (
-            <div className="progress-cheer" style={{ left: `${ratio(cheerAt - nowPlaying.start) * 100}%` }} />
-          )}
-        </div>
+        {progress}
         <div className="play-row" ref={rowRef}>
-          {song &&
-            (song.kind === 'player' ? (
-              <PlayerPortrait teamId={song.teamId} player={playerOf(song)} size="dock" />
-            ) : (
-              <TeamLogo teamId={song.teamId} size={36} />
-            ))}
-          <NowText
-            key={hasPlayed ? 'live' : 'idle'}
-            rise={hasPlayed}
-            label={live ? STATUS_LABELS[status] : STATUS_LABELS.idle}
-            titleKey={song?.id ?? null}
-            title={song ? song.title : '선택한 곡 없음'}
-          >
-            {song && (
-              <>
-                <span className="now-team">{getTeam(song.teamId).name}</span>
-                <span className="now-sep"> · </span>
-              </>
-            )}
-            <span className="now-time">
-              {live ? `${formatTime(elapsed)} / ${formatTime(duration)}` : '--:-- / --:--'}
-            </span>
-            {live && cheerAt !== null && nowPlaying && (
-              <span className="now-cheer"> · 응원가 {formatTime(cheerAt - nowPlaying.start)}</span>
-            )}
-          </NowText>
+          {/* 곡이 없을 때도 같은 버튼으로 두어야 곡을 멈추고 틀 때마다 글자가 다시 만들어지지 않는다 */}
+          {narrow ? (
+            <button
+              type="button"
+              className="now-open"
+              aria-label={song ? `지금 재생 크게 보기: ${song.title}` : '지금 재생 크게 보기'}
+              aria-haspopup="dialog"
+              aria-expanded={nowOpen}
+              disabled={!song}
+              onClick={() => setNowOpen(true)}
+            >
+              {nowFace}
+            </button>
+          ) : (
+            nowFace
+          )}
           <div className="play-actions">
             <TapButton type="button" className="skip-btn" disabled={!canSkip} onClick={skipToCheer}>
               <ChevronsRight className="wide-only" size={18} strokeWidth={1.75} aria-hidden="true" />
@@ -203,6 +233,20 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
         </div>
         <div className="dock-situations" ref={situationSlotRef} />
       </div>
+      <Sheet
+        open={nowOpen}
+        title="지금 재생"
+        titleId="now-sheet-title"
+        className="now-sheet"
+        onClose={() => setNowOpen(false)}
+      >
+        <PlayerCard song={song ?? null} />
+        <div className="now-sheet-progress">{progress}</div>
+        <p className="now-sheet-time">
+          <span>{timeText}</span>
+          {cheerOffset !== null && <span className="now-sheet-cheer">응원가 {formatTime(cheerOffset)}</span>}
+        </p>
+      </Sheet>
       <Sheet open={toolsOpen} title="재생 도구" titleId="tools-sheet-title" onClose={() => setToolsOpen(false)}>
         <div className="sheet-tools">{tools}</div>
       </Sheet>

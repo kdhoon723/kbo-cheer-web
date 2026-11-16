@@ -5,7 +5,8 @@ import type { TeamId } from '../types.ts'
 
 interface Props {
   teamId: TeamId
-  size: 28 | 36 | 44
+  /** 88은 선수 카드에서 선수 곡이 아닐 때만 쓴다 */
+  size: 28 | 36 | 44 | 88
 }
 
 export default function TeamLogo({ teamId, size }: Props) {

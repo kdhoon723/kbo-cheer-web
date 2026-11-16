@@ -4,26 +4,38 @@ import { Link, Outlet, useLocation, useParams } from 'react-router-dom'
 import StatusMessage from '../components/StatusMessage.tsx'
 import { usePrefs } from '../context/PrefsContext.tsx'
 import { isTeamId } from '../data/teams.ts'
+import { matchupOf } from '../lib/matchup.ts'
 import { teamSwitchDirection } from '../lib/motion.ts'
-import type { SwitchDirection } from '../lib/motion.ts'
+import type { ColumnEnter, SwitchDirection } from '../lib/motion.ts'
 import type { TeamId } from '../types.ts'
 
 interface View {
   teamId: TeamId | null
+  prevId: TeamId | null
   pathname: string
-  direction: SwitchDirection
+  enter: ColumnEnter
+}
+
+function directionOf(from: TeamId | null, to: TeamId | null): SwitchDirection {
+  return from && to ? teamSwitchDirection(from, to) : 0
 }
 
 export default function TeamLayout() {
   const { teamId } = useParams()
-  const { visitTeam } = usePrefs()
+  const { teamState, visitTeam } = usePrefs()
   const valid = isTeamId(teamId) ? teamId : null
+  const prevId = valid ? matchupOf(valid, teamState).prev : null
   const { pathname } = useLocation()
-  // Outlet이 팀마다 새로 만들어지므로 직전 팀은 이 레이아웃이 기억한다. 팀 안에서 화면만 바뀌면 방향은 0이다
-  const [view, setView] = useState<View>({ teamId: valid, pathname, direction: 0 })
-  if (view.teamId !== valid || view.pathname !== pathname) {
-    const direction = view.teamId && valid ? teamSwitchDirection(view.teamId, valid) : 0
-    setView({ teamId: valid, pathname, direction })
+  // Outlet이 팀마다 새로 만들어지므로 직전 팀은 이 레이아웃이 기억한다. 팀 안에서 화면만 바뀌면 방향은 0이다.
+  // 넓은 화면의 오른쪽 열도 Outlet과 함께 새로 만들어지므로 그 열의 직전 팀도 여기서 기억한다
+  const [view, setView] = useState<View>({ teamId: valid, prevId, pathname, enter: { current: 0, prev: 0 } })
+  if (view.teamId !== valid || view.prevId !== prevId || view.pathname !== pathname) {
+    setView({
+      teamId: valid,
+      prevId,
+      pathname,
+      enter: { current: directionOf(view.teamId, valid), prev: directionOf(view.prevId, prevId) },
+    })
   }
 
   useEffect(() => {
@@ -44,5 +56,5 @@ export default function TeamLayout() {
       </StatusMessage>
     )
   }
-  return <Outlet key={valid} context={view.direction} />
+  return <Outlet key={valid} context={view.enter} />
 }

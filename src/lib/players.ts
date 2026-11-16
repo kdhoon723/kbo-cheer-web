@@ -61,6 +61,19 @@ export function photoUrl(teamId: TeamId, player: PlayerInfo | null): string | nu
   return player?.photo ? `/players/${teamId}/${player.playerId}.jpg` : null
 }
 
+/** 누끼(배경을 뺀 상반신) 주소. 누끼가 있다고 표시된 선수만 요청한다 */
+export function cutoutUrl(teamId: TeamId, player: PlayerInfo | null): string | null {
+  return player?.cutout ? `/players/${teamId}/cutout/${player.playerId}.webp` : null
+}
+
+const KIND_LABELS: Record<Exclude<Song['kind'], 'player'>, string> = { team: '팀 응원가', situation: '상황' }
+
+/** 선수 카드 아래 둘째 줄: 선수 곡은 「구단 · 포지션」, 그 밖은 「구단 · 곡 종류」 */
+export function cardSubtitle(song: Pick<Song, 'kind'>, teamName: string, player: PlayerInfo | null): string {
+  const detail = song.kind === 'player' ? player?.position : KIND_LABELS[song.kind]
+  return detail ? `${teamName} · ${detail}` : teamName
+}
+
 export function avatarUrl(teamId: TeamId): string {
   return `/avatars/${teamId}.webp`
 }

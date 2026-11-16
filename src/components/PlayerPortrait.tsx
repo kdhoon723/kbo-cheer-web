@@ -6,7 +6,7 @@ import type { PlayerInfo, TeamId } from '../types.ts'
 interface Props {
   teamId: TeamId
   player: PlayerInfo | null
-  size: 'cell' | 'row' | 'dock'
+  size: 'cell' | 'row' | 'dock' | 'card'
 }
 
 /**

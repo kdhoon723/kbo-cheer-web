@@ -1,6 +1,8 @@
 //20241476-김도훈-(2026-11-15)
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+import { assignTeam as assignSlot } from '../lib/matchup.ts'
+import type { Slot } from '../lib/matchup.ts'
 import { DEFAULT_SETTINGS, loadSettings, loadTeamState, saveSettings, saveTeamState } from '../lib/storage.ts'
 import type { GridSort, Settings, TeamId, TeamState } from '../types.ts'
 import { useNotice } from './NoticeContext.tsx'
@@ -8,6 +10,8 @@ import { useNotice } from './NoticeContext.tsx'
 interface PrefsContextValue {
   teamState: TeamState
   visitTeam: (teamId: TeamId) => void
+  /** 넓은 화면의 두 팀 열 중 한 칸의 팀을 바꾼다. URL은 부르는 쪽이 맞춘다 */
+  assignTeam: (slot: Slot, teamId: TeamId) => void
   settings: Settings
   setVolume: (v: number) => void
   setGridSort: (s: GridSort) => void
@@ -52,6 +56,10 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
     )
   }, [])
 
+  const assignTeam = useCallback((slot: Slot, teamId: TeamId) => {
+    setTeamState((prev) => assignSlot(prev, slot, teamId))
+  }, [])
+
   const setVolume = useCallback((v: number) => {
     const volume = Math.min(100, Math.max(0, Math.round(Number.isFinite(v) ? v : DEFAULT_SETTINGS.volume)))
     setSettings((prev) => (prev.volume === volume ? prev : { ...prev, volume }))
@@ -62,8 +70,8 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo(
-    () => ({ teamState, visitTeam, settings, setVolume, setGridSort }),
-    [teamState, visitTeam, settings, setVolume, setGridSort],
+    () => ({ teamState, visitTeam, assignTeam, settings, setVolume, setGridSort }),
+    [teamState, visitTeam, assignTeam, settings, setVolume, setGridSort],
   )
   return <PrefsContext.Provider value={value}>{children}</PrefsContext.Provider>
 }

@@ -216,6 +216,12 @@ kbd {
   padding: 5px;
 }
 
+/* 선수 카드에서 선수 곡이 아닐 때만 쓰는 큰 판 */
+.logo-88 {
+  --plate-size: 88px;
+  padding: 10px;
+}
+
 .logo-plate img {
   display: block;
   width: 100%;
@@ -691,6 +697,17 @@ kbd {
   border-radius: var(--r-plate);
 }
 
+/* 누끼가 없는 선수의 카드 사진. 팀 색 판 위에 4:5로 선다 */
+.portrait-card {
+  --pw: 96px;
+  --ph: 120px;
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  border-radius: 3px;
+  transform: translateX(-50%);
+}
+
 .team-song-list,
 .result-list {
   list-style: none;
@@ -937,6 +954,143 @@ kbd {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* 휴대폰 재생 줄: 사진과 글자 자리를 누르면 지금 재생 시트가 열린다. 겉모양은 버튼이 아닌 줄 그대로다 */
+.now-open {
+  flex: 1;
+  justify-content: flex-start;
+  min-width: 0;
+  padding: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  color: inherit;
+  text-align: left;
+  border: 0;
+  border-radius: 0;
+}
+
+.now-open:disabled {
+  color: inherit;
+  cursor: default;
+}
+
+/* 선수 카드: 아래 30%만 팀 색 판이고, 누끼는 판 바닥에 서서 머리와 어깨가 판 위로 올라온다. 판 위에는 글자를 두지 않는다 */
+.player-card-area {
+  display: none;
+}
+
+.player-card {
+  min-width: 0;
+}
+
+.card-stage {
+  position: relative;
+  height: 140px;
+  overflow: hidden;
+}
+
+.card-plate {
+  position: absolute;
+  inset: auto 0 0;
+  height: 30%;
+  background: var(--band);
+  border-radius: var(--r-plate);
+}
+
+.card-stage.is-idle .card-plate {
+  background: var(--pressed);
+}
+
+.card-cutout {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  height: 100%;
+  aspect-ratio: 4 / 5;
+  opacity: 0;
+  transform: translateX(-50%);
+}
+
+.card-cutout.is-loaded {
+  opacity: 1;
+}
+
+.card-team {
+  position: absolute;
+  left: 8px;
+  top: calc(70% + 8px);
+  display: flex;
+}
+
+.card-logo {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  display: flex;
+  transform: translateX(-50%);
+}
+
+.card-name {
+  margin-top: 12px;
+  overflow: hidden;
+  font-size: 22px;
+  font-weight: 700;
+  /* 곡이 없을 때 글자가 작아져도 줄 높이는 같아야 첫 곡에 아래가 밀리지 않는다 */
+  line-height: 28px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.card-stage.is-idle ~ .card-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.card-sub {
+  min-height: 20px;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--text-2);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 지금 재생 시트(휴대폰). 머리말 57px과 플레이어 203px 아래만 써서 재생 중인 플레이어를 덮지 않는다 */
+.now-sheet .sheet-body {
+  max-height: calc(100dvh - 260px);
+}
+
+.now-sheet-progress {
+  margin-top: 16px;
+}
+
+.now-sheet-progress .progress {
+  height: 4px;
+}
+
+.now-sheet-progress .progress-cheer {
+  top: -3px;
+}
+
+.now-sheet-time {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.now-sheet-cheer {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-2);
 }
 
 /* 휴대폰: 곡을 틀기 전에는 플레이어 자리를 비워 격자를 더 보인다. iframe은 그대로 두고 칸만 접는다 */
@@ -1433,6 +1587,8 @@ kbd {
     align-self: start;
     position: sticky;
     top: 0;
+    /* 고정 위치인 알림이 이 열 안에 있어, 열이 왼쪽 열의 사진(위치 지정 요소)보다 위에 그려져야 알림이 가려지지 않는다 */
+    z-index: 20;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -1573,6 +1729,184 @@ kbd {
   .sheet-body {
     border: 1px solid var(--edge);
     border-radius: var(--r-plate);
+  }
+}
+
+/* 넓은 화면: 왼쪽은 두 팀을 나란히 놓는 매치업 보드, 오른쪽 열에는 선수 카드가 더해진다 */
+@media (min-width: 1200px) {
+  :root {
+    --col-w: clamp(392px, 28vw, 480px);
+    --app-max: 1680px;
+    /* 화면이 앱 최대 폭보다 넓을 때 앱 왼쪽 끝의 위치. 고정 위치(알림, 팀 고르기 창)를 앱 안에 맞춘다 */
+    --app-left: max(0px, calc((100vw - var(--app-max)) / 2));
+  }
+
+  .app {
+    max-width: var(--app-max);
+    margin-inline: auto;
+  }
+
+  .app:has(.board) .team-trigger,
+  .app:has(.board) .prev-team {
+    display: none;
+  }
+
+  .toast-region {
+    left: calc(var(--app-left) + 24px);
+  }
+
+  .team-sheet {
+    left: calc(var(--app-left) + 24px);
+  }
+
+  .player-card-area {
+    display: block;
+    flex: none;
+  }
+
+  /* 이름과 구단·포지션은 카드 아래에 있으므로 재생 줄은 상태와 시간만 쓴다 */
+  .play-row > .portrait,
+  .play-row > .logo-plate,
+  .now-title,
+  .now-team,
+  .now-sep {
+    display: none;
+  }
+
+  .now,
+  .now:first-child {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 8px;
+  }
+
+  .situation-tabs {
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .situation-tabs button {
+    gap: 8px;
+    padding: 0 12px 0 8px;
+    font-size: 15px;
+  }
+
+  .situation-none {
+    padding: 12px 0;
+    font-size: 13px;
+    color: var(--text-2);
+  }
+
+  .search-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .search-row .search-field {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .search-row .sort-toggle {
+    flex: none;
+    padding-bottom: 0;
+  }
+
+  .board {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .matchup,
+  .board-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .board-columns {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 48px;
+    align-items: start;
+  }
+
+  .matchup-team,
+  .matchup-pick {
+    justify-self: start;
+    max-width: 100%;
+    min-height: 52px;
+  }
+
+  .matchup-team {
+    gap: 12px;
+    padding: 0 8px 0 4px;
+    border-color: transparent;
+  }
+
+  .matchup-name {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 22px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .matchup-vs {
+    justify-self: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-3);
+  }
+
+  .board-column {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .board-column + .board-column::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -24px;
+    width: 1px;
+    background: var(--line);
+  }
+
+  .board-column > .status-message {
+    margin: 0;
+  }
+
+  .is-board .player-grid {
+    grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  }
+
+  .is-board .player-cell {
+    min-height: 100px;
+  }
+
+  .is-board .portrait-cell {
+    --pw: 48px;
+    --ph: 60px;
+  }
+
+  .is-board .player-sub {
+    max-width: calc(100% - 52px);
+  }
+}
+
+/* 앱 최대 폭보다 넓은 화면에서는 오른쪽 열 바깥에도 선을 그어 열이 바탕에 묻히지 않게 한다 */
+@media (min-width: 1681px) {
+  .player-panel {
+    border-right: 1px solid var(--line);
   }
 }
 

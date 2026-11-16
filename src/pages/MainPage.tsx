@@ -1,34 +1,31 @@
 //20241476-김도훈-(2026-11-15)
-import { useMemo, useRef, useState } from 'react'
-import * as m from 'motion/react-m'
+import { startTransition, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import EmptyState from '../components/EmptyState.tsx'
-import PlayerGrid from '../components/PlayerGrid.tsx'
+import MatchupHeader from '../components/MatchupHeader.tsx'
 import SearchBox from '../components/SearchBox.tsx'
 import SearchResults from '../components/SearchResults.tsx'
-import StatusMessage from '../components/StatusMessage.tsx'
 import SituationGrid from '../components/SituationGrid.tsx'
-import TeamSongList from '../components/TeamSongList.tsx'
+import SituationTeamTabs from '../components/SituationTeamTabs.tsx'
+import StatusMessage from '../components/StatusMessage.tsx'
+import TeamColumn from '../components/TeamColumn.tsx'
 import { useHistory } from '../context/historyState.ts'
 import { usePlayer } from '../context/PlayerContext.tsx'
 import { usePrefs } from '../context/PrefsContext.tsx'
 import { useSituationSlot } from '../context/SituationSlotContext.ts'
 import { useSongs } from '../context/SongsContext.tsx'
-import { playerOf } from '../data/players.ts'
 import { getTeam } from '../data/teams.ts'
 import { useActiveTeam } from '../hooks/useActiveTeam.ts'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts.ts'
-import type { SwitchDirection } from '../lib/motion.ts'
+import { BOARD_QUERY, useMediaQuery } from '../hooks/useMediaQuery.ts'
 import { recentSongs } from '../lib/history.ts'
-import { sortPlayerSongs } from '../lib/playerSort.ts'
+import { assignTeam, leavesMatchup, matchupOf, situationTeamOf } from '../lib/matchup.ts'
+import type { Matchup, Slot } from '../lib/matchup.ts'
+import type { ColumnEnter } from '../lib/motion.ts'
 import type { SearchHit } from '../lib/search.ts'
 import { buildSearchIndex, searchIndex } from '../lib/search.ts'
 import { situationSlots } from '../lib/situationSlots.ts'
-import type { GridSort, Song } from '../types.ts'
-import { distance, swap } from '../ui/motionTokens.ts'
-
-type Tab = 'players' | 'team'
+import type { GridSort, Song, TeamId } from '../types.ts'
 
 const SORTS: { value: GridSort; label: string }[] = [
   { value: 'starters', label: '주전순' },
@@ -36,30 +33,41 @@ const SORTS: { value: GridSort; label: string }[] = [
   { value: 'frequent', label: '자주 튼' },
 ]
 
+const SITUATION_PANEL_ID = 'situation-panel'
+
 export default function MainPage() {
   const team = useActiveTeam()
   const navigate = useNavigate()
   const { songs } = useSongs()
-  const { settings, setGridSort, teamState } = usePrefs()
+  const { settings, setGridSort, teamState, assignTeam: assignSlot } = usePrefs()
   const { history } = useHistory()
   const { nowPlaying, play, stop, skipToCheer } = usePlayer()
   const situationSlot = useSituationSlot()
+  const board = useMediaQuery(BOARD_QUERY)
   const [query, setQuery] = useState('')
-  const [tab, setTab] = useState<Tab>('players')
   const [searchFocused, setSearchFocused] = useState(false)
+  // 상황 칸은 마지막으로 누른 곡의 팀을 따른다. 화면을 열 때는 재생 중인 곡의 팀에서 시작한다
+  const [lastPicked, setLastPicked] = useState<TeamId | null>(
+    () => songs.find((s) => s.id === nowPlaying?.songId)?.teamId ?? null,
+  )
   // 「자주 튼」 순서는 화면을 열거나 정렬을 고를 때의 횟수로 정한다. 곡을 누를 때마다 칸이 옮겨 가면 다음 칸을 누르기 어렵다
   const [order, setOrder] = useState({ sort: settings.gridSort, counts: history.counts })
   if (order.sort !== settings.gridSort) setOrder({ sort: settings.gridSort, counts: history.counts })
   const inputRef = useRef<HTMLInputElement>(null)
-  const enterFrom = useOutletContext<SwitchDirection>()
+  const enter = useOutletContext<ColumnEnter>()
 
   const teamId = team?.id ?? null
-  const { players, teamSongs, situations } = useMemo(() => {
-    const mine = songs.filter((s) => s.teamId === teamId)
-    const byOrder = (kind: Song['kind']) => mine.filter((s) => s.kind === kind).sort((a, b) => a.order - b.order)
-    const players = sortPlayerSongs(byOrder('player'), order.sort, { playerOf, counts: order.counts })
-    return { players, teamSongs: byOrder('team'), situations: byOrder('situation') }
-  }, [songs, teamId, order])
+  // 휴대폰과 노트북은 URL의 팀 하나만 보인다. 넓은 화면만 전 팀을 오른쪽 열에 함께 둔다
+  const shown = useMemo<Matchup | null>(() => {
+    if (!teamId) return null
+    return board ? matchupOf(teamId, teamState) : { current: teamId, prev: null }
+  }, [board, teamId, teamState])
+  const situationTeam = shown ? situationTeamOf(lastPicked, shown) : null
+
+  const situations = useMemo(
+    () => songs.filter((s) => s.teamId === situationTeam && s.kind === 'situation').sort((a, b) => a.order - b.order),
+    [songs, situationTeam],
+  )
   const cells = useMemo(() => situationSlots(situations), [situations])
 
   const index = useMemo(() => buildSearchIndex(songs), [songs])
@@ -74,6 +82,11 @@ export default function MainPage() {
     [recent, teamId],
   )
 
+  function playSong(song: Song) {
+    play(song)
+    setLastPicked(song.teamId)
+  }
+
   useKeyboardShortcuts((action) => {
     switch (action.type) {
       case 'stop':
@@ -83,7 +96,12 @@ export default function MainPage() {
         skipToCheer()
         break
       case 'prevTeam':
-        if (teamState.prevTeamId) navigate('/team/' + teamState.prevTeamId)
+        // 넓은 화면은 두 팀이 이미 보이므로 열을 바꾸지 않고 상황 칸의 팀만 바꾼다
+        if (shown?.prev && situationTeam) {
+          setLastPicked(situationTeam === shown.current ? shown.prev : shown.current)
+        } else if (!board && teamState.prevTeamId) {
+          navigate('/team/' + teamState.prevTeamId)
+        }
         break
       case 'focusSearch':
         inputRef.current?.focus()
@@ -94,21 +112,21 @@ export default function MainPage() {
         break
       case 'situation': {
         const song = cells[action.index]
-        if (song) play(song)
+        if (song) playSong(song)
         break
       }
     }
   })
 
-  if (!team) return null
+  if (!team || !shown || !situationTeam) return null
   const nowPlayingId = nowPlaying?.songId ?? null
   const searching = query.trim() !== ''
   const showRecent = searchFocused && !searching
-  const isEmpty = players.length + teamSongs.length + situations.length === 0
+  const liveCounts = settings.gridSort === 'frequent' ? history.counts : undefined
 
   function pick(song: Song) {
-    play(song)
-    if (song.teamId !== team?.id) navigate('/team/' + song.teamId)
+    playSong(song)
+    if (shown && leavesMatchup(song.teamId, shown)) navigate('/team/' + song.teamId)
   }
 
   function pickRecent(song: Song) {
@@ -116,15 +134,69 @@ export default function MainPage() {
     inputRef.current?.blur()
   }
 
+  function pickSlot(slot: Slot, next: TeamId) {
+    const target = assignTeam(teamState, slot, next).currentTeamId
+    // 저장한 팀과 URL이 같은 렌더에 바뀌어야 오른쪽 열이 잠깐 다른 팀을 보이지 않는다
+    startTransition(() => {
+      assignSlot(slot, next)
+      if (target && target !== teamId) navigate('/team/' + target)
+    })
+  }
+
+  const searchBox = (
+    <SearchBox
+      value={query}
+      onChange={setQuery}
+      inputRef={inputRef}
+      onFocus={() => setSearchFocused(true)}
+      onBlur={() => setSearchFocused(false)}
+    />
+  )
+
+  const sortToggle = (
+    <div className="sort-toggle" role="group" aria-label="선수 정렬">
+      {SORTS.map((s) => (
+        <button
+          key={s.value}
+          type="button"
+          aria-pressed={settings.gridSort === s.value}
+          onClick={() => setGridSort(s.value)}
+        >
+          {s.label}
+        </button>
+      ))}
+    </div>
+  )
+
+  const column = (id: TeamId, idPrefix: string, enterFrom: ColumnEnter['current']) => (
+    <TeamColumn
+      key={id}
+      teamId={id}
+      songs={songs}
+      idPrefix={idPrefix}
+      sort={order.sort}
+      sortCounts={order.counts}
+      counts={liveCounts}
+      nowPlayingId={nowPlayingId}
+      enterFrom={enterFrom}
+      sortControl={board ? undefined : sortToggle}
+      onPlay={playSong}
+    />
+  )
+
+  const situationTeams = shown.prev ? [shown.current, shown.prev] : null
+  const situationGrid = <SituationGrid cells={cells} nowPlayingId={nowPlayingId} onPlay={playSong} />
+
   return (
-    <div className="main-page">
-      <SearchBox
-        value={query}
-        onChange={setQuery}
-        inputRef={inputRef}
-        onFocus={() => setSearchFocused(true)}
-        onBlur={() => setSearchFocused(false)}
-      />
+    <div className={board ? 'main-page is-board' : 'main-page'}>
+      {board ? (
+        <div className="search-row">
+          {searchBox}
+          {sortToggle}
+        </div>
+      ) : (
+        searchBox
+      )}
       {searching ? (
         <SearchResults hits={hits} nowPlayingId={nowPlayingId} onPick={pick} />
       ) : showRecent ? (
@@ -138,77 +210,55 @@ export default function MainPage() {
             <SearchResults hits={recentHits} nowPlayingId={nowPlayingId} onPick={pickRecent} />
           )}
         </section>
-      ) : isEmpty ? (
-        <EmptyState teamId={team.id} />
-      ) : (
-        <>
-          <div className="tab-bar">
-            <div className="tabs" role="tablist" aria-label="곡 종류">
-              <button
-                type="button"
-                role="tab"
-                id="tab-players"
-                aria-selected={tab === 'players'}
-                aria-controls="panel-songs"
-                onClick={() => setTab('players')}
-              >
-                선수 <span className="count">{players.length}</span>
-              </button>
-              <button
-                type="button"
-                role="tab"
-                id="tab-team"
-                aria-selected={tab === 'team'}
-                aria-controls="panel-songs"
-                onClick={() => setTab('team')}
-              >
-                팀 응원가 <span className="count">{teamSongs.length}</span>
-              </button>
-            </div>
-            {tab === 'players' && (
-              <div className="sort-toggle" role="group" aria-label="선수 정렬">
-                {SORTS.map((s) => (
-                  <button
-                    key={s.value}
-                    type="button"
-                    aria-pressed={settings.gridSort === s.value}
-                    onClick={() => setGridSort(s.value)}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            )}
+      ) : board ? (
+        <div className="board">
+          <MatchupHeader matchup={shown} onPick={pickSlot} />
+          <div className="board-columns">
+            <section className="board-column" aria-label={`${getTeam(shown.current).name} 곡`}>
+              {column(shown.current, '', enter.current)}
+            </section>
+            <section className="board-column" aria-label={shown.prev ? `${getTeam(shown.prev).name} 곡` : '상대 팀'}>
+              {shown.prev ? (
+                column(shown.prev, 'prev-', enter.prev)
+              ) : (
+                <StatusMessage tone="empty">상대 팀을 고르면 두 팀의 선수를 나란히 볼 수 있습니다</StatusMessage>
+              )}
+            </section>
           </div>
-          <m.div
-            id="panel-songs"
-            role="tabpanel"
-            aria-labelledby={tab === 'players' ? 'tab-players' : 'tab-team'}
-            initial={enterFrom === 0 ? false : { x: enterFrom * distance.team, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={swap}
-          >
-            {tab === 'players' ? (
-              <PlayerGrid
-                songs={players}
-                nowPlayingId={nowPlayingId}
-                counts={settings.gridSort === 'frequent' ? history.counts : undefined}
-                onPlay={play}
-              />
-            ) : (
-              <TeamSongList songs={teamSongs} nowPlayingId={nowPlayingId} onPlay={play} />
-            )}
-          </m.div>
-        </>
+        </div>
+      ) : (
+        column(shown.current, '', enter.current)
       )}
       {situationSlot &&
-        situations.length > 0 &&
+        (situations.length > 0 || situationTeams) &&
         createPortal(
           <>
-            <SituationGrid cells={cells} nowPlayingId={nowPlayingId} onPlay={play} />
+            {situationTeams ? (
+              <>
+                <SituationTeamTabs
+                  teams={situationTeams}
+                  selected={situationTeam}
+                  panelId={SITUATION_PANEL_ID}
+                  onSelect={setLastPicked}
+                />
+                <div
+                  id={SITUATION_PANEL_ID}
+                  role="tabpanel"
+                  aria-labelledby={`situation-tab-${situationTeam}`}
+                >
+                  {situations.length > 0 ? (
+                    situationGrid
+                  ) : (
+                    <p className="situation-none">이 팀에는 상황 곡이 없습니다</p>
+                  )}
+                </div>
+              </>
+            ) : (
+              situationGrid
+            )}
             <p className="shortcut-hint">
-              <kbd>Space</kbd> 정지 · <kbd>S</kbd> 응원가로 · <kbd>T</kbd> 전 팀 · <kbd>/</kbd> 검색 ·{' '}
-              <kbd>1</kbd>~<kbd>8</kbd> 상황 칸
+              <kbd>Space</kbd> 정지 · <kbd>S</kbd> 응원가로 · <kbd>T</kbd> {board ? '상황 팀' : '전 팀'} ·{' '}
+              <kbd>/</kbd> 검색 · <kbd>1</kbd>~<kbd>8</kbd> 상황 칸
             </p>
           </>,
           situationSlot,

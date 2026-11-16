@@ -1,7 +1,7 @@
 //20241476-김도훈-(2026-11-16)
 import { describe, expect, it } from 'vitest'
 import { TEAM_IDS } from '../data/teams.ts'
-import { avatarUrl, buildPlayerIndex, findPlayer, parsePlayers, photoUrl } from './players.ts'
+import { avatarUrl, buildPlayerIndex, cardSubtitle, cutoutUrl, findPlayer, parsePlayers, photoUrl } from './players.ts'
 import { makeSong } from './testSongs.ts'
 
 const player = (name: string, extra: object = {}) => ({
@@ -67,5 +67,29 @@ describe('사진 주소', () => {
 
   it('기본 아바타는 팀 ID로 찾는다', () => {
     expect(avatarUrl('lg')).toBe('/avatars/lg.webp')
+  })
+})
+
+describe('cutoutUrl', () => {
+  it('누끼가 있다고 표시된 선수만 주소를 만든다', () => {
+    const p = parsePlayers({ teams: { hanwha: [player('가'), player('나', { cutout: false })] } }).hanwha
+    expect(cutoutUrl('hanwha', p[0])).toBe('/players/hanwha/cutout/가-id.webp')
+    expect(cutoutUrl('hanwha', p[1])).toBeNull()
+    expect(cutoutUrl('hanwha', null)).toBeNull()
+  })
+})
+
+describe('cardSubtitle', () => {
+  const [withPos, noPos] = parsePlayers({ teams: { hanwha: [player('가'), player('나', { position: null })] } }).hanwha
+
+  it('선수 곡은 구단과 포지션, 포지션이 없거나 이어지지 않으면 구단만 쓴다', () => {
+    expect(cardSubtitle({ kind: 'player' }, '한화', withPos)).toBe('한화 · 투수')
+    expect(cardSubtitle({ kind: 'player' }, '한화', noPos)).toBe('한화')
+    expect(cardSubtitle({ kind: 'player' }, '한화', null)).toBe('한화')
+  })
+
+  it('선수 곡이 아니면 곡 종류를 쓴다', () => {
+    expect(cardSubtitle({ kind: 'team' }, '한화', null)).toBe('한화 · 팀 응원가')
+    expect(cardSubtitle({ kind: 'situation' }, '한화', null)).toBe('한화 · 상황')
   })
 })

@@ -234,6 +234,7 @@ STEP 4 뒤에 바꾼 단계마다 같은 명령을 다시 돌린 결과다. 앞 
 | 디자인 개편 후속(2026-11-16) | 17 files, 182 passed | 48 passed(TC-60 추가) | 없음 | 통과, 같은 경고(569.57 kB, gzip 174.58 kB) | 오류 0, 경고 5(같음) |
 | 오류 수정·공개 배포(STEP 4-2, 2026-11-16) | 17 files, 186 passed(3번 모두) | 53 passed(3번 모두, TC-61~65 추가) | 없음 | 통과, 500 kB 경고 없음(index 283.78 kB·gzip 85.21, react 218.75 kB·gzip 68.27) | 오류 0, 경고 4(only-export-components) |
 | 선수 정보와 사진(STEP 3-⑪, 2026-11-16) | 21 files, 231 passed | 65 passed(TC-70~88 중 E2E 추가) | 없음 | 통과(index 362.69 kB·gzip 97.63, react 218.75 kB) | 오류 0, 경고 4 |
+| 매치업 보드와 선수 카드(STEP 3-⑫, 2026-11-16) | 22 files, 244 passed | 69 passed(TC-89~95 중 E2E 추가) | 없음 | 통과(index 369.24 kB·gzip 99.51, react 218.75 kB) | 오류 0, 경고 4 |
 
 - 디자인 개편 후속에서 바뀐 TC: TC-08(상황 칸 글자: 상황 이름과 필요할 때만 곡 제목 줄), TC-24(휴대폰은 첫 곡 전에 플레이어 자리가 접히고, 재생 뒤 같은 iframe이 200×200 이상), TC-60 추가(휴대폰 재생 도구 시트).
 - 모션 단계부터 E2E는 동작 줄이기(`reducedMotion: 'reduce'`)로 돈다. 움직임 자체는 브라우저에서 프레임마다 transform·opacity를 기록해 따로 확인했다(design.md 5.4 모션).

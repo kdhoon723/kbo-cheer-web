@@ -5,6 +5,12 @@ import type { TeamId } from '../types.ts'
 /** 새 팀이 팀 순서에서 오른쪽이면 1, 왼쪽이면 -1, 같은 팀이면 0 */
 export type SwitchDirection = -1 | 0 | 1
 
+/** 팀 열마다 새 팀이 들어오는 방향. 넓은 화면의 오른쪽 열(prev)은 그 열의 팀이 바뀔 때만 움직인다 */
+export interface ColumnEnter {
+  current: SwitchDirection
+  prev: SwitchDirection
+}
+
 export function teamSwitchDirection(from: TeamId, to: TeamId): SwitchDirection {
   const d = TEAM_IDS.indexOf(to) - TEAM_IDS.indexOf(from)
   return d > 0 ? 1 : d < 0 ? -1 : 0

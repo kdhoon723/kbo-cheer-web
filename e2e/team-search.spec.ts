@@ -29,6 +29,8 @@ const TEAMS = [
   { id: 'kt', name: 'KT', color: '#000000' },
 ] as const
 
+const SINGLE_TEAM = { width: 1024, height: 768 }
+
 function parseRgb(css: string): [number, number, number] {
   const m = /^rgba?\((\d+), (\d+), (\d+)/.exec(css)
   if (!m) throw new Error(`색 형식이 다름: ${css}`)
@@ -83,6 +85,8 @@ test.describe('2. 팀 선택·전환', () => {
   })
 
   test('TC-04 전 팀 전환', async ({ page }) => {
+    // [STEP 3-⑫] 「전 팀」은 한 팀 화면(1199px 이하)의 기능이다. 1200px 이상은 두 팀을 함께 보는 보드라 TC-89~91에서 본다
+    await page.setViewportSize(SINGLE_TEAM)
     await gotoHanwha(page)
     await teamTrigger(page).click()
     const sheet = page.getByRole('dialog', { name: '팀 고르기' })
@@ -226,6 +230,8 @@ test.describe('3. 메인 화면과 검색', () => {
   })
 
   test('TC-10 다른 팀 검색 결과', async ({ page }) => {
+    // [STEP 3-⑫] 결과를 누른 뒤의 「전 팀」 버튼을 보므로 한 팀 화면에서 본다
+    await page.setViewportSize(SINGLE_TEAM)
     await page.locator('.search-box').fill('디아즈')
     const hit = page.locator('.result-list button').filter({ hasText: '디아즈' })
     await expect(hit.locator('.song-line-title')).toHaveText('디아즈')
