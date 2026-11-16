@@ -40,12 +40,17 @@ export default function SongListPage() {
     <section className="song-list-page">
       <div className="page-head">
         <h2>곡 관리 · {team.fullName}</h2>
-        {teamSongs.length > 0 && (
-          <Link className="link-button" to={`/team/${teamId}/songs/add`}>
-            <Plus size={18} strokeWidth={1.75} aria-hidden="true" />
-            곡 추가
+        <div className="page-actions">
+          <Link className="plain-link" to={`/team/${teamId}/songs/data`}>
+            백업·초기화
           </Link>
-        )}
+          {teamSongs.length > 0 && (
+            <Link className="link-button" to={`/team/${teamId}/songs/add`}>
+              <Plus size={18} strokeWidth={1.75} aria-hidden="true" />
+              곡 추가
+            </Link>
+          )}
+        </div>
       </div>
       {teamSongs.length === 0 ? (
         <EmptyState teamId={teamId} />

@@ -244,13 +244,14 @@ test.describe('4. 재생', () => {
     test.setTimeout(90_000)
     await playAndWait(page, '노시환')
     const seen: number[] = []
-    for (const step of ['곡 관리', '설정', 'KT'] as const) {
+    for (const step of ['곡 관리', '백업·초기화', 'KT'] as const) {
       if (step === 'KT') {
         await pickTeam(page, 'kt')
         await expect(page).toHaveURL(/\/team\/kt$/)
       } else {
-        await navLink(page, step).click()
-        await expect(page).toHaveURL(step === '설정' ? /\/settings$/ : /\/team\/hanwha\/songs$/)
+        if (step === '곡 관리') await navLink(page, step).click()
+        else await page.getByRole('link', { name: step }).click()
+        await expect(page).toHaveURL(step === '곡 관리' ? /\/team\/hanwha\/songs$/ : /\/team\/hanwha\/songs\/data$/)
       }
       await page.waitForTimeout(1_000)
       const s = await ytSnapshot(page)

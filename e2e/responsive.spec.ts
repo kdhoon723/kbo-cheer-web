@@ -27,9 +27,9 @@ const PAGES: { name: string; path: string; ready: (page: Page) => Promise<void> 
     ready: (page) => expect(page.getByRole('heading', { name: /^곡 추가/ })).toBeVisible(),
   },
   {
-    name: '설정',
-    path: '/settings',
-    ready: (page) => expect(page.getByRole('heading', { name: '설정' })).toBeVisible(),
+    name: '백업·초기화',
+    path: '/team/hanwha/songs/data',
+    ready: (page) => expect(page.getByRole('heading', { name: '백업·초기화' })).toBeVisible(),
   },
 ]
 

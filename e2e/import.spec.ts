@@ -215,10 +215,10 @@ test.describe('5-1. 곡 관리 안의 곡 추가 [STEP 3-⑰]', () => {
   test('TC-100 메뉴에 가져오기가 없고 예전 주소는 곡 추가로 간다', async ({ page }) => {
     await page.goto('/team/hanwha')
     const nav = page.getByRole('navigation', { name: '화면' })
-    await expect(nav.getByRole('link')).toHaveText(['응원', '곡 관리', '설정'])
+    // [STEP 3-⑱] 설정이 곡 관리 안으로 들어가 메뉴는 둘이다. 휴대폰은 지금 화면이 아닌 쪽 하나만 보인다
+    await expect(nav.getByRole('link')).toHaveText(['응원', '곡 관리'])
     await page.setViewportSize({ width: 360, height: 640 })
-    await page.getByRole('button', { name: '메뉴' }).click()
-    await expect(page.locator('#header-menu').getByRole('link')).toHaveText(['응원', '곡 관리', '설정'])
+    await expect(nav.getByRole('link')).toHaveText(['곡 관리'])
 
     await page.goto('/team/hanwha/import')
     await expect(page).toHaveURL(/\/team\/hanwha\/songs\/add$/)

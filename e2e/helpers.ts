@@ -280,6 +280,13 @@ export function navLink(page: Page, name: string): Locator {
   return page.getByRole('navigation', { name: '화면' }).getByRole('link', { name, exact: true })
 }
 
+/** 예전 설정 화면 자리: 곡 관리 → 「백업·초기화」(화면 이동 없이 앱 안에서) [STEP 3-⑱] */
+export async function openSongData(page: Page): Promise<void> {
+  await navLink(page, '곡 관리').click()
+  await page.getByRole('link', { name: '백업·초기화' }).click()
+  await expect(page.getByRole('heading', { name: '백업·초기화' })).toBeVisible()
+}
+
 export function formField(page: Page, label: string): Locator {
   return page
     .locator('label.field')

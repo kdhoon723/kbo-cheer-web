@@ -1,13 +1,10 @@
 //20241476-김도훈-(2026-11-15)
-import { useEffect, useState } from 'react'
-import { ChevronDown, Ellipsis, X } from 'lucide-react'
-import { AnimatePresence, useReducedMotionConfig } from 'motion/react'
-import * as m from 'motion/react-m'
+import { useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { getTeam } from '../data/teams.ts'
 import type { TeamId } from '../types.ts'
 import { TapButton } from '../ui/Press.tsx'
-import { distance, exit, spring, swap } from '../ui/motionTokens.ts'
 import PrevTeamButton from './PrevTeamButton.tsx'
 import TeamLogo from './TeamLogo.tsx'
 import TeamSheet from './TeamSheet.tsx'
@@ -18,37 +15,19 @@ interface NavItem {
   end?: boolean
 }
 
+// 화면은 응원과 곡 관리 둘뿐이라 접는 메뉴 없이 머리말에 바로 둔다. 휴대폰은 지금 화면이 아닌 쪽 하나만 보인다(index.css) [STEP 3-⑱]
 function navItems(teamId: TeamId | null): NavItem[] {
-  const team: NavItem[] = teamId
+  return teamId
     ? [
         { to: `/team/${teamId}`, label: '응원', end: true },
         { to: `/team/${teamId}/songs`, label: '곡 관리' },
       ]
     : []
-  return [...team, { to: '/settings', label: '설정' }]
 }
 
 export default function Header({ teamId }: { teamId: TeamId | null }) {
   const navigate = useNavigate()
-  const [menuOpen, setMenuOpen] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
-  // 동작 줄이기에서는 옮기기가 순간 이동이 되므로 닫을 때는 사라지기만 한다
-  const menuExitY = useReducedMotionConfig() ? {} : { y: -distance.row }
-  const links = () =>
-    navItems(teamId).map((item) => (
-      <NavLink key={item.to} to={item.to} end={item.end}>
-        {item.label}
-      </NavLink>
-    ))
-
-  useEffect(() => {
-    if (!menuOpen) return
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') setMenuOpen(false)
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [menuOpen])
 
   function pick(next: TeamId) {
     setSheetOpen(false)
@@ -78,39 +57,13 @@ export default function Header({ teamId }: { teamId: TeamId | null }) {
         {teamId && <span className="brand board-brand">KBO 응원가</span>}
         <PrevTeamButton />
         <nav className="header-nav" aria-label="화면">
-          {links()}
+          {navItems(teamId).map((item) => (
+            <NavLink key={item.to} to={item.to} end={item.end}>
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
-        <TapButton
-          type="button"
-          className="icon-btn menu-toggle"
-          aria-label="메뉴"
-          aria-expanded={menuOpen}
-          aria-controls={menuOpen ? 'header-menu' : undefined}
-          onClick={() => setMenuOpen((v) => !v)}
-        >
-          {menuOpen ? (
-            <X size={22} strokeWidth={1.75} aria-hidden="true" />
-          ) : (
-            <Ellipsis size={22} strokeWidth={1.75} aria-hidden="true" />
-          )}
-        </TapButton>
       </div>
-      {/* 휴대폰 메뉴는 플레이어를 덮지 않도록 머리말 아래로 펼쳐 내용을 밀어낸다 */}
-      <AnimatePresence>
-        {menuOpen && (
-          <m.nav
-            id="header-menu"
-            className="header-menu"
-            aria-label="화면"
-            onClick={() => setMenuOpen(false)}
-            initial={{ opacity: 0, y: -distance.row }}
-            animate={{ opacity: 1, y: 0, transition: { y: spring.sheet, opacity: swap } }}
-            exit={{ opacity: 0, ...menuExitY, transition: exit }}
-          >
-            {links()}
-          </m.nav>
-        )}
-      </AnimatePresence>
       {teamId && (
         <TeamSheet open={sheetOpen} currentTeamId={teamId} onClose={() => setSheetOpen(false)} onPick={pick} />
       )}

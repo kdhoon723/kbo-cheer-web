@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test'
 import type { Page } from '@playwright/test'
 import {
   formField,
-  navLink,
+  openSongData,
   note,
   openEdit,
   parseSongList,
@@ -37,7 +37,7 @@ async function exportJson(page: Page, savePath: string): Promise<{ name: string;
 
 test.describe('7. JSON과 처음 데이터', () => {
   test('TC-44 처음 데이터', async ({ page }, testInfo) => {
-    await page.goto('/settings')
+    await page.goto('/team/hanwha/songs/data')
     await expect(page.getByText('현재 곡 507곡')).toBeVisible()
     const songs = await storedSongs(page)
     const players = songs.filter((s) => s.kind === 'player').length
@@ -50,7 +50,7 @@ test.describe('7. JSON과 처음 데이터', () => {
 
   test('TC-45 JSON 내보내기', async ({ page }, testInfo) => {
     await renameNoh(page)
-    await navLink(page, '설정').click()
+    await openSongData(page)
     const { name, text } = await exportJson(page, testInfo.outputPath('export.json'))
     note(testInfo, '파일 이름', name)
     expect(name).toBe(`kbo-cheer-songs-${todayStamp()}.json`)
@@ -66,7 +66,7 @@ test.describe('7. JSON과 처음 데이터', () => {
 
   test('TC-46 처음 데이터로 되돌리기', async ({ page }) => {
     await renameNoh(page)
-    await navLink(page, '설정').click()
+    await openSongData(page)
     page.once('dialog', (d) => void d.dismiss())
     await page.getByRole('button', { name: '처음 데이터로 되돌리기' }).click()
     expect((await storedSongs(page)).some((s) => s.title === '노시환(수정)')).toBe(true)
@@ -83,7 +83,7 @@ test.describe('7. JSON과 처음 데이터', () => {
 
   test('TC-47 JSON 가져오기 왕복', async ({ page }, testInfo) => {
     await renameNoh(page)
-    await navLink(page, '설정').click()
+    await openSongData(page)
     const filePath = testInfo.outputPath('export.json')
     const { text } = await exportJson(page, filePath)
     const exported = parseSongList(JSON.parse(text))
@@ -104,7 +104,7 @@ test.describe('7. JSON과 처음 데이터', () => {
   })
 
   test('TC-48 잘못된 JSON 파일', async ({ page }, testInfo) => {
-    await page.goto('/settings')
+    await page.goto('/team/hanwha/songs/data')
     const before = await storedSongs(page)
     const dialogs: string[] = []
     page.on('dialog', (d) => {
@@ -135,5 +135,24 @@ test.describe('7. JSON과 처음 데이터', () => {
       expect(await storedSongs(page)).toEqual(before)
     }
     expect(dialogs).toEqual([])
+  })
+})
+
+test.describe('7-1. 곡 관리 안의 백업·초기화 [STEP 3-⑱]', () => {
+  test('TC-102 예전 설정 주소와 메뉴', async ({ page }) => {
+    // 팀을 고른 적이 없으면 팀 선택 화면으로 간다
+    await page.goto('/settings')
+    await expect(page).toHaveURL(/\/$/)
+    await page.goto('/team/hanwha')
+    const nav = page.getByRole('navigation', { name: '화면' })
+    await expect(nav.getByRole('link')).toHaveText(['응원', '곡 관리'])
+    await page.goto('/settings')
+    await expect(page).toHaveURL(/\/team\/hanwha\/songs\/data$/)
+    await expect(page.getByRole('heading', { name: '백업·초기화' })).toBeVisible()
+    await expect(page.getByText('현재 곡 507곡(10개 구단 전체)')).toBeVisible()
+    await page.getByRole('link', { name: '곡 관리', exact: true }).last().click()
+    await expect(page).toHaveURL(/\/team\/hanwha\/songs$/)
+    await page.setViewportSize({ width: 360, height: 640 })
+    await expect(nav.getByRole('link')).toHaveText(['응원'])
   })
 })

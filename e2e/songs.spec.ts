@@ -114,7 +114,7 @@ test.describe('6. 곡 수정·삭제', () => {
     expect(songs).toHaveLength(506)
     expect(songs.some((s) => s.title === '페라자')).toBe(false)
     expect(messages).toEqual(["'페라자'을(를) 삭제합니다", "'페라자'을(를) 삭제합니다"])
-    await navLink(page, '설정').click()
+    await page.getByRole('link', { name: '백업·초기화' }).click()
     await expect(page.getByText('현재 곡 506곡')).toBeVisible()
   })
 

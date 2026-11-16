@@ -77,7 +77,7 @@ src/
     AppLayout.tsx, TeamLayout.tsx
   pages/
     HomeRedirect.tsx, TeamSelectPage.tsx, MainPage.tsx,
-    SongListPage.tsx, SongEditPage.tsx, ImportPage.tsx, SettingsPage.tsx
+    SongListPage.tsx, SongEditPage.tsx, ImportPage.tsx, SongDataPage.tsx
   components/
     Header.tsx, TeamSheet.tsx, TeamGrid.tsx, TeamLogo.tsx, PrevTeamButton.tsx, Toast.tsx,
     PlayerPanel.tsx, PlayerHost.tsx, VolumeSlider.tsx, band.ts,
@@ -515,7 +515,8 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
           <Route path="songs/add" element={<ImportPage />} />     {/* 곡 추가(가져오기) [STEP 3-⑰] */}
           <Route path="import" element={<Navigate to="../songs/add" replace />} />  {/* 예전 주소 */}
         </Route>
-        <Route path="settings" element={<SettingsPage />} />     {/* 데이터 관리 */}
+        <Route path="songs/data" element={<SongDataPage />} />  {/* 백업·초기화, 팀 경로 안 [STEP 3-⑱] */}
+        <Route path="settings" element={<SettingsRedirect />} /> {/* 예전 주소 → 마지막 팀의 songs/data, 팀 없으면 / */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
@@ -531,15 +532,17 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 | `/team/:teamId/songs/:songId/edit` | 곡 수정 | FR-15 |
 | `/team/:teamId/songs/add` | 곡 추가(모음 영상 URL, 영상 하나 URL, YouTube 검색, 확인 단계). 저장하거나 확인 단계·단일 등록에서 취소하면 곡 관리 목록으로 돌아간다 [STEP 3-⑰] | FR-11~14, FR-28 |
 | `/team/:teamId/import` | 예전 가져오기 주소. `<Navigate to="../songs/add" replace>`로 곡 추가로 보낸다 [STEP 3-⑰] | |
-| `/settings` | 데이터 관리(JSON 내보내기·가져오기, 처음 데이터로 되돌리기, 접속 주소) | FR-20~22, BR-44 |
+| `/team/:teamId/songs/data` | 백업·초기화(JSON 내보내기·가져오기, 처음 데이터로 되돌리기, 저장 위치 안내). 곡 관리 제목 옆 「백업·초기화」로 들어간다 [STEP 3-⑱] | FR-20~22, BR-44 |
+| `/settings` | 예전 설정 주소. 마지막 팀이 있으면 `/team/<팀>/songs/data`, 없으면 `/`로 보낸다(`SettingsRedirect`) [STEP 3-⑱] | |
 
+- [STEP 3-⑱] 설정 화면에 있던 곡 목록 옮기기(JSON), 처음 데이터로 되돌리기, 저장 위치 안내도 모두 곡 목록을 다루는 일이라 곡 관리 아래 `songs/data`(「백업·초기화」)로 옮겼다. 목록 아래 구역이 아니라 하위 경로를 고른 이유는, 한 팀의 곡 목록이 수십 줄(한화 44곡, 휴대폰에서 약 4,000px)이라 맨 아래 구역은 길게 내려야 보이고 찾기 어렵기 때문이다. 하위 경로로 두면 목록 화면에는 제목 옆 글자 링크 하나만 늘고(곡 목록이 주인공), 백업은 한 번 눌러 간다. 「곡 추가」와 같은 모양이다. 내용은 10개 구단 전체 곡 목록에 대한 것이라 「현재 곡 N곡(10개 구단 전체)」로 적는다. 화면 메뉴는 응원 · 곡 관리 둘이다.
 - [STEP 3-⑰] 곡 추가(가져오기)와 곡 관리는 둘 다 경기 밖에서 곡 목록을 손보는 일이라 곡 관리 아래 한 갈래로 묶었다. 화면 메뉴는 응원 · 곡 관리 · 설정 셋이고, 곡 추가 화면에서도 「곡 관리」가 현재 메뉴로 표시된다(NavLink가 `/songs` 아래 주소를 모두 포함). 곡 추가 화면 맨 위에 「곡 관리」로 돌아가는 링크(ArrowLeft)를 두어, 입력 단계처럼 취소 버튼이 없는 단계에서도 목록으로 돌아갈 수 있다. 곡 관리 제목 오른쪽의 「곡 추가」는 밝은 판 링크(Plus 아이콘)이고, 곡이 없는 팀은 빈 상태 안내의 「곡 추가」로 같은 화면에 간다.
 - 현재 팀을 URL에 두는 이유: 새로고침과 뒤로가기에서도 팀이 유지되고, 곡 관리·가져오기 화면이 "어느 팀의" 화면인지 분명해진다. 마지막 팀과 전 팀은 URL만으로 알 수 없으므로 TeamState에 따로 저장한다.
 - `TeamLayout`은 `useParams`로 teamId를 읽고, 10개 팀 ID가 아니면 "팀을 찾을 수 없습니다"와 처음 화면 링크를 보여 준다(수업 MenuDetail 예제와 같은 처리).
 - `TeamLayout`은 `<Outlet key={teamId} />`로 그린다. 팀이 바뀌면 아래 화면이 새로 만들어져 메인 화면의 검색어가 비워진다(BR-29). 같은 라우트에서 params만 바뀌면 React Router는 컴포넌트를 다시 만들지 않기 때문이다. [R-23]
 - `SongEditPage`는 `songId`와 `teamId`가 모두 맞는 곡만 연다. 곡이 없거나 다른 팀 곡이면 "곡을 찾을 수 없습니다"와 곡 관리로 돌아가는 링크를 보여 준다(EX-29). [C-14, R-22]
 - 팀을 바꾸면(머리말 팀 메뉴, 「전 팀」, 다른 팀 검색 결과) 언제나 그 팀의 메인 화면 `/team/<팀>`으로 간다. 수정 화면의 곡 ID는 원래 팀의 곡이라 다른 팀으로 그대로 옮길 수 없기 때문이다.
-- Header의 팀 표시는 `useMatch('/team/:teamId/*')`로 URL의 팀을 먼저 쓰고, URL에 팀이 없을 때(`/settings`)만 `teamState.currentTeamId`를 쓴다. TeamLayout의 effect가 팀을 기록하기 전 한 프레임 동안 이전 팀이 보이는 것을 막는다. [R-24]
+- Header의 팀 표시는 `useMatch('/team/:teamId/*')`로 URL의 팀을 먼저 쓰고, URL에 팀이 없을 때만 `teamState.currentTeamId`를 쓴다. TeamLayout의 effect가 팀을 기록하기 전 한 프레임 동안 이전 팀이 보이는 것을 막는다. [R-24]
 
 ### 5.2 화면 배치 [디자인 개편]
 
@@ -549,7 +552,7 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 
 ```
 ┌──────────────────────────────┐
-│ [로고36 한화 v] [<> 로고 전 팀] (…)│ ← Header 56px. 팀 버튼은 팀 고르기 창을, (…)는 화면 메뉴를 연다
+│ [로고36 한화 v] [<> 로고 전 팀] 곡 관리│ ← Header 56px. 팀 버튼은 팀 고르기 창을 연다. 오른쪽은 지금 화면이 아닌 쪽 링크 하나(응원 화면이면 「곡 관리」, 곡 관리 화면이면 「응원」) [STEP 3-⑱]
 ├══════════════════════════════┤ ← 재생 중이면 플레이어 위 3px 띠가 그 곡의 팀 색
 │  ┌────────────────────────┐  │
 │  │   YouTube 플레이어      │  │ ← PlayerHost(폭 100%, 높이 200px, 스크롤하면 위로 사라짐). 첫 곡 전에는 높이 0
@@ -579,7 +582,7 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 
 ```
 ┌──────────────────────────────────────────┬───────────────────────────┐
-│ [로고 한화 v] [<> 로고 전 팀]   응원 곡 관리 설정        │ ═════ 팀 색 3px 띠 ═════ │
+│ [로고 한화 v] [<> 로고 전 팀]   응원 곡 관리             │ ═════ 팀 색 3px 띠 ═════ │
 ├──────────────────────────────────────────┤ ┌───────────────────────┐ │
 │ [돋보기 초성이나 이름으로 찾기 ........ /] │ │ YouTube 플레이어       │ │ ← 360×202, 열 위쪽
 │ 선수 22 | 팀 응원가 18  [주전순][가나다][자주 튼]│ └───────────────────────┘ │
@@ -604,7 +607,7 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 
 ```
 ┌──────────────────────────────────────────────────────────────┬──────────────────────────┐
-│                                 응원 곡 관리 설정             │ ═════ 팀 색 3px 띠 ═════ │
+│                                 응원 곡 관리                  │ ═════ 팀 색 3px 띠 ═════ │
 ├──────────────────────────────────────────────────────────────┤ ┌──────────────────────┐ │
 │ [돋보기 초성이나 이름으로 찾기 .................. /] [주전순][가나다][자주 튼] │ │ YouTube 플레이어 16:9  │ │ ← 열 안쪽 폭, 1280px에서 359×202, 1920px에서 446×251
 │ [로고44 한화 v]              vs  [로고44 삼성 v]                │ └──────────────────────┘ │
@@ -640,13 +643,13 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 - [디자인 개편 후속] 팀 고르기 창과 재생 도구 시트는 같은 `Sheet` 컴포넌트(아래에서 올라오는 `<dialog>`, 제목과 닫기 버튼)를 쓴다.
 - [디자인 개편] 팀 메뉴는 `<select>` 대신 머리말의 팀 버튼(로고 판 36 + 팀 이름 + 아래 화살표)과 팀 고르기 창(TeamSheet)이다. 창은 `<dialog>`를 `showModal()`로 열어 대화상자 역할, 포커스 가두기, Esc로 닫기를 브라우저가 맡는다. 열면 지금 팀 칸에 포커스를 두고, 닫으면 팀 버튼으로 포커스가 돌아간다. 창 뒤를 어둡게 덮지 않아(`::backdrop` 투명) 플레이어가 가려지지 않는다. 휴대폰은 화면 아래에서 올라오는 시트, 노트북은 왼쪽 열 위쪽의 상자다. 팀 고르기 창과 첫 실행 화면은 같은 5×2 로고 격자(TeamGrid)를 쓴다.
 - [디자인 개편] 「전 팀」 버튼은 맞바꿈 아이콘, 전 팀 로고 판 28, "전 팀" 글자다. 접근 가능한 이름은 "전 팀: 삼성"이고, 전 팀이 없으면 "전 팀"이며 비활성이다.
-- [디자인 개편] 화면 메뉴(응원, 곡 관리, 설정. [STEP 3-⑰] 가져오기는 곡 관리 안 「곡 추가」로 옮김)는 휴대폰에서 더 보기 아이콘으로 열고, 머리말 아래로 펼쳐져 내용을 밀어낸다(플레이어를 덮지 않음). Esc로 닫힌다. 노트북에서는 머리말 오른쪽에 글자 링크로 늘 보인다.
+- [STEP 3-⑱] 화면 메뉴는 응원 · 곡 관리 둘이다(가져오기는 [STEP 3-⑰]에 곡 관리 안 「곡 추가」로, 설정은 「백업·초기화」로 옮김). 노트북은 머리말 오른쪽에 두 글자 링크가 늘 보인다. 휴대폰은 펼치는 더보기 메뉴(…)를 없애고, 지금 화면의 링크를 숨겨 다른 화면으로 가는 링크 하나만 둔다(`.header-nav a.active { display: none }`). 둘뿐이라 한 번 더 눌러 펼칠 이유가 없고, 두 링크를 다 두면 360px에서 팀 이름이 「한」처럼 잘리기 때문이다(링크 하나일 때 10개 팀 이름 모두 잘리지 않음을 확인). 링크는 44×44 이상이다.
 - [STEP 3-7] 상황 칸은 MainPage가 고르고(1~8번 단축키와 같은 배열), PlayerPanel 안의 자리(`.dock-situations`)에 `createPortal`로 그린다. 자리 요소는 AppLayout이 `SituationSlotContext`로 내려 준다.
 - [STEP 3-7] 알림(Toast)은 독 안에 두어, 휴대폰에서는 독 바로 위에 뜨고 플레이어를 덮지 않는다. 노트북에서는 왼쪽 열 아래에 뜬다. 누르면 바로 닫히고, 4초 뒤에도 닫힌다.
 - [STEP 3-7] 진행 표시는 곡 구간 기준 `경과 / 길이`(예: 00:12 / 01:01)다. 모음 영상은 30분이 넘어, 영상 기준 시각(23:45 / 24:46)으로는 곡이 얼마나 남았는지 알기 어렵다. PlayerPanel이 250ms마다 `getCurrentTime()`을 읽고, 표시하는 초가 바뀔 때만 상태를 바꾼다. 응원가 시작 지점이 구간 안에 있으면 막대에 눈금으로 표시한다.
 - 버튼 최소 크기는 44×44px(NFR-02)이고, 페이지 전체 가로 스크롤은 없다(NFR-01). 상황 칸은 고정 4열이라 가로로 넘기지 않는다.
 - 플레이어 크기는 IFrame API 문서의 "Embedded players must have a viewport that is at least 200px by 200px" 조건에 따른다. 휴대폰에서 첫 재생이 막혔을 때 사용자가 영상을 직접 눌러 허용하려면 플레이어가 보여야 한다(8.6). [R-02]
-- 설정 화면 맨 아래에 "이 브라우저 저장소: `http://192.168.0.10:5173`(지금 접속 주소)"를 보여 주고, "접속 주소가 바뀌면 곡 목록이 따로 저장됩니다. 늘 같은 주소(https://kbocheer.kdhoon.me)로 열고, 다른 기기로 옮길 때는 JSON 내보내기·가져오기를 써 주세요"를 함께 적는다(BR-44). [R-08, 공개 배포]
+- 백업·초기화 화면([STEP 3-⑱] 예전 설정 화면) 맨 아래에 "이 브라우저 저장소: `http://192.168.0.10:5173`(지금 접속 주소)"를 보여 주고, "접속 주소가 바뀌면 곡 목록이 따로 저장됩니다. 늘 같은 주소(https://kbocheer.kdhoon.me)로 열고, 다른 기기로 옮길 때는 JSON 내보내기·가져오기를 써 주세요"를 함께 적는다(BR-44). [R-08, 공개 배포]
 
 ### 5.3 사용자 동선
 
@@ -663,7 +666,7 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 | 모음 영상 가져오기 | 메뉴 「곡 관리」 → 「곡 추가」 → URL 입력 → 후보 표 확인·수정 → 「저장」 → 곡 관리 목록 [STEP 3-⑰] |
 | YouTube 검색 등록 | 곡 추가 화면 「YouTube 검색」 탭 → 검색어 → 결과 하나 선택 → 모음이면 후보 표, 아니면 단일 등록 폼 |
 | 곡 수정·삭제 | 메뉴 「곡 관리」 → 곡 줄의 「수정」 → 폼 저장 / 「삭제」 → 확인 |
-| 노트북 → 휴대폰 | 노트북 「설정」 → 내보내기 → 파일을 휴대폰으로 전달(메신저 등) → 휴대폰 「설정」 → 가져오기 → 확인 |
+| 노트북 → 휴대폰 | 노트북 「곡 관리」 → 「백업·초기화」 → 내보내기 → 파일을 휴대폰으로 전달(메신저 등) → 휴대폰 「곡 관리」 → 「백업·초기화」 → 가져오기 → 확인 |
 
 ### 5.4 디자인 언어 [디자인 개편]
 
@@ -717,10 +720,10 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 | `quick` | 140ms, `in` | 알림이 사라질 때. 재생 줄 제목이 바뀔 때는 같은 시간에 `out`으로 나타난다 |
 | `swap` | 200ms, `out` | 팀 전환 도착, 목록 첫 등장, 첫 곡의 재생 줄 글자, 알림 등장, 시트·메뉴의 페이드 |
 | `row` | 220ms, `out` | 첫 곡에 재생 줄이 자라기 |
-| `exit` | 180ms, `in` | 팀 고르기 창·화면 메뉴 닫기 |
+| `exit` | 180ms, `in` | 팀 고르기 창·시트 닫기 |
 | `ease.out` / `ease.in` / `ease.inOut` | cubic-bezier(.2,.8,.2,1) / (.4,0,1,1) / (.4,0,.2,1) | 도착 / 나가기 / 화면 안 두 자리 사이 옮기기(지금 쓰는 곳 없음) |
 | `spring.press` | `visualDuration` 240ms, `bounce` 0 | 눌림이 풀려 돌아오기 |
-| `spring.sheet` | `visualDuration` 280ms, `bounce` 0.08 | 팀 고르기 창·재생 도구 시트가 올라오기, 화면 메뉴가 내려오기(옮기기만. 페이드는 `swap`) |
+| `spring.sheet` | `visualDuration` 280ms, `bounce` 0.08 | 팀 고르기 창·재생 도구 시트가 올라오기(옮기기만. 페이드는 `swap`) |
 | `stagger` | 24ms, 앞 8줄까지 | 목록 첫 등장. 9번째 줄부터는 8번째 줄과 같이 움직인다(`lib/motion.ts`의 `staggerDelay`) |
 | `distance` | 팀 24px, 목록 줄 8px, 시트 24px | |
 | `pressScale` | 0.96 | |
@@ -731,7 +734,7 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 - 팀 전환: 선수 격자·팀 응원가 목록(`#panel-songs`)이 팀 순서(`TEAMS`)에서 새 팀이 있는 쪽에서 24px 들어온다(`swap`). 방향은 `lib/motion.ts`의 `teamSwitchDirection`이 정하고, TeamLayout이 직전 팀을 기억해 `<Outlet context>`로 내려 준다(Outlet은 팀마다 `key`로 새로 만들어져 직전 팀을 모른다). 「전 팀」으로 두 팀을 오가면 늘 반대쪽에서 온다. 같은 팀 안에서 화면만 바뀌면 움직이지 않는다. 나가는 목록은 그 프레임에 사라진다. 머리말, 검색칸, 탭, 상황 칸은 움직이지 않는다. 들어오는 격자가 가로 스크롤을 만들지 않게 `.app-main`에 `overflow-x: clip`을 둔다.
 - 목록 첫 등장: 검색 결과가 처음 나타날 때, 곡 관리 화면과 가져오기 후보 목록이 처음 열릴 때 줄이 아래 8px에서 24ms씩 차례로 올라온다(`listItemMotion`). 이미 열린 검색 결과에 검색어를 더 쳐서 생기는 줄은 움직이지 않는다(SearchResults가 처음 렌더의 곡 id를 `useState`로 기억한다. [STEP 4-2] 렌더 중 ref 읽기 경고를 없애려고 `useMounted`를 없앴다).
 - 팀 고르기 창과 재생 도구 시트(`Sheet`): `<dialog>`는 그대로 `showModal()`로 열고, 보이는 판(`.sheet-body`)이 아래 24px에서 `spring.sheet`로 올라온다. 닫을 때(닫기, 팀 고르기, 바깥 누름, Esc)는 판이 `exit`로 사라진 뒤 `close()`한다. Esc는 `cancel` 이벤트를 막고 같은 길로 닫는다. 포커스는 `close()` 때 팀 버튼으로 돌아간다. 창 뒤는 5.2대로 어둡게 덮지 않는다(플레이어가 가려지지 않게).
-- 화면 메뉴(휴대폰): 머리말 아래로 펼쳐지므로 위 8px에서 내려오고(`spring.sheet`, 페이드 `swap`), 닫을 때 `exit`. 메뉴가 내용을 밀어내는 높이 변화는 움직이지 않는다.
+- 화면 메뉴(휴대폰): [STEP 3-⑱] 펼치는 메뉴를 없애 움직임도 없다.
 - 휴대폰 플레이어 자리가 첫 곡에 펼쳐지는 것은 움직이지 않는다(iframe을 움직이는 요소로 감싸지 않는다).
 - 재생 줄: 처음 곡을 튼 순간 한 번 `row`로 자라고(앱에서 높이를 움직이는 곳은 여기 하나), 글자(`.now`)는 60ms 뒤 아래 8px에서 `swap`으로 올라온다. 지금 배치에서는 재생 전과 재생 중의 줄 높이가 같아(360px에서 60px, 1280px에서 151.6px) 실제로 자라는 일은 없고 글자만 올라온다. 곡이 바뀌면 제목만 `quick`으로 페이드된다.
 - 알림: 아래 8px에서 `swap`으로 올라오고 `quick`으로 사라진다. 알림이 바로 다른 알림으로 바뀌면 앞 알림이 사라진 뒤 새 알림이 올라와 둘이 겹치지 않는다.
@@ -879,7 +882,7 @@ App
               │ │     ├ UrlInputForm / VideoSearchForm
               │ │     ├ CandidateTable
               │ │     └ SongForm               (단일 영상 등록)
-              │ └ SettingsPage
+              │ └ (settings → SettingsRedirect)
               └ PlayerPanel
                 ├ PlayerHost                (player-stage 안)
                 ├ PlayerCard                (넓은 화면 오른쪽 열, 휴대폰 지금 재생 시트) [STEP 3-⑫]
@@ -895,7 +898,7 @@ App
 | 컴포넌트 | 책임 | Props | 쓰는 Context |
 | --- | --- | --- | --- |
 | AppLayout | 공통 틀, 플레이어·알림 상시 표시, 상황 버튼 자리를 `SituationSlotContext`로 제공 [STEP 3-7] | 없음 | Prefs |
-| Header | 팀 버튼(로고 판 36, 팀 이름)과 팀 고르기 창, 전 팀 버튼, 화면 메뉴. 팀은 `useMatch`로 URL에서 먼저 읽음 [R-24, 디자인 개편] | `teamId: TeamId \| null` | 없음 |
+| Header | 팀 버튼(로고 판 36, 팀 이름)과 팀 고르기 창, 전 팀 버튼, 화면 링크(응원·곡 관리, 휴대폰은 지금 화면이 아닌 쪽 하나) [STEP 3-⑱]. 팀은 `useMatch`로 URL에서 먼저 읽음 [R-24, 디자인 개편] | `teamId: TeamId \| null` | 없음 |
 | Sheet | 아래에서 올라오는 창. `<dialog>`를 `showModal()`로 열고, 제목과 닫기 버튼, Esc·바깥 누르기로 닫힘, 닫는 움직임이 끝난 뒤 `close()` [디자인 개편 후속] | `open: boolean`, `title: string`, `titleId: string`, `className?: string`, `focusSelector?: string`, `onClose(): void`, `children: ReactNode` | 없음 |
 | TeamSheet | 팀 고르기 창. Sheet에 TeamGrid를 넣고 지금 팀에 포커스 [디자인 개편]. [STEP 3-⑫] 매치업 머리가 「상대 팀 고르기」 제목으로도 쓴다. 빈 칸이면 포커스할 팀이 없다 | `open: boolean`, `title?: string`(기본 「팀 고르기」), `currentTeamId: TeamId \| null`, `onClose(): void`, `onPick(teamId: TeamId): void` | 없음 |
 | TeamGrid | 10개 팀 로고 5×2 격자(첫 실행 화면과 팀 고르기 창이 함께 씀) [디자인 개편] | `currentTeamId: TeamId \| null`, `onPick(teamId: TeamId): void` | 없음 |
@@ -930,7 +933,7 @@ App
 | UrlInputForm | URL 입력, 형식 검사(EX-01) | `disabled: boolean`, `onSubmit(videoId: string): void` | 없음 |
 | VideoSearchForm | YouTube 검색어 입력, 결과 목록 | `disabled: boolean`, `onPick(videoId: string): void` | 없음 |
 | CandidateTable | 후보 표. 선택·종류·이름·시작 시각 고치기, 경고·이미 있음·중복·같은 이름 표시 | `rows: CandidateRow[]`, `videoId: string`, `onChange(key: number, patch: Partial<Pick<ImportCandidate, 'kind' \| 'title' \| 'startText' \| 'selection'>>): void`, `disabled: boolean` | 없음 |
-| SettingsPage | 내보내기, 가져오기(확인), 되돌리기(확인), 접속 주소 표시 [C-15, R-08] | 없음 | Songs, Notice |
+| SongDataPage | 곡 관리 안 백업·초기화: 내보내기, 가져오기(확인), 되돌리기(확인), 접속 주소 표시, 위쪽 「곡 관리」 링크 [C-15, R-08, STEP 3-⑱] | 없음 | Songs, Notice |
 
 ```ts
 /** SongForm 입력값(시각은 문자열로 받아 검증 후 초로 바꾼다) */
@@ -1031,7 +1034,7 @@ export function useSongs(): SongsContextValue;  // Provider 밖이면 오류(수
 - 초기화: `useReducer(songsReducer, seed, init)`의 init에서 `loadSongs(seed)`를 부른다. status가 corrupt·unavailable이면 마운트 후 `useEffect`로 한 번 알림(EX-14, EX-15).
 - 저장: `useEffect(() => { if (!saveSongs(state.songs)) notify(저장 실패) }, [state.songs])`.
 - 팀별 목록과 종류별 목록은 상태로 따로 두지 않고 `songs.filter(...)`로 그때그때 만든다. 같은 데이터를 두 곳에 두면 어긋날 수 있기 때문이다. 600곡 수준이라 매 렌더링 필터링해도 느리지 않다.
-- 되돌리기 확인(FR-22, BR-39): SettingsPage가 `window.confirm("곡 목록을 처음 데이터(N곡)로 되돌립니다. 지금 곡 목록과 지정한 응원가 시작 지점이 사라집니다")`를 받은 경우에만 `resetToSeed()`를 부른다. 취소하면 아무것도 바뀌지 않는다. [C-15]
+- 되돌리기 확인(FR-22, BR-39): SongDataPage가 `window.confirm("곡 목록을 처음 데이터(N곡)로 되돌립니다. 지금 곡 목록과 지정한 응원가 시작 지점이 사라집니다")`를 받은 경우에만 `resetToSeed()`를 부른다. 취소하면 아무것도 바뀌지 않는다. [C-15]
 
 ### 7.3 PrefsContext
 
@@ -1610,7 +1613,7 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 - [STEP 3-7] 리스너는 한 번만 등록하고 MainPage의 최신 처리 함수는 ref로 읽는다. 볼륨 슬라이더처럼 글자를 받지 않는 input(range, checkbox 등)에 포커스가 있을 때는 입력 중으로 보지 않는다. 마우스로 볼륨을 바꾼 직후 Space로 정지할 수 있게 하기 위해서다.
 - [디자인 개편] 숫자 1~8은 상황 칸 순서를 따른다(안타 1, 아웃 2, 볼넷 3, 풀카운트 4, 라인업 5, 라인업 소개 6, 경기 개시 7, 기타 8). 같은 숫자는 팀이 바뀌어도 같은 상황이다. 빈 칸 번호를 누르면 아무것도 하지 않는다. 9칸째부터(8곡을 넘는 상황 곡)는 단축키가 없다.
 - [디자인 개편] 팀 고르기 창(`<dialog>`) 안에서는 Space·숫자가 그 창의 버튼 조작이라 단축키를 끈다(BR-36의 대화상자).
-- 단축키는 메인 화면에서만 켠다. 곡 관리·가져오기·설정 화면은 글자를 입력하는 화면이라 겹치지 않게 하기 위해서다.
+- 단축키는 메인 화면에서만 켠다. 곡 관리·곡 추가·백업·초기화 화면은 글자를 입력하는 화면이라 겹치지 않게 하기 위해서다.
 - 글자 키는 `e.key`가 아니라 `e.code`(물리 키 위치)로 판단한다. 한글 입력 상태에서는 `S`·`T`의 `e.key`가 `ㄴ`·`ㅅ`로 들어오기 때문이다.
 - Space 문제: 재생 버튼을 마우스로 누른 뒤 Space를 누르면, 포커스된 버튼이 keyup 때 눌려 정지 직후 같은 곡이 다시 시작될 수 있다. 두 겹으로 막는다. [R-06]
   1. 재생 버튼은 마우스 클릭 때 포커스를 가져가지 않는다(6.2).
@@ -1651,13 +1654,13 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 | FR-19 지금을 응원가 시작으로 | PlayerPanel onCheerHere, canCheerHere 주기 갱신 | 7.4 |
 | FR-20 JSON 내보내기 | createSongsFile, Blob 다운로드 | 3.4 |
 | FR-21 JSON 가져오기 | parseSongsFile, confirm, REPLACE_ALL | 3.4, 7.2 |
-| FR-22 처음 데이터로 되돌리기 | SettingsPage confirm, resetToSeed | 7.2 |
+| FR-22 처음 데이터로 되돌리기 | SongDataPage confirm, resetToSeed | 7.2 |
 | FR-23 키보드 단축키 | useKeyboardShortcuts | 12.5 |
 | FR-24 볼륨 조절 | VolumeSlider, Settings.volume, volumeRef | 7.3, 8.5 |
 | FR-25 페이드아웃 | stop, startFade, cancelFade, finish | 8.5 |
 | FR-26 구단 표시 | TeamLogo(`public/teams/<팀>.webp`), Team.color(재생 중 띠), useMatch | 1.3, 5.1, 5.2, 5.4 |
 | FR-27 격자 정렬 | Settings.gridSort, `sortPlayerSongs`, `parseGridSort` | 3.1, 5.5, 7.3, 6.2 |
-| FR-28 접속 주소 안내 | dataApiAvailability('lanHost'), DataApiNotice, 설정 화면 접속 주소 | 5.2, 10.1 |
+| FR-28 접속 주소 안내 | dataApiAvailability('lanHost'), DataApiNotice, 백업·초기화 화면 접속 주소 | 5.2, 10.1 |
 | FR-29 선수 정보 연결 | `players-2026.json`, `parsePlayers`, `buildPlayerIndex`, `findPlayer`, `playerOf` | 5.5 |
 | FR-30 선수 칸 정보 | PlayerGrid(이름·포지션·`extra` 사진), `.player-cell` CSS | 5.2, 5.5 |
 | FR-31 선수 사진과 기본 아바타 | PlayerPortrait, `photoUrl`, `avatarUrl`, `public/avatars`, `playerMediaPlugin.ts`, `build-deploy.mjs` | 5.5 |
@@ -1714,10 +1717,10 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 | BR-35 볼륨·정렬 공통 설정 | Settings, `kboCheer.settings` | 3.1, 7.3 |
 | BR-36 단축키 배정 | useKeyboardShortcuts | 12.5 |
 | BR-37~38 JSON 형식, 통째로 바꾸기 | songsFile.ts | 3.4 |
-| BR-39 되돌리기는 곡 목록만, 확인 후 | SettingsPage confirm, resetToSeed | 7.2 |
+| BR-39 되돌리기는 곡 목록만, 확인 후 | SongDataPage confirm, resetToSeed | 7.2 |
 | BR-41 페이드 규칙 | stop, startFade, cancelFade | 8.5 |
 | BR-43 같은 제목 상황 곡 폼 경고 | SongForm `isDuplicateSituationTitle` | 6.2 |
-| BR-44 접속 주소 표시 | SettingsPage | 5.2 |
+| BR-44 접속 주소 표시 | SongDataPage | 5.2 |
 | BR-52~56 매치업 보드의 두 칸, 칸 바꾸기, 재생과 이동, 상황 칸 팀, 공통 정렬 [STEP 3-⑫] | `lib/matchup.ts`, MainPage, MatchupHeader, PrefsContext `assignTeam` | 5.6, 7.3 |
 | EX-01 URL 형식 오류 | extractVideoId → null → 'badUrl' | 10.3, 10.4 |
 | EX-02~03, EX-06~09, EX-18 API 관련 | DataApiError 분류와 문구 | 10.2 |
