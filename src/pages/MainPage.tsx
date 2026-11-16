@@ -7,15 +7,22 @@ import EmptyState from '../components/EmptyState.tsx'
 import PlayerGrid from '../components/PlayerGrid.tsx'
 import SearchBox from '../components/SearchBox.tsx'
 import SearchResults from '../components/SearchResults.tsx'
+import StatusMessage from '../components/StatusMessage.tsx'
 import SituationGrid from '../components/SituationGrid.tsx'
 import TeamSongList from '../components/TeamSongList.tsx'
+import { useHistory } from '../context/historyState.ts'
 import { usePlayer } from '../context/PlayerContext.tsx'
 import { usePrefs } from '../context/PrefsContext.tsx'
 import { useSituationSlot } from '../context/SituationSlotContext.ts'
 import { useSongs } from '../context/SongsContext.tsx'
+import { playerOf } from '../data/players.ts'
+import { getTeam } from '../data/teams.ts'
 import { useActiveTeam } from '../hooks/useActiveTeam.ts'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts.ts'
 import type { SwitchDirection } from '../lib/motion.ts'
+import { recentSongs } from '../lib/history.ts'
+import { sortPlayerSongs } from '../lib/playerSort.ts'
+import type { SearchHit } from '../lib/search.ts'
 import { buildSearchIndex, searchIndex } from '../lib/search.ts'
 import { situationSlots } from '../lib/situationSlots.ts'
 import type { GridSort, Song } from '../types.ts'
@@ -24,8 +31,9 @@ import { distance, swap } from '../ui/motionTokens.ts'
 type Tab = 'players' | 'team'
 
 const SORTS: { value: GridSort; label: string }[] = [
-  { value: 'chapter', label: '챕터 순' },
-  { value: 'name', label: '가나다 순' },
+  { value: 'starters', label: '주전순' },
+  { value: 'name', label: '가나다' },
+  { value: 'frequent', label: '자주 튼' },
 ]
 
 export default function MainPage() {
@@ -33,10 +41,15 @@ export default function MainPage() {
   const navigate = useNavigate()
   const { songs } = useSongs()
   const { settings, setGridSort, teamState } = usePrefs()
+  const { history } = useHistory()
   const { nowPlaying, play, stop, skipToCheer } = usePlayer()
   const situationSlot = useSituationSlot()
   const [query, setQuery] = useState('')
   const [tab, setTab] = useState<Tab>('players')
+  const [searchFocused, setSearchFocused] = useState(false)
+  // 「자주 튼」 순서는 화면을 열거나 정렬을 고를 때의 횟수로 정한다. 곡을 누를 때마다 칸이 옮겨 가면 다음 칸을 누르기 어렵다
+  const [order, setOrder] = useState({ sort: settings.gridSort, counts: history.counts })
+  if (order.sort !== settings.gridSort) setOrder({ sort: settings.gridSort, counts: history.counts })
   const inputRef = useRef<HTMLInputElement>(null)
   const enterFrom = useOutletContext<SwitchDirection>()
 
@@ -44,16 +57,21 @@ export default function MainPage() {
   const { players, teamSongs, situations } = useMemo(() => {
     const mine = songs.filter((s) => s.teamId === teamId)
     const byOrder = (kind: Song['kind']) => mine.filter((s) => s.kind === kind).sort((a, b) => a.order - b.order)
-    const players = byOrder('player')
-    if (settings.gridSort === 'name') players.sort((a, b) => a.title.localeCompare(b.title, 'ko'))
+    const players = sortPlayerSongs(byOrder('player'), order.sort, { playerOf, counts: order.counts })
     return { players, teamSongs: byOrder('team'), situations: byOrder('situation') }
-  }, [songs, teamId, settings.gridSort])
+  }, [songs, teamId, order])
   const cells = useMemo(() => situationSlots(situations), [situations])
 
   const index = useMemo(() => buildSearchIndex(songs), [songs])
   const hits = useMemo(
     () => (teamId ? searchIndex(index, query, teamId) : []),
     [index, query, teamId],
+  )
+
+  const recent = useMemo(() => recentSongs(history, songs), [history, songs])
+  const recentHits = useMemo<SearchHit[]>(
+    () => recent.map((song) => ({ song, team: getTeam(song.teamId), isCurrentTeam: song.teamId === teamId })),
+    [recent, teamId],
   )
 
   useKeyboardShortcuts((action) => {
@@ -85,6 +103,7 @@ export default function MainPage() {
   if (!team) return null
   const nowPlayingId = nowPlaying?.songId ?? null
   const searching = query.trim() !== ''
+  const showRecent = searchFocused && !searching
   const isEmpty = players.length + teamSongs.length + situations.length === 0
 
   function pick(song: Song) {
@@ -92,11 +111,33 @@ export default function MainPage() {
     if (song.teamId !== team?.id) navigate('/team/' + song.teamId)
   }
 
+  function pickRecent(song: Song) {
+    pick(song)
+    inputRef.current?.blur()
+  }
+
   return (
     <div className="main-page">
-      <SearchBox value={query} onChange={setQuery} inputRef={inputRef} />
+      <SearchBox
+        value={query}
+        onChange={setQuery}
+        inputRef={inputRef}
+        onFocus={() => setSearchFocused(true)}
+        onBlur={() => setSearchFocused(false)}
+      />
       {searching ? (
         <SearchResults hits={hits} nowPlayingId={nowPlayingId} onPick={pick} />
+      ) : showRecent ? (
+        <section className="recent" aria-labelledby="recent-heading">
+          <h2 id="recent-heading" className="recent-heading">
+            최근 튼 곡
+          </h2>
+          {recentHits.length === 0 ? (
+            <StatusMessage tone="empty">아직 튼 곡이 없습니다</StatusMessage>
+          ) : (
+            <SearchResults hits={recentHits} nowPlayingId={nowPlayingId} onPick={pickRecent} />
+          )}
+        </section>
       ) : isEmpty ? (
         <EmptyState teamId={team.id} />
       ) : (
@@ -148,7 +189,12 @@ export default function MainPage() {
             transition={swap}
           >
             {tab === 'players' ? (
-              <PlayerGrid songs={players} nowPlayingId={nowPlayingId} onPlay={play} />
+              <PlayerGrid
+                songs={players}
+                nowPlayingId={nowPlayingId}
+                counts={settings.gridSort === 'frequent' ? history.counts : undefined}
+                onPlay={play}
+              />
             ) : (
               <TeamSongList songs={teamSongs} nowPlayingId={nowPlayingId} onPlay={play} />
             )}

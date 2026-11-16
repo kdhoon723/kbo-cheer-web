@@ -15,6 +15,7 @@ declare global {
 
 export const APP_ORIGIN = 'http://localhost:5173'
 export const SONGS_KEY = 'kboCheer.songs'
+export const HISTORY_KEY = 'kboCheer.history'
 
 const TEAM_IDS: readonly string[] = ['kiwoom', 'hanwha', 'lotte', 'ssg', 'doosan', 'nc', 'kia', 'lg', 'samsung', 'kt']
 const KINDS: readonly string[] = ['player', 'team', 'situation']
@@ -188,6 +189,45 @@ export function exactText(text: string): RegExp {
 
 export function playerButton(page: Page, title: string): Locator {
   return page.locator('.player-grid').getByRole('button', { name: title, exact: true })
+}
+
+export function playerNames(page: Page): Locator {
+  return page.locator('.player-grid .player-name')
+}
+
+interface PlayerRecord {
+  name: string
+  playerId: string
+  plateAppearances: number | null
+}
+
+function playersOf(teamId: TeamId): PlayerRecord[] {
+  const raw: unknown = JSON.parse(readFileSync(new URL('../src/data/players-2026.json', import.meta.url), 'utf8'))
+  if (!isRecord(raw) || !isRecord(raw.teams)) throw new Error('선수 데이터 형식이 다름')
+  const list: unknown = raw.teams[teamId]
+  if (!Array.isArray(list)) throw new Error(`선수 목록이 없는 팀: ${teamId}`)
+  return list.map((x: unknown) => {
+    if (!isRecord(x) || typeof x.name !== 'string' || typeof x.playerId !== 'string') throw new Error('선수 항목 형식이 다름')
+    const pa = x.plateAppearances
+    return { name: x.name, playerId: x.playerId, plateAppearances: typeof pa === 'number' ? pa : null }
+  })
+}
+
+export function playerId(teamId: TeamId, name: string): string {
+  const found = playersOf(teamId).find((p) => p.name === name)
+  if (!found) throw new Error(`선수 데이터에 없는 선수: ${teamId} ${name}`)
+  return found.playerId
+}
+
+/** 처음 데이터의 선수 곡을 주전순(타석 수 많은 순, 같으면 가나다, 기록 없는 선수는 맨 아래 가나다)으로 늘어놓은 이름 */
+export function starterOrder(teamId: TeamId): string[] {
+  const pa = new Map(playersOf(teamId).map((p) => [p.name, p.plateAppearances]))
+  const names = teamSongs(teamId, 'player').map((s) => s.title)
+  const has = names.filter((n) => pa.get(n) != null)
+  const none = names.filter((n) => pa.get(n) == null)
+  has.sort((a, b) => (pa.get(b) ?? 0) - (pa.get(a) ?? 0) || a.localeCompare(b, 'ko'))
+  none.sort((a, b) => a.localeCompare(b, 'ko'))
+  return [...has, ...none]
 }
 
 export function situationButton(page: Page, title: string): Locator {

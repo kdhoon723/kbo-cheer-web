@@ -22,8 +22,14 @@ KBO 응원가 즉시 재생 웹서비스. 2026-2학기 스크립트프로그래�
 - 강조는 색이 아니라 반전(밝은 판 + 어두운 글자)으로 한다. 팀 색은 재생 중인 칸 위쪽 3px 띠와 플레이어 영역(위쪽 띠)에만 쓰고, 글자 색이나 넓은 바탕으로 쓰지 않는다. 팀은 로고(`TeamLogo`, 판 28·36·44)로 구분한다.
 - 모든 글자는 실제 바탕과 대비 4.5:1 이상이어야 한다. 새 색 조합을 넣으면 대비를 계산해 `docs/design.md` 5.4에 적는다.
 - 글꼴은 Pretendard 하나(`pretendard@1.3.9`, `main.tsx`에서 불러 Vite가 묶음, CDN 금지). 아이콘은 `lucide-react`(버전 고정)만 쓰고 `strokeWidth={1.75}`. 기호 글자(▶ ■ ⇄ ☰ ✕ ‹ › ▾ ▴ → 등)나 이모지를 아이콘으로 쓰지 않는다.
-- 카드·그림자 없이 1px 선으로 나눈다. 모서리는 판·격자 칸 4px, 버튼·입력칸 10px만 쓴다. 간격은 4의 배수, 화면 옆 여백 16px, 누르는 곳은 44px 이상.
+- 카드·그림자 없이 1px 선으로 나눈다. 모서리는 판·격자 칸 4px, 버튼·입력칸 10px만 쓴다(예외: 선수 사진은 위쪽 모서리만 3px). 간격은 4의 배수, 화면 옆 여백 16px, 누르는 곳은 44px 이상.
 - 쓰지 않는 것: 그라디언트 바탕, 네온, 빛 번짐, 유리 효과, 보라색 강조, 이모지, 뜻 없는 배지, 카드 그림자, 팀 색으로 화면 칠하기, 들뜬 문구, 누를 때 커지거나 튀는 효과, 로딩 뼈대 화면.
+
+## 선수 정보와 사진 규칙
+
+- 선수 사진(구단·KBO)은 저장소, `public/`, 제출 소스 어디에도 넣지 않는다. 저장소 밖 `../kbo-cheer-web-media/`에 있고 읽기만 한다. 개발 서버는 `.env.local`의 `KBO_MEDIA_DIR`(VITE_ 접두사 없음)로 `/players/*`를 내주고, 배포는 `npm run build:deploy`가 `dist/players/`로 복사한다.
+- 사진이 있다고 표시된(`photo !== null`) 선수만 `/players/<팀ID>/<선수ID>.jpg`를 요청한다. 없거나 실패하면 구단 기본 아바타(`public/avatars/<팀ID>.webp`, 원본은 `assets/avatars-original/`, `node scripts/optimize-avatars.mjs`)를 쓴다.
+- 튼 횟수와 최근 곡은 곡 목록과 별도 키 `kboCheer.history`에 둔다. 정렬 기본값은 주전순이다.
 
 ## 모션 규칙
 
@@ -36,7 +42,7 @@ KBO 응원가 즉시 재생 웹서비스. 2026-2학기 스크립트프로그래�
 ## 실행
 
 - 개발 서버: `npm run dev` (포트 5173 고정, LAN 접속 허용. `vite.config.ts`)
-- 빌드: `npm run build` / 단위 테스트: `npm test` / 린트: `npm run lint`
+- 빌드: `npm run build` / 사진을 넣는 배포 빌드: `npm run build:deploy` / 단위 테스트: `npm test` / 린트: `npm run lint`
 - E2E: `npm run test:e2e`. 시작할 때 `e2e/global-setup.ts`가 재생이 되는 YouTube 방문자 쿠키를 만들어 모든 테스트가 나눠 쓴다(쿠키 없는 새 방문자는 가끔 YouTube가 영상을 주지 않는다. `docs/test-results.md` F-01).
 - 배포: 공개 주소 https://kbocheer.kdhoon.me (Cloudflare Workers 정적 자산, `wrangler.jsonc`). 실제 배포 명령(`npx wrangler deploy`)은 계정 자격증명이 필요해 직접 실행하지 않는다.
 - 브라우저 확인은 Playwright MCP로 하고, 화면 캡처는 `docs/screenshots/`에 저장한다.

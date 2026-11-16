@@ -16,6 +16,8 @@
 - **응원가로 건너뛰기**: 등장곡이 나오는 중에 「응원가로」를 누르면 응원가 시작 지점으로 넘어간다. 지점은 재생 중에 「지금을 응원가 시작으로」를 한 번 눌러 저장한다.
 - **팀 전환과 검색**: 「전 팀」으로 바로 전에 본 팀으로 바꾼다. 검색칸에 이름이나 초성(예: ㄴㅅㅎ)을 치면 10개 구단 전체에서 찾고, 다른 팀 곡을 누르면 그 팀 화면으로 바뀌며 재생된다.
 - **곡 가져오기**: 모음 영상 URL을 넣으면 YouTube Data API로 설명란의 타임스탬프를 읽어 곡 후보를 만든다. 종류·이름·시각을 확인하고 고친 뒤 저장한다. 챕터가 없는 영상은 곡 하나로, YouTube 검색 결과로도 등록할 수 있다.
+- **선수 정보와 사진**: 선수 칸에 이름, 포지션, 오른쪽 아래에 사진이 나온다. 사진은 검색 결과와 재생 줄에도 나온다. 사진이 없으면 구단 기본 아바타가 대신 나온다. 정렬은 주전순(기본, 타석 수 많은 순), 가나다, 자주 튼(이 브라우저에서 튼 횟수, 칸에 「N번」) 순이다.
+- **최근 튼 곡**: 검색칸을 눌러 두고 아직 아무것도 치지 않으면 최근에 튼 곡 10개가 나온다. 누르면 바로 재생된다. 튼 횟수와 최근 곡은 곡 목록과 따로 이 브라우저에 저장된다.
 - **곡 관리**: 곡마다 이름, 종류, 구간, 응원가 시작 지점을 고치거나(미리 듣기 가능) 지운다.
 - **데이터 옮기기**: 곡 목록을 JSON 파일로 내보내고 가져온다(노트북 → 휴대폰). 처음 데이터(10개 구단 507곡)로 되돌릴 수도 있다.
 - **재생 조작**: 정지할 때 1초 페이드아웃, 볼륨 조절, 노트북 키보드 단축키(Space 정지, S 응원가로, T 전 팀, / 검색, 1~8 상황 칸).
@@ -43,12 +45,20 @@ VITE_YOUTUBE_API_KEY=발급받은_API_키
 ```
 
 - 키는 Google Cloud 콘솔에서 YouTube Data API v3용으로 만들고, HTTP 리퍼러를 `https://kbocheer.kdhoon.me/*`, `http://localhost:5173/*`, `http://127.0.0.1:5173/*`로 제한한다. 앱도 같은 세 출처(`src/lib/env.ts`의 `DATA_API_ORIGINS`)에서만 API를 부른다.
+- 선수 사진은 공개 저장소에 없다(구단·KBO 사진이라 저장소와 제출 소스에 넣지 않는다). 개발 서버에서 사진을 보려면 사진 폴더 위치를 `.env.local`에 적는다. 적지 않거나 폴더가 없으면 구단 기본 아바타만 보이고 앱은 그대로 동작한다.
+
+  ```bash
+  # .env.local (저장소에 올리지 않는다). 폴더 안은 players/<팀ID>/<선수ID>.jpg 구조
+  KBO_MEDIA_DIR=../kbo-cheer-web-media
+  ```
+
 - 개발 서버에 휴대폰이 `http://<노트북 LAN 주소>:5173`으로 접속하면 재생과 곡 관리는 되지만, 키의 리퍼러 제한 때문에 곡 가져오기는 꺼지고 안내 문구가 나온다.
 
 | 명령 | 하는 일 |
 | --- | --- |
 | `npm run dev` | 개발 서버 |
-| `npm run build` | 타입 검사와 배포용 빌드(`dist/`) |
+| `npm run build` | 타입 검사와 배포용 빌드(`dist/`). 선수 사진은 들어가지 않는다 |
+| `npm run build:deploy` | `build` + 사진 폴더(`KBO_MEDIA_DIR`, 없으면 `../kbo-cheer-web-media`)의 `players/`를 `dist/players/`로 복사한다. 폴더가 없으면 안내하고 실패한다 |
 | `npm test` | 단위 테스트(Vitest) |
 | `npm run test:e2e` | E2E 테스트(Playwright, 실제 YouTube 재생) |
 | `npm run lint` | 린트(oxlint) |
@@ -58,9 +68,12 @@ VITE_YOUTUBE_API_KEY=발급받은_API_키
 `wrangler.jsonc`가 `dist/`를 정적 자산으로 올리고, 없는 경로는 모두 `index.html`을 돌려준다(SPA). Cloudflare 계정 로그인이 필요하다.
 
 ```bash
-npm run build                 # .env.local의 키가 빌드 결과에 들어간다
+npm run build:deploy          # 빌드 + 선수 사진을 dist/players/로 복사. .env.local의 키가 빌드 결과에 들어간다
 npx wrangler deploy           # 처음에는 npx wrangler login
 ```
+
+- 사진을 빼고 올리려면(모두 구단 기본 아바타로 보인다) `npm run build`만 돌린다. 사진 폴더 없이 `build:deploy`를 돌리면 빌드 전에 멈추고 폴더 위치를 알려 준다.
+- 사진은 `dist/players/`에만 들어가므로 저장소와 `public/`에는 사진이 없다. 구단 기본 아바타(`public/avatars/<팀ID>.webp`)는 `assets/avatars-original/`의 원본에서 `node scripts/optimize-avatars.mjs`로 만든다.
 
 - Vite는 `VITE_`로 시작하는 환경 변수를 빌드한 자바스크립트에 그대로 넣는다. 배포된 키는 누구나 볼 수 있으므로 반드시 위의 리퍼러 제한을 걸어 둔다.
 

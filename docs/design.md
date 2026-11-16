@@ -2,7 +2,7 @@
 
 - 과목: 2026-2학기 스크립트프로그래밍 / 작성: 20241476 김도훈 / 작성일: 2026-11-15
 - 단계: STEP 2 설계 (최종판, 설계 검토 반영)
-- 기준 문서: `docs/requirements.md` (FR-01~28, NFR-01~13, BR-01~44, EX-01~29)
+- 기준 문서: `docs/requirements.md` (FR-01~33, NFR-01~14, BR-01~51, EX-01~31). [STEP 3-⑪] FR-29~33, BR-45~51, EX-30·31, NFR-14는 5.5절
 - 검토 문서: `docs/reviews/design-review-claude.md`(R-01~28), `docs/reviews/design-review-codex.md`(C-01~18). 본문에서 검토 때문에 바뀐 곳에는 `[R-xx]`, `[C-xx]`를 붙였다. 전체 반영 내역은 15절.
 - 배포: `https://kbocheer.kdhoon.me`(Cloudflare Workers 정적 자산, `wrangler.jsonc`의 `assets.directory: ./dist`, `not_found_handling: single-page-application`으로 모든 경로에 index.html을 돌려준다) [공개 배포]
 - 기술 환경: React, TypeScript, Vite(포트 5173 고정, LAN 접속 허용), React Router(`react-router-dom`), YouTube IFrame Player API, YouTube Data API v3, LocalStorage, CSS
@@ -33,6 +33,8 @@ src/
   data/
     teams.ts                  10개 구단 고정 목록
     seed-songs.json           처음 데이터(내보내기 형식과 같음)
+    players-2026.json         선수 기록(팀별 포지션·타석 수·사진 유무) [STEP 3-⑪]
+    players.ts                선수 기록을 읽어 곡 → 선수 찾기(playerOf) [STEP 3-⑪]
   lib/
     time.ts                   시각 문자열 ↔ 초, ISO 8601 길이 변환
     youtubeUrl.ts             URL에서 영상 ID 뽑기
@@ -48,6 +50,9 @@ src/
     shortcuts.ts              단축키 → 동작, 입력 중 판별 [STEP 3-7]
     situationSlots.ts         상황 곡 → 4×2 칸 배치 [디자인 개편]
     motion.ts                 팀 전환 방향, 목록 줄 지연 [STEP 3-9]
+    players.ts                선수 기록 검사, 곡 ↔ 선수 연결, 사진·아바타 주소 [STEP 3-⑪]
+    playerSort.ts             주전순·가나다·자주 튼 정렬 [STEP 3-⑪]
+    history.ts                튼 횟수·최근 곡 기록, 검사 [STEP 3-⑪]
   api/
     youtubeData.ts            Data API 호출, 오류 분류
   player/
@@ -57,6 +62,8 @@ src/
     PrefsContext.tsx          팀 상태, 설정
     songsReducer.ts           곡 목록 리듀서
     SongsContext.tsx          곡 목록 Context
+    HistoryContext.tsx        튼 기록 Provider [STEP 3-⑪]
+    historyState.ts           HistoryContext와 useHistory [STEP 3-⑪]
     PlayerContext.tsx         재생 상태, 플레이어 제어
     SituationSlotContext.ts   상황 버튼을 그릴 자리(오른쪽 열·하단 묶음) [STEP 3-7]
   hooks/
@@ -72,10 +79,17 @@ src/
   components/
     Header.tsx, TeamSheet.tsx, TeamGrid.tsx, TeamLogo.tsx, PrevTeamButton.tsx, Toast.tsx,
     PlayerPanel.tsx, PlayerHost.tsx, VolumeSlider.tsx, band.ts,
-    SearchBox.tsx, SearchResults.tsx, PlayerGrid.tsx, TeamSongList.tsx,
+    SearchBox.tsx, SearchResults.tsx, PlayerGrid.tsx, PlayerPortrait.tsx, TeamSongList.tsx,
     SituationGrid.tsx, EmptyState.tsx, SongForm.tsx, SongRow.tsx,
     UrlInputForm.tsx, VideoSearchForm.tsx, CandidateTable.tsx, DataApiNotice.tsx,
     StatusMessage.tsx
+playerMediaPlugin.ts          개발 서버가 /players/*를 저장소 밖 사진 폴더에서 내주는 Vite 플러그인 [STEP 3-⑪]
+scripts/
+  optimize-logos.mjs          구단 로고 원본 → public/teams/*.webp
+  optimize-avatars.mjs        기본 아바타 원본 → public/avatars/*.webp(256px) [STEP 3-⑪]
+  build-deploy.mjs            npm run build:deploy: 빌드 + 사진 폴더를 dist/players로 복사 [STEP 3-⑪]
+assets/avatars-original/      기본 아바타 원본 PNG 512px와 README(배포물에 넣지 않음)
+public/avatars/<팀ID>.webp    기본 아바타(팀 10개, 각 5~6KB)
 ```
 
 ## 1. 데이터 모델
@@ -88,6 +102,8 @@ src/
 | Song | 곡 하나 = 영상 ID + 구간 + 응원가 시작 지점 | LocalStorage `kboCheer.songs` |
 | TeamState | 현재 팀, 전 팀 | LocalStorage `kboCheer.team` |
 | Settings | 볼륨, 격자 정렬 | LocalStorage `kboCheer.settings` |
+| PlayerInfo | 선수 한 명의 포지션, 경기·타석 수, 사진 유무. 곡이 아니라 선수 기록이다 | 번들 `src/data/players-2026.json`(읽기 전용) [STEP 3-⑪] |
+| PlayHistory | 곡별 튼 횟수와 최근 곡 id 10개 | LocalStorage `kboCheer.history` [STEP 3-⑪] |
 | VideoInfo | Data API로 읽은 영상 정보 | 메모리(가져오기 화면) |
 | ImportCandidate | 설명란 챕터 한 줄 = 확인 단계의 곡 후보 한 줄 | 메모리(가져오기 화면) |
 | CandidateRow | 후보를 평가한 파생 값(끝 시각, 경고, 이미 있음, 중복) | 저장하지 않음, 매 렌더링 계산 [C-08, C-09] |
@@ -107,7 +123,7 @@ src/
 | start | number | 시작 시각(초, 정수) | 0 ≤ start < end |
 | end | number | 끝 시각(초, 정수) | end ≤ videoDuration |
 | cheerStart | number \| null | 응원가 시작 지점(초) | 선수 곡만, start < cheerStart < end(BR-20, BR-21) |
-| order | number | 팀 안의 등록 순서 | 챕터 순 정렬(FR-04)에 쓴다 |
+| order | number | 팀 안의 등록 순서 | 팀 응원가·상황 곡 목록의 순서, 정렬·검색에서 같은 값일 때의 순서에 쓴다 |
 
 - 시각은 모두 초 단위 정수로 저장하고, 화면에서만 `MM:SS`·`H:MM:SS`로 바꾼다. 비교와 계산을 단순하게 하기 위해서다.
 - `videoDuration`을 곡마다 두는 이유: 수정 화면에서 Data API를 다시 부르지 않고 끝 시각 범위를 검사하기 위해서다(NFR-08, NFR-11).
@@ -173,11 +189,28 @@ export type TeamState =
   | { currentTeamId: null; prevTeamId: null }
   | { currentTeamId: TeamId; prevTeamId: TeamId | null };
 
-export type GridSort = 'chapter' | 'name';
+export type GridSort = 'starters' | 'name' | 'frequent';   // 주전순 / 가나다 / 자주 튼 [STEP 3-⑪]
 
 export interface Settings {
   volume: number;     // 0~100
   gridSort: GridSort;
+}
+
+/** 선수 기록 한 명(번들 JSON을 검사해 읽는다). 곡과 이름으로 잇는다(BR-45) [STEP 3-⑪] */
+export interface PlayerInfo {
+  name: string;
+  playerId: string;                    // KBO 선수 ID. 사진 파일 이름
+  position: string | null;
+  games: number | null;
+  plateAppearances: number | null;     // 없으면 주전순에서 맨 아래
+  photo: 'club' | 'kbo' | null;        // 사진 출처. null이면 사진 파일이 없다
+  cutout: boolean;                     // 누끼 사진 유무(이번 단계는 화면에 쓰지 않음)
+}
+
+/** 튼 기록. 곡 목록과 따로 저장한다(BR-49) [STEP 3-⑪] */
+export interface PlayHistory {
+  counts: Record<string, number>;      // 곡 id → 튼 횟수(1 이상인 곡만)
+  recent: string[];                    // 새것이 앞, 같은 id 없음, 최대 10개
 }
 
 /** Data API로 읽은 영상 정보 */
@@ -262,9 +295,11 @@ interface Window {
 | --- | --- | --- | --- |
 | `kboCheer.songs` | `{ "version": 1, "songs": Song[] }` | 처음 데이터로 시작(알림 없음) | 원래 문자열을 `kboCheer.songs.broken`에 옮긴 뒤 처음 데이터로 복구, "저장 데이터가 손상되어 초기화했습니다" 1회 알림(EX-14) [R-16] |
 | `kboCheer.team` | `{ "version": 1, "currentTeamId": TeamId \| null, "prevTeamId": TeamId \| null }` | 둘 다 null → 팀 선택 화면(BR-28) | 둘 다 null로 시작 |
-| `kboCheer.settings` | `{ "version": 1, "volume": number, "gridSort": GridSort }` | 기본값 `{ volume: 100, gridSort: 'chapter' }` | 기본값으로 시작 |
+| `kboCheer.settings` | `{ "version": 1, "volume": number, "gridSort": GridSort }` | 기본값 `{ volume: 100, gridSort: 'starters' }` | 볼륨이 틀렸거나 version이 다르면 기본값으로 시작. 정렬만 알 수 없는 값('chapter' 포함)이면 정렬만 기본값으로 읽고 볼륨은 지킨다 [STEP 3-⑪] |
+| `kboCheer.history` | `{ "version": 1, "counts": { [songId]: number }, "recent": string[] }` | 빈 기록 | 빈 기록으로 시작(알림 없음). 구조는 맞고 항목만 틀리면 그 항목만 버린다 [STEP 3-⑪] |
 
-- 키를 셋으로 나눈 이유: 설정 값 하나가 깨져도 곡 목록까지 초기화되지 않게 하고, 자주 바뀌는 팀 상태를 저장할 때 곡 목록 전체(약 600곡)를 다시 쓰지 않기 위해서다.
+- [STEP 3-⑪] 예전 정렬 값 'chapter'는 값 하나가 사라진 것이지 형식이 바뀐 것이 아니라 version을 올리지 않는다. 설정은 version 1 그대로 두고 `gridSort`를 읽을 때만 `parseGridSort(unknown)`으로 허용 값 세 가지 밖이면 기본값으로 바꾼다(처음에는 값 하나가 틀리면 설정 전체를 기본값으로 돌렸는데, 이러면 볼륨을 잃는다). 튼 기록(`kboCheer.history`)은 곡 목록과 키가 달라 JSON 가져오기·처음 데이터로 되돌리기(`kboCheer.songs`만 바꿈)가 기록을 지우지 않는다.
+- 키를 넷으로 나눈 이유: 설정 값 하나가 깨져도 곡 목록까지 초기화되지 않게 하고, 자주 바뀌는 팀 상태를 저장할 때 곡 목록 전체(약 600곡)를 다시 쓰지 않기 위해서다.
 - `version`은 지금 1뿐이다. 읽은 값의 version이 1이 아니면 깨진 데이터로 본다. 나중에 형식을 바꾸면 version 2를 만들고 `migrate(v1 → v2)` 함수를 이 자리에 넣는다.
 - `kboCheer.songs.broken`은 사용자 기능이 아니라 데이터 보호용 사본이다. 한 번만 쓰고(이미 있으면 덮어쓰지 않음) 앱은 읽지 않는다. 곡 하나가 깨져 전체를 복구하더라도, 원래 값을 개발자 도구에서 되살릴 수 있게 하기 위해서다. [R-16]
 
@@ -280,6 +315,8 @@ function loadTeamState(): LoadResult<TeamState>;
 function saveTeamState(state: TeamState): boolean;
 function loadSettings(): LoadResult<Settings>;
 function saveSettings(settings: Settings): boolean;
+function loadHistory(): LoadResult<PlayHistory>;     // [STEP 3-⑪]
+function saveHistory(history: PlayHistory): boolean;
 ```
 
 읽기 순서(의사코드):
@@ -511,15 +548,16 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 │  └────────────────────────┘  │
 ├──────────────────────────────┤
 │ [돋보기 초성이나 이름으로 찾기 ]│ ← SearchBox
-│ 선수 22 | 팀 응원가 18  [챕터 순][가나다 순]│ ← 탭과 선수 정렬
+│ 선수 22 | 팀 응원가 18   [주전순][가나다][자주 튼]│ ← 탭과 선수 정렬(좁으면 정렬이 아랫줄)
 ├─────────┬─────────┬──────────┤
-│최인호    │페라자    │문현빈     │ ← PlayerGrid 3열, 칸 높이 68, 1px 선으로 나눔
+│문현빈    │노시환    │강백호     │ ← PlayerGrid 3열, 칸 높이 84, 1px 선으로 나눔
+│좌익수 [사진]│3루수 [사진]│1루수 [사진]│    이름 아래 포지션(12px), 오른쪽 아래에 40×50 사진
 ├─────────┼─────────┼──────────┤
-│강백호    │=노시환=  │허인서     │ ← 재생 중 칸: 밝은 판 + 어두운 글자, 위쪽 3px 팀 색 띠
+│페라자    │=허인서=  │김태연     │ ← 재생 중 칸: 밝은 판 + 어두운 글자, 위쪽 3px 팀 색 띠
 └─────────┴─────────┴──────────┘
 │ ┌ 3곡을 저장했습니다      X ┐ │ ← Toast(독 바로 위)
 ╞━━━━━━━━━━━━━│━━━━━━━━━━━━━━━━╡ ← 독 위 가장자리 2px 진행 막대, │는 응원가 시작 지점
-│ [로고] 노시환     [응원가로][정지][⋮]│ ← 재생 줄(로고 판, 곡 이름, 경과/길이, 응원가로, 정지, 더보기)
+│ [사진] 노시환     [응원가로][정지][⋮]│ ← 재생 줄(선수 곡은 사진 32×40, 그 밖은 로고 판 36, 곡 이름, 경과/길이, 응원가로, 정지, 더보기)
 │        00:12 / 01:01          │    더보기는 「지금을 응원가 시작으로」와 볼륨이 든 재생 도구 시트를 연다
 ├───────┬───────┬───────┬──────┤
 │ 안타   │ 아웃   │ 볼넷   │풀카운트│ ← 상황 칸 4×2(칸 높이 52). 상황 이름을 크게 쓰고, 곡이 없는 칸은 비워 둔다
@@ -535,9 +573,9 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 │ [로고 한화 v] [<> 로고 전 팀]   응원 곡 관리 가져오기 설정 │ ═════ 팀 색 3px 띠 ═════ │
 ├──────────────────────────────────────────┤ ┌───────────────────────┐ │
 │ [돋보기 초성이나 이름으로 찾기 ........ /] │ │ YouTube 플레이어       │ │ ← 360×202, 열 위쪽
-│ 선수 22 | 팀 응원가 18     [챕터 순][가나다 순]│ └───────────────────────┘ │
+│ 선수 22 | 팀 응원가 18  [주전순][가나다][자주 튼]│ └───────────────────────┘ │
 │ ┌──────┬──────┬──────┬──────┬──────┐     │ ━━━━━━━│━━━━━━━━━━━━━━━ │ ← 2px 진행 막대
-│ │최인호 │페라자 │문현빈 │강백호 │노시환 │     │ 지금 재생                  │
+│ │문현빈 │노시환 │강백호 │페라자 │허인서 │     │ 지금 재생                  │
 │ ├──────┼──────┼──────┼──────┼──────┤     │ [로고] 노시환              │
 │ │허인서 │ ...                       │     │ 한화 · 00:12 / 01:01 · 응원가 00:30 │
 │ └──────┴──────┴──────┴──────┴──────┘     │ [>> 응원가로][정지 아이콘 정지] │
@@ -558,7 +596,7 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 - [디자인 개편 후속] 「지금을 응원가 시작으로」와 볼륨은 경기 중이 아니라 준비할 때 쓰는 기능이라, 휴대폰에서는 재생 줄의 더보기 버튼(`EllipsisVertical`, 44×44)이 여는 재생 도구 시트에 둔다. 노트북은 지금처럼 오른쪽 열 아래 도구 줄에 둔다. 두 자리는 같은 요소를 PlayerPanel이 한 번 만들어 넣으며, 휴대폰 도구 줄은 CSS로 감추고 시트는 열 때만 그린다. 재생 줄이 더보기 버튼만큼 좁아져 휴대폰에서는 「팀 ·」을 빼고 「경과/길이」만 쓴다(팀은 로고 판으로 보인다).
 - [디자인 개편 후속] 곡을 틀기 전에는 휴대폰 플레이어 자리(`.player-stage`)를 높이 0, `overflow: hidden`으로 접는다. PlayerPanel이 첫 곡을 받은 렌더에서 `has-played`를 붙여 자리를 펼친다. iframe은 접힌 동안에도 같은 크기로 문서에 남아 있어 다시 만들지 않고, 펼칠 때 움직임도 없다(모션 규칙: iframe을 감싸거나 옮기지 않는다). 노트북은 늘 보인다. 바꾸기 전과 360×640에서 새 창의 첫 재생을 80번씩 번갈아 재 보니, 누른 순간부터 PLAYING까지 중앙값 308ms → 314ms, 평균 335.0ms → 323.9ms, 90번째 백분위 385ms → 371ms, 8초 안에 재생되지 않은 횟수(F-01) 9 → 7로 나빠지지 않았다.
 - [디자인 개편 후속] 휴대폰 높이: 머리말 56이 위에 있고, 독(진행 2 + 재생 줄 60 + 상황 칸 105 + 여백 8 = 약 177)이 아래에 붙는다. 첫 곡 전에는 플레이어 자리가 없어 격자 첫 줄이 203에서 시작하고, 맨 위에서 다 보이는 격자 줄은 360×640에서 3줄(+ 걸친 줄 1), 390×844에서 6줄이다. 재생 중에는 플레이어 203px이 더해져 첫 줄이 406에서 시작하고, 360×640에서 0줄(걸친 줄 1), 390×844에서 3줄이다. 첫 곡을 누르는 순간 격자가 플레이어 높이만큼 아래로 밀린다. 스크롤하면 플레이어가 위로 사라지며 격자가 보인다. 재생 중 플레이어는 어떤 요소에도 덮이지 않는다(TC-24).
-- [디자인 개편] 메인 화면은 「선수 N | 팀 응원가 N」 탭으로 격자와 목록 중 하나만 보여 준다. 정렬(챕터 순 / 가나다 순)은 선수 탭에서만 보인다. 탭은 팀이 바뀌면 선수로 돌아간다(TeamLayout이 `key`로 화면을 새로 만든다).
+- [디자인 개편] 메인 화면은 「선수 N | 팀 응원가 N」 탭으로 격자와 목록 중 하나만 보여 준다. 정렬(주전순 / 가나다 / 자주 튼)은 선수 탭에서만 보인다. 폭 360px에서는 탭과 정렬 세 개가 한 줄에 들어가지 않아 정렬이 아랫줄로 내려간다. 탭은 팀이 바뀌면 선수로 돌아간다(TeamLayout이 `key`로 화면을 새로 만든다).
 - [디자인 개편] 상황 칸은 `lib/situationSlots.ts`의 `situationSlots(songs)`가 정한다. 칸 순서는 안타, 아웃, 볼넷, 풀카운트 / 라인업, 라인업 소개, 경기 개시, 기타다. 제목을 `normalize`한 뒤 낱말로 칸을 고른다. "라인업"이 있으면 "소개"나 "수비"가 함께 있을 때 라인업 소개, 아니면 라인업이다. 그 밖에는 안타, 아웃, 볼넷, 풀카운트, 개시(경기 개시) 순으로 보고, 아무것도 없으면 기타다.
   - [디자인 개편 후속] 칸 글자는 `situationLabel(title)`이 정한다. 칸에는 곡 제목에서 고른 상황 이름(안타, 아웃, 볼넷, 풀카운트, 라인업, 라인업 소개, 경기 개시)을 17px 굵게 쓰고, 곡 제목은 그 아래 13px 보조 글자색 한 줄(넘치면 말줄임)로 쓴다. 제목에서 빈칸을 빼고 앞의 「공통」, 뒤의 「송·곡·음악·응원가」를 뗀 말이 상황 이름과 같으면 제목 줄은 생략한다. 처음 데이터의 상황 곡 48곡 중 제목 줄이 남는 곡은 롯데의 「수비 라인업송」「공격 라인업송」 둘이다. 기타 칸은 곡 제목을 크게 쓴다. 다른 칸으로 밀려난 곡도 자기 제목에서 고른 이름을 쓴다. 칸의 접근 가능한 이름은 곡 제목 전체다. 「라인업 소개」는 360px 칸(안쪽 폭 약 65px)에 한 줄로 들어가지 않아 낱말 단위로 두 줄이 된다.
   - 곡은 `order` 순서로 제 칸을 차지하고, 제 칸이 이미 찬 곡(같은 상황의 두 번째 곡)은 9번째 칸부터 줄을 더해 놓는다. 다른 상황의 빈 칸에는 넣지 않는다. 그래서 앞 8칸과 단축키 1~8은 늘 같은 상황이고, 같은 상황은 팀이 바뀌어도 같은 칸에 있다. [STEP 4-2, K-06] 처음에는 밀려난 곡을 앞쪽 빈 칸(예: 아웃 칸)에 넣었는데, 그러면 단축키 2가 볼넷 곡을 트는 일이 생겨 바꿨다.
@@ -610,9 +648,9 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 - 팀 색은 화면을 칠하지 않는다. 쓰는 곳은 재생 중 칸 위쪽 3px 띠와, 재생 중일 때 플레이어 위 3px 띠 두 군데뿐이다. 띠 색은 지금 보는 팀이 아니라 재생 중인 곡의 팀 색이다. 팀 색은 글자 색으로 쓰지 않는다. 그래서 `Team.onColor`는 화면에서 더는 쓰지 않는다.
 - 팀은 로고로 알아본다. 로고는 언제나 같은 밝은 판(#ECE7DD, 모서리 4px) 위에 `object-fit: contain`과 안쪽 여백으로 놓고, 판 크기는 28·36·44px만 쓴다(TeamLogo). 이미지(`public/teams/<팀>.webp`)를 못 읽으면 판 안에 팀 짧은 이름을 쓴다.
 - 글꼴은 Pretendard 하나다. `pretendard@1.3.9`를 설치하고 가변 글꼴의 글자 범위별 CSS(`dist/web/variable/pretendardvariable-dynamic-subset.css`)를 `main.tsx`에서 불러 Vite가 글꼴 파일을 묶는다(CDN 없음). 브라우저는 화면에 나온 글자 범위의 조각(woff2)만 받는다. 굵기별 정적 CSS는 828개 `@font-face`라 묶은 CSS가 536kB(gzip 190kB)였고, 가변 글꼴은 92개라 훨씬 작다. 크기와 굵기: 머리말 팀 이름 22/700, 선수 이름 18/600, 지금 재생 제목 17/700, 탭·버튼 15~16, 보조 13, 개수 12. 숫자는 `tabular-nums`, 줄바꿈은 `word-break: keep-all`.
-- 카드와 그림자는 없다. 격자와 목록은 1px 선으로 나눈다. 격자는 칸마다 1px 외곽선(`outline`)을 그리고 칸 사이를 1px 띄워, 마지막 줄의 빈 자리에는 선이 생기지 않게 한다. 모서리는 판·격자 칸 4px, 버튼·입력칸 10px 두 가지뿐이다. 간격은 4의 배수(4, 8, 12, 16, 24, 32), 화면 옆 여백은 16px다.
+- 카드와 그림자는 없다. 격자와 목록은 1px 선으로 나눈다. 격자는 칸마다 1px 외곽선(`outline`)을 그리고 칸 사이를 1px 띄워, 마지막 줄의 빈 자리에는 선이 생기지 않게 한다. 모서리는 판·격자 칸 4px, 버튼·입력칸 10px 두 가지뿐이다(한 가지 예외: 선수 사진 3px, 5.5절). 간격은 4의 배수(4, 8, 12, 16, 24, 32), 화면 옆 여백은 16px다.
 - 아이콘은 `lucide-react@1.73.0`만 쓰고 `strokeWidth`는 1.75다. 이모지나 기호 글자(▶ ■ ⇄ ☰ ✕ ‹ › ▾ ▴ → 등)를 아이콘으로 쓰지 않는다. 아이콘만으로 뜻이 모호하면 글자를 함께 둔다(「전 팀」, 「응원가로」, 노트북의 「정지」). 아이콘만 있는 버튼(메뉴, 닫기, 휴대폰의 정지)은 `aria-label`을 단다.
-- 누를 수 있는 것은 모두 44×44px 이상이다. 선수 칸 68, 팀 응원가 줄·상황 칸 52.
+- 누를 수 있는 것은 모두 44×44px 이상이다. 선수 칸 84(사진 때문에 68에서 늘렸다), 팀 응원가 줄·상황 칸 52.
 - 쓰지 않는 것: 그라디언트 바탕, 네온, 빛 번짐, 유리 효과, 보라색 강조, 이모지, 뜻 없는 배지, 카드 그림자, 팀 색으로 화면 칠하기, 들뜬 문구, 누를 때 커지거나 튀는 효과, 로딩 뼈대 화면. 문구는 짧은 평서문이다.
 
 글자 대비(WCAG 상대 휘도 공식, 실제로 놓이는 바탕마다 계산):
@@ -625,7 +663,8 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 | #171513 판 위 글자 | 쓰지 않음 | 쓰지 않음 | 쓰지 않음 | 14.78 |
 
 - 주 버튼에 마우스를 올리면 바탕이 #DDD7CB가 되고, 그 위 #171513 글자 대비는 12.71이다.
-- 셋째 글자는 #302D29(선 색) 위에서 4.17이라 선 위에는 글자를 두지 않는다. 재생 중인 밝은 판 위에서는 보조·셋째 글자도 모두 #171513으로 바꾼다(`.is-playing *`).
+- 셋째 글자는 #302D29(선 색) 위에서 4.17이라 선 위에는 글자를 두지 않는다. 재생 중인 밝은 판 위에서는 보조·셋째 글자도 모두 #171513으로 바꾼다(`.is-playing *`, 선수 칸의 포지션·횟수 글자는 `.is-playing .player-sub`).
+- [STEP 3-⑪] 새로 놓인 글자 조합: 선수 칸의 포지션·「N번」(12px, #ABA49A)은 칸 바탕 #131211에서 7.58, 누르거나 마우스를 올린 #252320에서 6.35다. 재생 중 칸에서는 #171513으로 바뀌어 #ECE7DD 위에서 14.78이다(마우스를 올린 재생 칸 #DDD7CB 위에서 12.71). 「최근 튼 곡」 제목(13px, #ABA49A)은 #131211에서 7.58이다. 모두 4.5 이상이다.
 
 #### 모션 [STEP 3-9]
 
@@ -659,6 +698,29 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 - transform과 opacity만 움직인다(예외는 재생 줄 높이). 프레임마다 React 상태를 바꾸지 않는다.
 - 동작 줄이기: 앱 전체를 `<MotionConfig reducedMotion="user">`로 감싸, 시스템의 동작 줄이기가 켜지면 옮기기·크기·스프링이 순간 적용되고 페이드만 남는다. 누름은 아예 꺼지고, 창·메뉴를 닫을 때는 옮기기 없이 사라지기만 한다(순간 이동으로 튀지 않게). E2E는 이 설정(`playwright.config.ts`의 `reducedMotion: 'reduce'`)으로 돈다.
 
+### 5.5 선수 정보·사진·정렬·최근 곡 [STEP 3-⑪]
+
+선수 이름만으로는 누구인지 알아보기 어려워, 선수 칸에 포지션과 사진을 붙이고 순서를 자주 쓰는 선수가 앞에 오게 했다. 노트북 배치는 다음 단계에서 다시 짜므로 이 단계는 지금 배치를 건드리지 않고 칸만 키웠다.
+
+**데이터와 연결.** 선수 기록은 `src/data/players-2026.json`(596명, 팀별 배열)이고 `lib/players.ts`의 `parsePlayers(unknown)`가 항목마다 타입 검사를 해 읽는다(틀린 항목은 건너뜀). `buildPlayerIndex`가 팀마다 `정규화한 이름 → 선수` 사전을 만들고, 같은 이름이 둘이면 값을 `null`로 둬 잇지 않는다(BR-45). `findPlayer`는 선수 곡만 찾는다. 앱은 `data/players.ts`의 `playerOf(song)`로 쓴다(번들 데이터라 한 번만 만든다). LG에는 한 선수가 「오스틴」(기록 있음)과 「오스틴 딘」(기록 없음) 두 줄로 있고 선수 ID가 같다. 이름이 다르므로 서로 다른 선수로 다루고, 곡 「오스틴」은 기록이 있는 쪽에 이어진다. 처음 데이터의 선수 곡 235곡은 모두 이어지고, 이어진 곡 모두 사진이 있으며 누끼는 173곡, 타석 기록은 229곡에 있다(`data/players.test.ts`가 이 숫자를 지킨다).
+
+**정렬(`lib/playerSort.ts`).** `sortPlayerSongs(songs, sort, { playerOf, counts })`는 새 배열을 돌려준다. 주전순은 타석 수 내림차순이고 같으면 가나다, 기록이 없거나 이어지지 않은 곡은 맨 아래 가나다다. 가나다는 `localeCompare('ko')`에 등록 순서를 보조로 둔다. 자주 튼은 횟수 내림차순에 주전순을 보조로 둔다. 「자주 튼」의 순서에 쓰는 횟수는 MainPage가 화면을 열 때와 정렬을 고를 때 한 번 찍어 두고(`order` 상태), 곡을 누를 때마다 다시 정하지 않는다. 눌러서 칸이 옮겨 가면 연달아 다른 선수를 누르기 어렵기 때문이다. 칸의 「N번」 글자는 실시간 횟수라 바로 바뀐다. 팀을 바꾸면 MainPage가 새로 만들어져 그때의 횟수로 다시 정해진다.
+
+**튼 기록(`lib/history.ts`, `context/HistoryContext.tsx`).** `recordPlay(history, id)`는 순수 함수로 횟수를 올리고 최근 곡 맨 앞에 놓는다(같은 id는 앞으로 옮기고 10개를 넘으면 가장 오래된 것을 뺌). `PlayerContext.play`가 곡을 틀 때 `recordPlay`를 부른다(종류 상관없이, 재생 성공 전에). 저장은 Prefs와 같은 방식이다. 상태가 바뀔 때 `saveHistory`를 부르고, 실패하면 다시 성공할 때까지 한 번만 알린다(EX-15, EX-31). `recentSongs(history, songs)`가 지운 곡의 id를 건너뛴다. 기록은 지우지 않아, 곡을 다시 등록하면 같은 id일 때만 횟수가 이어진다(가져오기는 새 id를 만들므로 사실상 이어지지 않는다). Provider 순서는 Notice → Prefs → History → Songs → Player다(Player가 History를 쓴다).
+
+**선수 칸(`PlayerGrid`).** 칸은 `PressCell`이고, 안의 내용(`.player-cell-body`)은 이름(18/600) 아래에 포지션(12px, `--text-2`)과 「N번」(12px)이 세로로 쌓인다. 사진은 줄어들지 않는 `extra`로 칸 오른쪽 아래에 `position: absolute; right: 8px; bottom: 0`로 붙는다. 사진을 눌림 때 줄어드는 내용 안에 두면 `transform-origin: left center` 기준으로 줄어 사진이 아래 선에서 떠 버리기 때문이다(상황 칸의 단축키 번호와 같은 이유). 칸은 `min-height: 84`(이름 줄 10+22, 사진 50이 이름 줄 아래에서 시작) 하나로 정해 한 팀 격자의 칸 높이가 같고, 사진이 이름을 가리지 않는다. 이름은 한 줄이고 넘치면 말줄임이다. 포지션은 `max-width: calc(100% - 40px)`로 사진 왼쪽까지만 쓴다. 접근 가능한 버튼 이름은 곡 제목 그대로 두려고 포지션·횟수 글자는 `aria-hidden`이다.
+
+**사진 자리(`PlayerPortrait`).** 크기는 칸 40×50, 검색 결과 줄 32×40(줄 왼쪽, 줄 아래 선에 붙음), 재생 줄 32×40(칸 안 가운데, 모서리 4px)이다. 사진 비율은 4:5다. 칸과 줄의 사진은 위쪽 모서리만 3px 둥글다(학생이 정한 예외 값. 판·칸은 4px, 버튼은 10px 규칙의 밖이다). 구단 기본 아바타를 항상 먼저 깔고 사진 `img`는 불러온 뒤(`onLoad`)에만 보이게(`opacity`) 한다. 사진 요청이 실패하면(`onError`) 사진 요소를 치운다. 그래서 불러오는 동안과 실패 뒤에도 깨진 그림 표시가 없고, 아바타로 매끄럽게 내려간다. 사진 주소는 사진이 있다고 표시된 선수만 요청한다(BR-51). 사진과 아바타는 장식이라 `alt=""`, `aria-hidden`이다. 검색 결과 줄과 재생 줄에서 선수 곡이 아닌 곡은 이전처럼 로고 판(`TeamLogo`)이다. 검색 결과에서 다른 팀 곡의 팀 로고 판 28과 팀 이름은 그대로 오른쪽에 둔다.
+
+**기본 아바타 크기.** 원본 512px(260KB)를 `scripts/optimize-avatars.mjs`(sharp, `fit: 'inside'`, `withoutEnlargement`)로 256px WebP(품질 82, 5~6KB)로 줄여 `public/avatars/<팀ID>.webp`에 둔다(10개 합 약 56KB, 원본 2.6MB). 지금 칸은 40×50이라 3배 화면에서도 120×150이면 충분하지만, 다음 단계에서 키울 카드(가로 120px대, 2배 화면 기준 약 250px)에도 선명하도록 256px로 정했다. 더 키우면 파일만 커진다. 원본은 `assets/avatars-original/`(README 포함)에 두고 배포물에 넣지 않는다(로고의 `assets/teams-original`과 같은 방식). 사진 `object-fit: cover`, `object-position: center top`으로 네모 아바타를 4:5로 자른다.
+
+**최근 곡(`MainPage`).** 검색칸의 `onFocus`·`onBlur`로 커서 여부를 알고, 커서가 있고 검색어가 비면 격자 대신 「최근 튼 곡」과 `SearchResults`(검색 결과와 같은 줄 모양, 같은 `onPick` 규칙)를 보여 준다. 줄을 누르면 재생하고, 다른 팀이면 그 팀으로 이동(BR-33)한 뒤 검색칸을 벗어난다. 휴대폰은 이 목록이 키보드가 올라온 화면에서 쓰는 주된 자리다. 노트북에서도 같은 동작으로 두었다(`/`로 검색칸에 가면 왼쪽 열에 나온다). 노트북 전용 고정 자리(예: 오른쪽 열이나 격자 위 줄)는 만들지 않았다. 오른쪽 열은 이미 플레이어·재생 줄·상황 칸·도구로 차 있고, 격자 위에 고정 줄을 두면 격자가 밀려 다음 단계의 노트북 배치와 부딪치기 때문이다. 노트북 배치를 다시 짤 때 고정 자리를 정한다.
+
+**사진 파일 경로와 개발·배포.** 앱은 `/players/<팀ID>/<선수ID>.jpg`를 읽는다(누끼 `/players/<팀ID>/cutout/<선수ID>.webp`는 이번 단계에서 화면에 쓰지 않는다). 사진은 저장소 밖 폴더(기본 위치 `../kbo-cheer-web-media/players/…`)에 있고 저장소·`public/`에는 넣지 않는다.
+
+- 개발: `.env.local`의 `KBO_MEDIA_DIR`(VITE_ 접두사가 없어 브라우저 번들에 들어가지 않음)에 폴더를 적으면, `vite.config.ts`의 `playerMedia` 플러그인(`playerMediaPlugin.ts`)이 `/players/*`를 그 폴더의 `players/` 아래에서 내준다. 확장자는 `.jpg`·`.webp`만, 경로가 폴더 밖으로 나가는 요청은 막는다. 환경 변수가 없거나 폴더·파일이 없으면 404이고 화면은 아바타로 내려간다. `vite preview`에도 같은 플러그인이 붙는다.
+- 배포: `npm run build:deploy`(`scripts/build-deploy.mjs`)가 폴더 확인 → `npm run build` → `players/`의 `.jpg`·`.webp`를 `dist/players/`로 복사한다. 폴더가 없거나 비어 있으면 빌드 전에 안내를 쓰고 실패한다. 폴더 위치는 `KBO_MEDIA_DIR`, 없으면 `../kbo-cheer-web-media`다. 그다음 `npx wrangler deploy`는 기존과 같다. 공개 주소는 없는 경로를 `index.html`로 돌려주므로(SPA), 사진이 없는 선수를 요청하면 HTML이 오는데, 이 경우에도 `img`가 그림이 아니라서 `onError`가 불려 아바타로 내려간다. 사진이 있다고 표시된 선수만 요청하므로 이런 일은 거의 없다.
+
 ## 6. 컴포넌트 구조
 
 ### 6.1 계층
@@ -668,9 +730,10 @@ App
 └ BrowserRouter
   └ NoticeProvider
     └ PrefsProvider
-      └ SongsProvider
-        └ PlayerProvider
-          └ Routes
+      └ HistoryProvider                          [STEP 3-⑪]
+        └ SongsProvider
+          └ PlayerProvider
+            └ Routes
             └ AppLayout
               ├ Header
               │ ├ 팀 버튼 → TeamSheet(dialog) → TeamGrid [디자인 개편]
@@ -683,7 +746,8 @@ App
               │ │   ├ MainPage
               │ │   │ ├ SearchBox
               │ │   │ ├ SearchResults          (검색어 있을 때)
-              │ │   │ ├ PlayerGrid             (검색어 없고 선수 탭)
+              │ │   │ ├ 최근 튼 곡 → SearchResults (검색칸에 커서, 검색어 없을 때) [STEP 3-⑪]
+              │ │   │ ├ PlayerGrid → PlayerPortrait (검색어 없고 선수 탭)
               │ │   │ ├ TeamSongList           (검색어 없고 팀 응원가 탭)
               │ │   │ ├ EmptyState             (팀에 곡이 없을 때)
               │ │   │ └ SituationGrid, 단축키 안내 (PlayerPanel의 .dock-situations에 포털로) [디자인 개편]
@@ -699,6 +763,7 @@ App
               │ └ SettingsPage
               └ PlayerPanel
                 ├ PlayerHost                (player-stage 안)
+                ├ 재생 줄: PlayerPortrait(선수 곡) 또는 TeamLogo
                 ├ VolumeSlider              (「지금을 응원가 시작으로」와 함께. 노트북은 player-tools, 휴대폰은 재생 도구 시트)
                 ├ Sheet                     (재생 도구 시트, 휴대폰) [디자인 개편 후속]
                 └ Toast                     (독 안) [STEP 3-7]
@@ -719,15 +784,16 @@ App
 | HomeRedirect | 마지막 팀으로 `<Navigate>` 또는 팀 선택 화면 | 없음 | Prefs |
 | TeamSelectPage | 10개 팀 로고 격자(TeamGrid) | 없음 | 없음(useNavigate) |
 | TeamLayout | teamId 검사, 팀 방문 기록(`visitTeam`), `<Outlet key={teamId}>` [R-23] | 없음 | Prefs |
-| MainPage | 검색어·탭 상태, 곡 나누기(선수/팀/상황), 선수 정렬, `situationSlots`로 상황 칸 만들기, 단축키 연결, 상황 칸을 독 자리에 포털로 그림 [STEP 3-7, 디자인 개편] | 없음 | Songs, Prefs, Player, SituationSlot |
-| SearchBox | 검색 입력칸 | `value: string`, `onChange(v: string): void`, `inputRef: RefObject<HTMLInputElement \| null>` | 없음 |
-| SearchResults | 검색 결과 목록(52px 줄), 다른 팀 결과에 로고 판 28과 팀 이름 | `hits: SearchHit[]`, `nowPlayingId: string \| null`, `onPick(song: Song): void` | 없음 |
-| PlayerGrid | 선수 이름 칸 격자(휴대폰 3열, 칸 높이 68) | `songs: Song[]`, `nowPlayingId: string \| null`, `onPlay(song: Song): void` | 없음 |
+| MainPage | 검색어·탭·검색칸 커서 상태, 곡 나누기(선수/팀/상황), 선수 정렬(`sortPlayerSongs`), 최근 곡, `situationSlots`로 상황 칸 만들기, 단축키 연결, 상황 칸을 독 자리에 포털로 그림 [STEP 3-7, 디자인 개편, STEP 3-⑪] | 없음 | Songs, Prefs, History, Player, SituationSlot |
+| SearchBox | 검색 입력칸. 커서 여부를 `onFocus`·`onBlur`로 알린다(최근 곡) | `value: string`, `onChange(v: string): void`, `inputRef: RefObject<HTMLInputElement \| null>`, `onFocus?(): void`, `onBlur?(): void` | 없음 |
+| SearchResults | 검색 결과·최근 곡 목록(52px 줄), 선수 곡은 왼쪽에 사진 32×40, 다른 팀 결과에 로고 판 28과 팀 이름 | `hits: SearchHit[]`, `nowPlayingId: string \| null`, `onPick(song: Song): void` | 없음 |
+| PlayerGrid | 선수 칸 격자(휴대폰 3열, 칸 높이 84): 이름, 포지션, 「자주 튼」일 때 「N번」, 오른쪽 아래 사진 [STEP 3-⑪] | `songs: Song[]`, `nowPlayingId: string \| null`, `counts?: Readonly<Record<string, number>>`, `onPlay(song: Song): void` | 없음 |
+| PlayerPortrait | 구단 아바타 위에 선수 사진을 덮는 사진 자리. 사진이 없거나 실패하면 아바타만. `cell` 40×50, `row`·`dock` 32×40 [STEP 3-⑪] | `teamId: TeamId`, `player: PlayerInfo \| null`, `size: 'cell' \| 'row' \| 'dock'` | 없음 |
 | TeamSongList | 팀 응원가 목록(번호와 제목, 52px 줄) | `songs: Song[]`, `nowPlayingId: string \| null`, `onPlay(song: Song): void` | 없음 |
 | SituationGrid | 상황 칸 4×2(칸 높이 52), 상황 이름과 필요할 때만 곡 제목 줄(`situationLabel`), 빈 칸은 누를 수 없음, 노트북에서 칸마다 단축키 번호 [디자인 개편, 후속] | `cells: (Song \| null)[]`, `nowPlayingId: string \| null`, `onPlay(song: Song): void` | 없음 |
 | EmptyState | 곡 없음 문구, 가져오기 링크(EX-16). 메인과 곡 관리에서 함께 씀 | `teamId: TeamId` | 없음 |
 | StatusMessage | 빈 상태·불러오는 중·오류·안내 문구 한 가지 모양 [STEP 3-7] | `tone: 'empty' \| 'loading' \| 'error' \| 'info'`, `children: ReactNode`, `action?: ReactNode` | 없음 |
-| PlayerPanel | 플레이어 자리(재생 중 곡의 팀 색 띠, 휴대폰은 첫 곡 전에 접힘), 도구 줄(「지금을 응원가 시작으로」, 볼륨. 휴대폰은 더보기 버튼이 여는 재생 도구 시트), 독(진행 막대, 재생 줄, 응원가로, 정지, 더보기, 알림, 상황 칸 자리). 응원가 시작 버튼 활성 여부와 진행 시간을 250ms마다 스스로 갱신 [C-10, STEP 3-7] | `situationSlotRef(el: HTMLDivElement \| null): void` | Player, Songs, Prefs |
+| PlayerPanel | (재생 줄에 선수 곡은 사진, 그 밖은 로고 판) 플레이어 자리(재생 중 곡의 팀 색 띠, 휴대폰은 첫 곡 전에 접힘), 도구 줄(「지금을 응원가 시작으로」, 볼륨. 휴대폰은 더보기 버튼이 여는 재생 도구 시트), 독(진행 막대, 재생 줄, 응원가로, 정지, 더보기, 알림, 상황 칸 자리). 응원가 시작 버튼 활성 여부와 진행 시간을 250ms마다 스스로 갱신 [C-10, STEP 3-7] | `situationSlotRef(el: HTMLDivElement \| null): void` | Player, Songs, Prefs |
 | PlayerHost | 플레이어가 들어갈 DOM 자리 | 없음 | Player(`attachHost`) |
 | VolumeSlider | 볼륨 0~100, iOS 안내(EX-24) | `value: number`, `onChange(v: number): void`, `supported: boolean` | 없음 |
 | SongListPage | 팀 곡을 종류별로 나열 | 없음 | Songs, Player |
@@ -782,6 +848,8 @@ interface SearchHit {
 | 곡 목록 | SongsContext | useReducer | 여러 화면(메인, 곡 관리, 수정, 가져오기, 설정, 플레이어)이 같이 읽고 바꾼다. 바꾸는 방법이 5가지로 정해져 있어 리듀서가 맞다 |
 | 현재 팀·전 팀 | PrefsContext | useState | 머리말, 처음 화면, TeamLayout이 쓴다. 단순 값 두 개라 리듀서까지 필요 없다 |
 | 볼륨·격자 정렬 | PrefsContext | useState | 플레이어(볼륨)와 메인 화면(정렬)이 쓴다 |
+| 튼 횟수·최근 곡 | HistoryContext | useState + 순수 함수 `recordPlay` | 플레이어(기록하기)와 메인 화면(횟수·최근 곡 표시)이 쓴다. 곡 목록과 따로 저장한다(BR-49) [STEP 3-⑪] |
+| 검색칸 커서 여부, 「자주 튼」 순서에 쓴 횟수 | MainPage | useState | 메인 화면 안에서만 쓴다. 팀이 바뀌면 새로 만들어진다 [STEP 3-⑪] |
 | 재생 중 곡(ID·구간), 재생 상태, 플레이어 준비 여부 | PlayerContext | useState + 같은 값의 ref | 화면은 state로, 타이머·이벤트 처리기는 ref로 읽는다 [R-04, C-11] |
 | YouTube 플레이어 객체, 타이머, 대기 중 재생 요청 | PlayerContext | useRef | 화면을 다시 그릴 필요가 없는 값이다 |
 | 「지금을 응원가 시작으로」 활성 여부 | PlayerPanel | useState(boolean) | 재생 위치에 따라 바뀌므로 PlayerPanel이 스스로 주기적으로 계산한다. 값이 바뀔 때만 다시 그린다 [C-10] |
@@ -790,7 +858,7 @@ interface SearchHit {
 | 가져오기 단계·후보 | ImportPage | useState | 저장 전에는 다른 화면과 공유하지 않는다(BR-08). 후보의 파생 값은 상태로 두지 않는다 [C-08, C-09] |
 | 폼 입력값·오류 | SongForm | useState | 저장 전 임시 값이다 |
 
-Provider 순서는 의존 관계 순이다: Notice(아무도 의존 안 함) → Prefs(알림) → Songs(알림) → Player(곡 목록: 최신 곡 읽기·삭제 감지, 설정: 볼륨, 알림).
+Provider 순서는 의존 관계 순이다: Notice(아무도 의존 안 함) → Prefs(알림) → History(알림) → Songs(알림) → Player(곡 목록: 최신 곡 읽기·삭제 감지, 설정: 볼륨, 튼 기록, 알림).
 
 ### 7.2 SongsContext (useReducer + Context)
 
@@ -1336,6 +1404,7 @@ useEffect(() => () => requestRef.current?.abort(), [])
 ```
 PlayerGrid 버튼 onClick
  → MainPage.onPlay(song) → PlayerContext.play(song)
+   → HistoryContext.recordPlay(song.id): 튼 횟수 +1, 최근 곡 맨 앞 [STEP 3-⑪]
    → segRef·nowPlaying = { songId, videoId, start, end }, status 'starting'
    → player.loadVideoById({ videoId, startSeconds: start, endSeconds: end })
    → tick: getPlayerState() === PLAYING → status 'playing'
@@ -1419,7 +1488,7 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 | FR-01 팀 목록·선택 | `teams.ts`, TeamSheet, TeamGrid, TeamSelectPage, 라우트 `/team/:teamId` | 1.3, 5.1, 6.2 |
 | FR-02 마지막 팀 복원 | TeamState, `kboCheer.team`, HomeRedirect | 3.1, 5.1, 7.3 |
 | FR-03 전 팀 전환 | PrevTeamButton, visitTeam | 7.3, 12.3 |
-| FR-04 선수 격자 | PlayerGrid, Song.order, CSS auto-fill 격자 | 1.2, 5.2, 6.2 |
+| FR-04 선수 격자 | PlayerGrid, `sortPlayerSongs`, CSS auto-fill 격자 | 1.2, 5.2, 6.2 |
 | FR-05 선수 곡 재생 | play, loadVideoById(endSeconds), 감시 타이머 | 8.3 |
 | FR-06 응원가로 | skipToCheer, PlayerPanel | 8.4 |
 | FR-07 상황 버튼 | SituationGrid, `situationSlots`, kind = 'situation', 파생 중복 판정, 폼 경고 | 4.6, 6.2 |
@@ -1442,8 +1511,13 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 | FR-24 볼륨 조절 | VolumeSlider, Settings.volume, volumeRef | 7.3, 8.5 |
 | FR-25 페이드아웃 | stop, startFade, cancelFade, finish | 8.5 |
 | FR-26 구단 표시 | TeamLogo(`public/teams/<팀>.webp`), Team.color(재생 중 띠), useMatch | 1.3, 5.1, 5.2, 5.4 |
-| FR-27 격자 정렬 | Settings.gridSort, PlayerGrid | 7.3, 6.2 |
+| FR-27 격자 정렬 | Settings.gridSort, `sortPlayerSongs`, `parseGridSort` | 3.1, 5.5, 7.3, 6.2 |
 | FR-28 접속 주소 안내 | dataApiAvailability('lanHost'), DataApiNotice, 설정 화면 접속 주소 | 5.2, 10.1 |
+| FR-29 선수 정보 연결 | `players-2026.json`, `parsePlayers`, `buildPlayerIndex`, `findPlayer`, `playerOf` | 5.5 |
+| FR-30 선수 칸 정보 | PlayerGrid(이름·포지션·`extra` 사진), `.player-cell` CSS | 5.2, 5.5 |
+| FR-31 선수 사진과 기본 아바타 | PlayerPortrait, `photoUrl`, `avatarUrl`, `public/avatars`, `playerMediaPlugin.ts`, `build-deploy.mjs` | 5.5 |
+| FR-32 튼 횟수 | `history.ts`, HistoryContext, `kboCheer.history` | 3.1, 5.5 |
+| FR-33 최근 튼 곡 | `recentSongs`, MainPage 최근 곡, SearchBox 커서 | 5.5 |
 
 ### 14.2 비기능 요구사항
 

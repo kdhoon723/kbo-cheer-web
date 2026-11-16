@@ -1,11 +1,13 @@
 //20241476-김도훈-(2026-11-15)
 import { isTeamId } from '../data/teams.ts'
-import type { Settings, Song, TeamState } from '../types.ts'
+import type { GridSort, PlayHistory, Settings, Song, TeamState } from '../types.ts'
+import { EMPTY_HISTORY, parseHistory } from './history.ts'
 import { isRecord, isSongArray } from './songValidation.ts'
 
 export const SONGS_KEY = 'kboCheer.songs'
 export const TEAM_KEY = 'kboCheer.team'
 export const SETTINGS_KEY = 'kboCheer.settings'
+export const HISTORY_KEY = 'kboCheer.history'
 export const BROKEN_KEY = 'kboCheer.songs.broken'
 
 export type LoadStatus = 'ok' | 'missing' | 'corrupt' | 'unavailable'
@@ -14,7 +16,7 @@ export interface LoadResult<T> {
   status: LoadStatus
 }
 
-export const DEFAULT_SETTINGS: Settings = { volume: 100, gridSort: 'chapter' }
+export const DEFAULT_SETTINGS: Settings = { volume: 100, gridSort: 'starters' }
 const DEFAULT_TEAM_STATE: TeamState = { currentTeamId: null, prevTeamId: null }
 
 type RawRead = { kind: 'ok'; raw: string } | { kind: 'missing' } | { kind: 'unavailable' }
@@ -61,16 +63,13 @@ function isTeamState(x: unknown): x is TeamState {
   return isTeamId(currentTeamId) && (prevTeamId === null || isTeamId(prevTeamId))
 }
 
-function isSettings(x: unknown): x is Settings {
-  if (!isRecord(x)) return false
-  const { volume, gridSort } = x
-  return (
-    typeof volume === 'number' &&
-    Number.isInteger(volume) &&
-    volume >= 0 &&
-    volume <= 100 &&
-    (gridSort === 'chapter' || gridSort === 'name')
-  )
+/** 예전 값('chapter')이나 알 수 없는 값은 기본 정렬로 바꾼다. 볼륨까지 버리지 않는다 */
+function parseGridSort(x: unknown): GridSort {
+  return x === 'starters' || x === 'name' || x === 'frequent' ? x : DEFAULT_SETTINGS.gridSort
+}
+
+function isVolume(x: unknown): x is number {
+  return typeof x === 'number' && Number.isInteger(x) && x >= 0 && x <= 100
 }
 
 export function loadSongs(seed: Song[]): LoadResult<Song[]> {
@@ -113,12 +112,25 @@ export function loadSettings(): LoadResult<Settings> {
   if (read.kind === 'unavailable') return { value: DEFAULT_SETTINGS, status: 'unavailable' }
   if (read.kind === 'missing') return { value: DEFAULT_SETTINGS, status: 'missing' }
   const data = parseJson(read.raw)
-  if (isRecord(data) && data.version === 1 && isSettings(data)) {
-    return { value: { volume: data.volume, gridSort: data.gridSort }, status: 'ok' }
+  if (isRecord(data) && data.version === 1 && isVolume(data.volume)) {
+    return { value: { volume: data.volume, gridSort: parseGridSort(data.gridSort) }, status: 'ok' }
   }
   return { value: DEFAULT_SETTINGS, status: 'corrupt' }
 }
 
 export function saveSettings(settings: Settings): boolean {
   return write(SETTINGS_KEY, { version: 1, ...settings })
+}
+
+export function loadHistory(): LoadResult<PlayHistory> {
+  const read = readRaw(HISTORY_KEY)
+  if (read.kind === 'unavailable') return { value: EMPTY_HISTORY, status: 'unavailable' }
+  if (read.kind === 'missing') return { value: EMPTY_HISTORY, status: 'missing' }
+  const data = parseJson(read.raw)
+  const history = isRecord(data) && data.version === 1 ? parseHistory(data) : null
+  return history ? { value: history, status: 'ok' } : { value: EMPTY_HISTORY, status: 'corrupt' }
+}
+
+export function saveHistory(history: PlayHistory): boolean {
+  return write(HISTORY_KEY, { version: 1, ...history })
 }

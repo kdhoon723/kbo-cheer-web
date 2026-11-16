@@ -8,8 +8,10 @@ import {
   nowTitle,
   pickTeam,
   playerButton,
+  playerNames,
   prevTeamButton,
   situationButton,
+  starterOrder,
   teamSongs,
   teamTrigger,
 } from './helpers.ts'
@@ -64,10 +66,10 @@ test.describe('2. 팀 선택·전환', () => {
     await page.goto('/')
     await page.locator('.team-grid').getByRole('button', { name: '한화', exact: true }).click()
     await expect(page).toHaveURL(/\/team\/hanwha$/)
-    const expected = teamSongs('hanwha', 'player').map((s) => s.title)
-    expect(expected.slice(0, 3)).toEqual(['최인호', '페라자', '문현빈'])
+    const expected = starterOrder('hanwha')
+    expect(expected.slice(0, 3)).toEqual(['문현빈', '노시환', '강백호'])
     await expect(page.locator('.player-grid button')).toHaveCount(22)
-    await expect(page.locator('.player-grid button')).toHaveText(expected)
+    await expect(playerNames(page)).toHaveText(expected)
   })
 
   test('TC-03 마지막 팀 복원', async ({ page }) => {
@@ -77,7 +79,7 @@ test.describe('2. 팀 선택·전환', () => {
     await page.reload()
     await page.goto('/')
     await expect(page).toHaveURL(/\/team\/hanwha$/)
-    await expect(page.locator('.player-grid button').first()).toHaveText('최인호')
+    await expect(playerNames(page).first()).toHaveText('문현빈')
   })
 
   test('TC-04 전 팀 전환', async ({ page }) => {
@@ -165,11 +167,14 @@ test.describe('3. 메인 화면과 검색', () => {
       .map((s) => s.title)
       .sort((a, b) => a.localeCompare(b, 'ko'))
     expect(byName.slice(0, 3)).toEqual(['강백호', '김태연', '노시환'])
-    await page.getByRole('button', { name: '가나다 순' }).click()
-    await expect(page.locator('.player-grid button')).toHaveText(byName)
+    await expect(page.getByRole('button', { name: '주전순', exact: true })).toHaveAttribute('aria-pressed', 'true')
+    await page.getByRole('button', { name: '가나다', exact: true }).click()
+    await expect(playerNames(page)).toHaveText(byName)
     await page.reload()
-    await expect(page.getByRole('button', { name: '가나다 순' })).toHaveAttribute('aria-pressed', 'true')
-    await expect(page.locator('.player-grid button')).toHaveText(byName)
+    await expect(page.getByRole('button', { name: '가나다', exact: true })).toHaveAttribute('aria-pressed', 'true')
+    await expect(playerNames(page)).toHaveText(byName)
+    await page.getByRole('button', { name: '주전순', exact: true }).click()
+    await expect(playerNames(page)).toHaveText(starterOrder('hanwha'))
   })
 
   test('TC-08 상황 버튼·팀 응원가', async ({ page }) => {

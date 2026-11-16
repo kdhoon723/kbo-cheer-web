@@ -5,6 +5,7 @@ import { isIOS } from '../lib/env.ts'
 import { cheerTarget, isLeftoverStop, isStalePosition, playerErrorMessage } from '../lib/playback.ts'
 import { loadYouTubeIframeApi } from '../player/youtubeIframe.ts'
 import type { NowPlaying, Song } from '../types.ts'
+import { useHistory } from './historyState.ts'
 import { useNotice } from './NoticeContext.tsx'
 import { usePrefs } from './PrefsContext.tsx'
 import { useSongs } from './SongsContext.tsx'
@@ -44,6 +45,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const { songs } = useSongs()
   const { settings } = usePrefs()
   const { notify } = useNotice()
+  const { recordPlay } = useHistory()
 
   const [apiAttempt, setApiAttempt] = useState(0)
   const [apiState, setApiState] = useState<PlayerApiState>('loading')
@@ -177,6 +179,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       pendingRef.current = null
       bufferingSinceRef.current = null
       bufferingNoticedRef.current = false
+      recordPlay(song.id)
       const seg: NowPlaying = { songId: song.id, videoId: song.videoId, start: song.start, end: song.end }
       segRef.current = seg
       setNowPlaying(seg)
@@ -193,7 +196,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
       }
       loadSegment(seg)
     },
-    [apiState, cancelFade, clearAutoplayCheck, loadSegment, notify, setStatusBoth],
+    [apiState, cancelFade, clearAutoplayCheck, loadSegment, notify, recordPlay, setStatusBoth],
   )
 
   const stop = useCallback(() => {

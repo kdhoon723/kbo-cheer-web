@@ -1,0 +1,5390 @@
+{
+ "season": 2026,
+ "source": "KBO 공식 기록실 2026 정규시즌 타자 기본 기록(경기·타석)과 수비 기록(포지션), 구단·KBO 선수 사진 유무",
+ "teams": {
+  "kiwoom": [
+   {
+    "name": "고영우",
+    "playerId": "54344",
+    "position": "내야수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "권혁빈",
+    "playerId": "55371",
+    "position": "유격수",
+    "games": 107,
+    "plateAppearances": 326,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김건희",
+    "playerId": "53312",
+    "position": "포수",
+    "games": 122,
+    "plateAppearances": 410,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김동규",
+    "playerId": "53164",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김동헌",
+    "playerId": "53344",
+    "position": "포수",
+    "games": 43,
+    "plateAppearances": 113,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김서준",
+    "playerId": "55359",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김선기",
+    "playerId": "66018",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김성민",
+    "playerId": "67828",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김성진",
+    "playerId": "51301",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김시앙",
+    "playerId": "51303",
+    "position": "포수",
+    "games": 3,
+    "plateAppearances": 2,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김연주",
+    "playerId": "54368",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김웅빈",
+    "playerId": "65898",
+    "position": "3루수",
+    "games": 100,
+    "plateAppearances": 323,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김윤하",
+    "playerId": "54319",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김재웅",
+    "playerId": "67391",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김재현",
+    "playerId": "62332",
+    "position": "포수",
+    "games": 23,
+    "plateAppearances": 40,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김지석",
+    "playerId": "56326",
+    "position": "3루수",
+    "games": 17,
+    "plateAppearances": 56,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김태진",
+    "playerId": "64984",
+    "position": "2루수",
+    "games": 14,
+    "plateAppearances": 20,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "데이비슨",
+    "playerId": "54944",
+    "position": "1루수",
+    "games": 124,
+    "plateAppearances": 523,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "로젠버그",
+    "playerId": "55322",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박병호",
+    "playerId": "75125",
+    "position": null,
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박성빈",
+    "playerId": "53305",
+    "position": "포수",
+    "games": 17,
+    "plateAppearances": 25,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박수종",
+    "playerId": "52305",
+    "position": "중견수",
+    "games": 44,
+    "plateAppearances": 57,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박윤성",
+    "playerId": "53301",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박정훈",
+    "playerId": "55394",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박주홍",
+    "playerId": "50357",
+    "position": "중견수",
+    "games": 65,
+    "plateAppearances": 186,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박준현",
+    "playerId": "56318",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박지성",
+    "playerId": "56337",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박진형",
+    "playerId": "63512",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박찬혁",
+    "playerId": "52348",
+    "position": "우익수",
+    "games": 100,
+    "plateAppearances": 356,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박채울",
+    "playerId": "54303",
+    "position": "중견수",
+    "games": 34,
+    "plateAppearances": 26,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박한결",
+    "playerId": "56304",
+    "position": "2루수",
+    "games": 14,
+    "plateAppearances": 41,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "배동현",
+    "playerId": "51761",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "브룩스",
+    "playerId": "56322",
+    "position": "1루수",
+    "games": 41,
+    "plateAppearances": 161,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "서건창",
+    "playerId": "78168",
+    "position": "2루수",
+    "games": 99,
+    "plateAppearances": 450,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "송지후",
+    "playerId": "54394",
+    "position": "유격수",
+    "games": 13,
+    "plateAppearances": 35,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "안우진",
+    "playerId": "68341",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "안치홍",
+    "playerId": "79608",
+    "position": "2루수",
+    "games": 117,
+    "plateAppearances": 454,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "알칸타라",
+    "playerId": "69045",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "양현종",
+    "playerId": "55370",
+    "position": "3루수",
+    "games": 15,
+    "plateAppearances": 46,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "어준서",
+    "playerId": "55392",
+    "position": "유격수",
+    "games": 38,
+    "plateAppearances": 98,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "여동욱",
+    "playerId": "55393",
+    "position": "3루수",
+    "games": 76,
+    "plateAppearances": 187,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "염승원",
+    "playerId": "55339",
+    "position": "2루수",
+    "games": 19,
+    "plateAppearances": 51,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "오석주",
+    "playerId": "67116",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "오선진",
+    "playerId": "78756",
+    "position": "유격수",
+    "games": 61,
+    "plateAppearances": 77,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "와일스",
+    "playerId": "56334",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "원성준",
+    "playerId": "54307",
+    "position": "우익수",
+    "games": 16,
+    "plateAppearances": 37,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "원종현",
+    "playerId": "76118",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "유토",
+    "playerId": "56348",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "윤석원",
+    "playerId": "52395",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이강준",
+    "playerId": "50036",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이주형",
+    "playerId": "51302",
+    "position": "1루수",
+    "games": 5,
+    "plateAppearances": 5,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "이준우",
+    "playerId": "55301",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이태양",
+    "playerId": "56366",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이형종",
+    "playerId": "78135",
+    "position": "좌익수",
+    "games": 68,
+    "plateAppearances": 189,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "임병욱",
+    "playerId": "64346",
+    "position": "중견수",
+    "games": 83,
+    "plateAppearances": 289,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "임지열",
+    "playerId": "64340",
+    "position": "좌익수",
+    "games": 31,
+    "plateAppearances": 84,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "임진묵",
+    "playerId": "55382",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "장재영",
+    "playerId": "51359",
+    "position": "외야수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "전준표",
+    "playerId": "54362",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "전태현",
+    "playerId": "55397",
+    "position": "좌익수",
+    "games": 10,
+    "plateAppearances": 21,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "정다훈",
+    "playerId": "56345",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "정세영",
+    "playerId": "55377",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "정현우",
+    "playerId": "55313",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "조영건",
+    "playerId": "69360",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "주성원",
+    "playerId": "69332",
+    "position": "우익수",
+    "games": 11,
+    "plateAppearances": 20,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "최재영",
+    "playerId": "56338",
+    "position": "2루수",
+    "games": 41,
+    "plateAppearances": 52,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최주환",
+    "playerId": "76267",
+    "position": "1루수",
+    "games": 93,
+    "plateAppearances": 296,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "최현우",
+    "playerId": "56312",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "추재현",
+    "playerId": "68362",
+    "position": "좌익수",
+    "games": 79,
+    "plateAppearances": 322,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "하영민",
+    "playerId": "64350",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "히우라",
+    "playerId": "56305",
+    "position": "좌익수",
+    "games": 72,
+    "plateAppearances": 313,
+    "photo": "club",
+    "cutout": true
+   }
+  ],
+  "hanwha": [
+   {
+    "name": "강건우",
+    "playerId": "56769",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "강백호",
+    "playerId": "68050",
+    "position": "1루수",
+    "games": 131,
+    "plateAppearances": 570,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "강재민",
+    "playerId": "50705",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "권광민",
+    "playerId": "52769",
+    "position": "좌익수",
+    "games": 16,
+    "plateAppearances": 20,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "권민규",
+    "playerId": "55764",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김도빈",
+    "playerId": "54705",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김범준",
+    "playerId": "50710",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김서현",
+    "playerId": "53754",
+    "position": "투수",
+    "games": 4,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김종수",
+    "playerId": "63765",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김태연",
+    "playerId": "66704",
+    "position": "1루수",
+    "games": 128,
+    "plateAppearances": 452,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "노시환",
+    "playerId": "69737",
+    "position": "3루수",
+    "games": 127,
+    "plateAppearances": 571,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "류현진",
+    "playerId": "76715",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "문동주",
+    "playerId": "52701",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "문현빈",
+    "playerId": "53764",
+    "position": "좌익수",
+    "games": 132,
+    "plateAppearances": 589,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박상언",
+    "playerId": "66707",
+    "position": "포수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "박상원",
+    "playerId": "67703",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박재규",
+    "playerId": "53706",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박정현",
+    "playerId": "50709",
+    "position": "유격수",
+    "games": 79,
+    "plateAppearances": 153,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "박준영",
+    "playerId": "56709",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "배승수",
+    "playerId": "55798",
+    "position": "유격수",
+    "games": 5,
+    "plateAppearances": 3,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "심우준",
+    "playerId": "64006",
+    "position": "유격수",
+    "games": 128,
+    "plateAppearances": 447,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "엄상백",
+    "playerId": "65056",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "에르난데스",
+    "playerId": "56712",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "오재원",
+    "playerId": "56754",
+    "position": "중견수",
+    "games": 76,
+    "plateAppearances": 167,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "왕옌청",
+    "playerId": "56719",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "원종혁",
+    "playerId": "54702",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "유로결",
+    "playerId": "69766",
+    "position": "좌익수",
+    "games": 10,
+    "plateAppearances": 6,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "유민",
+    "playerId": "52765",
+    "position": "우익수",
+    "games": 31,
+    "plateAppearances": 79,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "윤산흠",
+    "playerId": "69213",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이교훈",
+    "playerId": "69205",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이도윤",
+    "playerId": "65703",
+    "position": "2루수",
+    "games": 117,
+    "plateAppearances": 401,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "이도훈",
+    "playerId": "56708",
+    "position": "중견수",
+    "games": 17,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이민우",
+    "playerId": "65616",
+    "position": "투수",
+    "games": 2,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이상규",
+    "playerId": "65117",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이원석",
+    "playerId": "68700",
+    "position": "중견수",
+    "games": 97,
+    "plateAppearances": 217,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "이재원",
+    "playerId": "76812",
+    "position": "포수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "이진영",
+    "playerId": "66657",
+    "position": "중견수",
+    "games": 51,
+    "plateAppearances": 102,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "이형범",
+    "playerId": "62951",
+    "position": "투수",
+    "games": 2,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "임종찬",
+    "playerId": "50704",
+    "position": "외야수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "장규현",
+    "playerId": "51762",
+    "position": "포수",
+    "games": 30,
+    "plateAppearances": 50,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "장유호",
+    "playerId": "69645",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "정민규",
+    "playerId": "51764",
+    "position": "3루수",
+    "games": 5,
+    "plateAppearances": 4,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "정우주",
+    "playerId": "55743",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "정은원",
+    "playerId": "68743",
+    "position": "2루수",
+    "games": 25,
+    "plateAppearances": 55,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "조동욱",
+    "playerId": "54768",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "주현상",
+    "playerId": "65707",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "짐머맨",
+    "playerId": "56799",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "채은성",
+    "playerId": "79192",
+    "position": "1루수",
+    "games": 47,
+    "plateAppearances": 192,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "최원준",
+    "playerId": "53705",
+    "position": "지명타자",
+    "games": 2,
+    "plateAppearances": 2,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최유빈",
+    "playerId": "56793",
+    "position": "2루수",
+    "games": 25,
+    "plateAppearances": 4,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최인호",
+    "playerId": "50707",
+    "position": "중견수",
+    "games": 79,
+    "plateAppearances": 218,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "최재훈",
+    "playerId": "78288",
+    "position": "포수",
+    "games": 55,
+    "plateAppearances": 122,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "쿠싱",
+    "playerId": "56760",
+    "position": "투수",
+    "games": 3,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "페라자",
+    "playerId": "54730",
+    "position": "우익수",
+    "games": 132,
+    "plateAppearances": 558,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "하동준",
+    "playerId": "56797",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "한지윤",
+    "playerId": "55767",
+    "position": "좌익수",
+    "games": 41,
+    "plateAppearances": 119,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "허인서",
+    "playerId": "52764",
+    "position": "포수",
+    "games": 130,
+    "plateAppearances": 460,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "화이트",
+    "playerId": "56724",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "황영묵",
+    "playerId": "54795",
+    "position": "2루수",
+    "games": 72,
+    "plateAppearances": 157,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "황준서",
+    "playerId": "54729",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   }
+  ],
+  "lotte": [
+   {
+    "name": "고승민",
+    "playerId": "69517",
+    "position": "2루수",
+    "games": 112,
+    "plateAppearances": 493,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "구승민",
+    "playerId": "63543",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김강현",
+    "playerId": "65522",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김기준",
+    "playerId": "53540",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김동혁",
+    "playerId": "52504",
+    "position": "우익수",
+    "games": 68,
+    "plateAppearances": 44,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "김동현",
+    "playerId": "55502",
+    "position": "좌익수",
+    "games": 18,
+    "plateAppearances": 46,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김민성",
+    "playerId": "77564",
+    "position": "3루수",
+    "games": 17,
+    "plateAppearances": 34,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "김세민",
+    "playerId": "52514",
+    "position": "3루수",
+    "games": 73,
+    "plateAppearances": 55,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김원중",
+    "playerId": "62528",
+    "position": "투수",
+    "games": 3,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김진욱",
+    "playerId": "51516",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김창훈",
+    "playerId": "51586",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김태균",
+    "playerId": "55507",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김한결",
+    "playerId": "56540",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김한홀",
+    "playerId": "56595",
+    "position": "우익수",
+    "games": 7,
+    "plateAppearances": 1,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "나균안",
+    "playerId": "67539",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "나승엽",
+    "playerId": "51551",
+    "position": "1루수",
+    "games": 105,
+    "plateAppearances": 437,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "노진혁",
+    "playerId": "62931",
+    "position": "1루수",
+    "games": 89,
+    "plateAppearances": 226,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "레이예스",
+    "playerId": "54529",
+    "position": "좌익수",
+    "games": 144,
+    "plateAppearances": 636,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "로드리게스",
+    "playerId": "56531",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박건우",
+    "playerId": "55509",
+    "position": "포수",
+    "games": 36,
+    "plateAppearances": 44,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박세웅",
+    "playerId": "64021",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박세진",
+    "playerId": "66047",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박승욱",
+    "playerId": "62802",
+    "position": "3루수",
+    "games": 107,
+    "plateAppearances": 153,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "박재엽",
+    "playerId": "55563",
+    "position": "포수",
+    "games": 17,
+    "plateAppearances": 12,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박정민",
+    "playerId": "56536",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박준우",
+    "playerId": "54503",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박찬형",
+    "playerId": "55530",
+    "position": "3루수",
+    "games": 18,
+    "plateAppearances": 34,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "비슬리",
+    "playerId": "56523",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "손성빈",
+    "playerId": "51528",
+    "position": "포수",
+    "games": 129,
+    "plateAppearances": 385,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "손호영",
+    "playerId": "50150",
+    "position": "3루수",
+    "games": 68,
+    "plateAppearances": 183,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "송재영",
+    "playerId": "51594",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "신동건",
+    "playerId": "56567",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "신윤후",
+    "playerId": "69508",
+    "position": "좌익수",
+    "games": 26,
+    "plateAppearances": 20,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "유강남",
+    "playerId": "61102",
+    "position": "포수",
+    "games": 58,
+    "plateAppearances": 128,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "윤동희",
+    "playerId": "52591",
+    "position": "우익수",
+    "games": 84,
+    "plateAppearances": 308,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "윤성빈",
+    "playerId": "67588",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이민석",
+    "playerId": "52530",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이서준",
+    "playerId": "56563",
+    "position": "유격수",
+    "games": 4,
+    "plateAppearances": 3,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이승헌",
+    "playerId": "68529",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이영재",
+    "playerId": "55503",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이이무라",
+    "playerId": "56503",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이준서",
+    "playerId": "56554",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이진하",
+    "playerId": "53562",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이호준",
+    "playerId": "54598",
+    "position": "2루수",
+    "games": 57,
+    "plateAppearances": 49,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "장두성",
+    "playerId": "68507",
+    "position": "중견수",
+    "games": 102,
+    "plateAppearances": 262,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "전민재",
+    "playerId": "68205",
+    "position": "유격수",
+    "games": 140,
+    "plateAppearances": 520,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "전준우",
+    "playerId": "78513",
+    "position": "좌익수",
+    "games": 74,
+    "plateAppearances": 259,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "정대선",
+    "playerId": "53568",
+    "position": "1루수",
+    "games": 15,
+    "plateAppearances": 9,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "정보근",
+    "playerId": "68518",
+    "position": "포수",
+    "games": 8,
+    "plateAppearances": 5,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "정철원",
+    "playerId": "68242",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "정현수",
+    "playerId": "54537",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "조민영",
+    "playerId": "55534",
+    "position": "우익수",
+    "games": 5,
+    "plateAppearances": 8,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "조세진",
+    "playerId": "52516",
+    "position": "우익수",
+    "games": 22,
+    "plateAppearances": 63,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "최이준",
+    "playerId": "68036",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최준용",
+    "playerId": "50556",
+    "position": "투수",
+    "games": 4,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최충연",
+    "playerId": "66451",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최항",
+    "playerId": "62884",
+    "position": "1루수",
+    "games": 4,
+    "plateAppearances": 13,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "쿄야마",
+    "playerId": "56548",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "한동희",
+    "playerId": "68525",
+    "position": "3루수",
+    "games": 109,
+    "plateAppearances": 461,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "한태양",
+    "playerId": "52568",
+    "position": "2루수",
+    "games": 80,
+    "plateAppearances": 210,
+    "photo": "club",
+    "cutout": false
+   },
+   {
+    "name": "현도훈",
+    "playerId": "68260",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "홍민기",
+    "playerId": "50596",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "황성빈",
+    "playerId": "50500",
+    "position": "중견수",
+    "games": 121,
+    "plateAppearances": 506,
+    "photo": "club",
+    "cutout": false
+   }
+  ],
+  "ssg": [
+   {
+    "name": "고명준",
+    "playerId": "51868",
+    "position": "3루수",
+    "games": 57,
+    "plateAppearances": 232,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "긴지로",
+    "playerId": "56800",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김건우",
+    "playerId": "51867",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김도현",
+    "playerId": "52844",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김민",
+    "playerId": "68043",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김민식",
+    "playerId": "62864",
+    "position": "포수",
+    "games": 14,
+    "plateAppearances": 28,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "김민준",
+    "playerId": "56840",
+    "position": "투수",
+    "games": 17,
+    "plateAppearances": 11,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김성욱",
+    "playerId": "62934",
+    "position": "우익수",
+    "games": 63,
+    "plateAppearances": 142,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "김성현",
+    "playerId": "76802",
+    "position": "2루수",
+    "games": 1,
+    "plateAppearances": 1,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김요셉",
+    "playerId": "56846",
+    "position": "3루수",
+    "games": 8,
+    "plateAppearances": 14,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김재환",
+    "playerId": "78224",
+    "position": "좌익수",
+    "games": 131,
+    "plateAppearances": 527,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "김정민",
+    "playerId": "53865",
+    "position": "우익수",
+    "games": 38,
+    "plateAppearances": 40,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김창평",
+    "playerId": "69825",
+    "position": "우익수",
+    "games": 6,
+    "plateAppearances": 5,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "김택형",
+    "playerId": "65343",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "노경은",
+    "playerId": "73211",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "류효승",
+    "playerId": "50868",
+    "position": "1루수",
+    "games": 9,
+    "plateAppearances": 26,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "마드리스",
+    "playerId": "56813",
+    "position": "좌익수",
+    "games": 17,
+    "plateAppearances": 72,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "문상준",
+    "playerId": "50007",
+    "position": "유격수",
+    "games": 2,
+    "plateAppearances": 2,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "문승원",
+    "playerId": "62869",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박성한",
+    "playerId": "67893",
+    "position": "유격수",
+    "games": 144,
+    "plateAppearances": 627,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "박시후",
+    "playerId": "50812",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "백승건",
+    "playerId": "69839",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "베니지아노",
+    "playerId": "56841",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "변건우",
+    "playerId": "54808",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "서진용",
+    "playerId": "61895",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "석정우",
+    "playerId": "52804",
+    "position": "3루수",
+    "games": 3,
+    "plateAppearances": 3,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "신범수",
+    "playerId": "66662",
+    "position": "포수",
+    "games": 21,
+    "plateAppearances": 28,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "신상연",
+    "playerId": "56808",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "아빌라",
+    "playerId": "56801",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "안상현",
+    "playerId": "66864",
+    "position": "3루수",
+    "games": 94,
+    "plateAppearances": 247,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "안재연",
+    "playerId": "56811",
+    "position": "유격수",
+    "games": 19,
+    "plateAppearances": 33,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "에레디아",
+    "playerId": "53827",
+    "position": "좌익수",
+    "games": 115,
+    "plateAppearances": 497,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "오시후",
+    "playerId": "56807",
+    "position": "우익수",
+    "games": 6,
+    "plateAppearances": 13,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "오태곤",
+    "playerId": "60558",
+    "position": "1루수",
+    "games": 106,
+    "plateAppearances": 269,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "윤태현",
+    "playerId": "52867",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이건욱",
+    "playerId": "64861",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이기순",
+    "playerId": "52868",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이로운",
+    "playerId": "53892",
+    "position": "투수",
+    "games": 2,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이준기",
+    "playerId": "51702",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이지영",
+    "playerId": "79456",
+    "position": "포수",
+    "games": 62,
+    "plateAppearances": 139,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "임근우",
+    "playerId": "52807",
+    "position": "우익수",
+    "games": 45,
+    "plateAppearances": 99,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "장지훈",
+    "playerId": "51895",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "전영준",
+    "playerId": "52809",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "전의산",
+    "playerId": "50820",
+    "position": "1루수",
+    "games": 86,
+    "plateAppearances": 332,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "정동윤",
+    "playerId": "66858",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "정준재",
+    "playerId": "54812",
+    "position": "2루수",
+    "games": 129,
+    "plateAppearances": 549,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "조병현",
+    "playerId": "51897",
+    "position": "투수",
+    "games": 2,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "조형우",
+    "playerId": "51865",
+    "position": "포수",
+    "games": 107,
+    "plateAppearances": 379,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "채현우",
+    "playerId": "69804",
+    "position": "우익수",
+    "games": 80,
+    "plateAppearances": 71,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "최민준",
+    "playerId": "68856",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최용준",
+    "playerId": "50650",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최윤석",
+    "playerId": "55894",
+    "position": "3루수",
+    "games": 6,
+    "plateAppearances": 12,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최정",
+    "playerId": "75847",
+    "position": "3루수",
+    "games": 71,
+    "plateAppearances": 305,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "최준우",
+    "playerId": "68868",
+    "position": "우익수",
+    "games": 26,
+    "plateAppearances": 51,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "최지훈",
+    "playerId": "50854",
+    "position": "중견수",
+    "games": 141,
+    "plateAppearances": 578,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "타케다",
+    "playerId": "56823",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "한두솔",
+    "playerId": "68092",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "한유섬",
+    "playerId": "62895",
+    "position": "우익수",
+    "games": 71,
+    "plateAppearances": 207,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "해치",
+    "playerId": "56855",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "홍대인",
+    "playerId": "55897",
+    "position": "3루수",
+    "games": 84,
+    "plateAppearances": 81,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "화이트",
+    "playerId": "55855",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   }
+  ],
+  "doosan": [
+   {
+    "name": "강승호",
+    "playerId": "63123",
+    "position": "1루수",
+    "games": 107,
+    "plateAppearances": 281,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "곽빈",
+    "playerId": "68220",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김기연",
+    "playerId": "66112",
+    "position": "포수",
+    "games": 44,
+    "plateAppearances": 65,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김대한",
+    "playerId": "69238",
+    "position": "우익수",
+    "games": 49,
+    "plateAppearances": 140,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김동주",
+    "playerId": "51230",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김동준",
+    "playerId": "52267",
+    "position": "내야수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김명신",
+    "playerId": "67246",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김민석",
+    "playerId": "53554",
+    "position": "좌익수",
+    "games": 135,
+    "plateAppearances": 519,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김민혁",
+    "playerId": "65269",
+    "position": "내야수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "김영현",
+    "playerId": "51097",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김인태",
+    "playerId": "63257",
+    "position": "좌익수",
+    "games": 46,
+    "plateAppearances": 56,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김정우",
+    "playerId": "68830",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김택연",
+    "playerId": "54263",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김한중",
+    "playerId": "55221",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "류승민",
+    "playerId": "53404",
+    "position": "우익수",
+    "games": 43,
+    "plateAppearances": 107,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "류현준",
+    "playerId": "54219",
+    "position": "포수",
+    "games": 4,
+    "plateAppearances": 6,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박성재",
+    "playerId": "51298",
+    "position": "1루수",
+    "games": 4,
+    "plateAppearances": 5,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박신지",
+    "playerId": "68249",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박정수",
+    "playerId": "65639",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박준순",
+    "playerId": "55252",
+    "position": "2루수",
+    "games": 98,
+    "plateAppearances": 413,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박지훈",
+    "playerId": "50204",
+    "position": "3루수",
+    "games": 114,
+    "plateAppearances": 290,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박찬호",
+    "playerId": "64646",
+    "position": "유격수",
+    "games": 143,
+    "plateAppearances": 607,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박치국",
+    "playerId": "67266",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "벤자민",
+    "playerId": "52043",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "서준오",
+    "playerId": "56241",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "세베리노",
+    "playerId": "56236",
+    "position": "1루수",
+    "games": 46,
+    "plateAppearances": 176,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "손아섭",
+    "playerId": "77532",
+    "position": "좌익수",
+    "games": 54,
+    "plateAppearances": 176,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "안재석",
+    "playerId": "51203",
+    "position": "3루수",
+    "games": 110,
+    "plateAppearances": 451,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "양석환",
+    "playerId": "64153",
+    "position": "1루수",
+    "games": 54,
+    "plateAppearances": 181,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "양의지",
+    "playerId": "76232",
+    "position": "포수",
+    "games": 135,
+    "plateAppearances": 537,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "양재훈",
+    "playerId": "55215",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "오명진",
+    "playerId": "50208",
+    "position": "2루수",
+    "games": 77,
+    "plateAppearances": 162,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "윤준호",
+    "playerId": "53296",
+    "position": "포수",
+    "games": 112,
+    "plateAppearances": 197,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "윤태호",
+    "playerId": "52202",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이병헌",
+    "playerId": "52204",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이영하",
+    "playerId": "66291",
+    "position": "투수",
+    "games": 4,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이용찬",
+    "playerId": "77211",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이유찬",
+    "playerId": "67207",
+    "position": "2루수",
+    "games": 104,
+    "plateAppearances": 135,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "임종성",
+    "playerId": "54236",
+    "position": "3루수",
+    "games": 17,
+    "plateAppearances": 22,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "잭로그",
+    "playerId": "55239",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "전다민",
+    "playerId": "54214",
+    "position": "좌익수",
+    "games": 16,
+    "plateAppearances": 2,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "정수빈",
+    "playerId": "79231",
+    "position": "중견수",
+    "games": 142,
+    "plateAppearances": 536,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "조수행",
+    "playerId": "66209",
+    "position": "좌익수",
+    "games": 119,
+    "plateAppearances": 224,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "최민석",
+    "playerId": "55268",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최승용",
+    "playerId": "51264",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최원준",
+    "playerId": "67263",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최주형",
+    "playerId": "56215",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최준호",
+    "playerId": "53259",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최지강",
+    "playerId": "52206",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "카메론",
+    "playerId": "56251",
+    "position": "우익수",
+    "games": 75,
+    "plateAppearances": 314,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "타무라",
+    "playerId": "56218",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "타카다",
+    "playerId": "56212",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "플렉센",
+    "playerId": "50234",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "홍성호",
+    "playerId": "66233",
+    "position": "1루수",
+    "games": 6,
+    "plateAppearances": 15,
+    "photo": "club",
+    "cutout": true
+   }
+  ],
+  "nc": [
+   {
+    "name": "고준휘",
+    "playerId": "56949",
+    "position": "좌익수",
+    "games": 37,
+    "plateAppearances": 78,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "구창모",
+    "playerId": "65933",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "권희동",
+    "playerId": "63963",
+    "position": "좌익수",
+    "games": 100,
+    "plateAppearances": 298,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김건",
+    "playerId": "56952",
+    "position": "유격수",
+    "games": 4,
+    "plateAppearances": 2,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김영규",
+    "playerId": "68900",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김재열",
+    "playerId": "64580",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김정호",
+    "playerId": "51903",
+    "position": "포수",
+    "games": 9,
+    "plateAppearances": 8,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김주원",
+    "playerId": "51907",
+    "position": "유격수",
+    "games": 131,
+    "plateAppearances": 590,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김준원",
+    "playerId": "54910",
+    "position": "투수",
+    "games": 2,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김진호",
+    "playerId": "67954",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김태경",
+    "playerId": "50992",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김태훈",
+    "playerId": "55995",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김한별",
+    "playerId": "50902",
+    "position": "2루수",
+    "games": 96,
+    "plateAppearances": 153,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김형준",
+    "playerId": "68912",
+    "position": "포수",
+    "games": 130,
+    "plateAppearances": 408,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김휘집",
+    "playerId": "51344",
+    "position": "3루수",
+    "games": 90,
+    "plateAppearances": 351,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "도태훈",
+    "playerId": "66965",
+    "position": "1루수",
+    "games": 77,
+    "plateAppearances": 91,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "라일리",
+    "playerId": "55903",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "류진욱",
+    "playerId": "65949",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "목지훈",
+    "playerId": "53973",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박건우",
+    "playerId": "79215",
+    "position": "우익수",
+    "games": 129,
+    "plateAppearances": 500,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박민우",
+    "playerId": "62907",
+    "position": "2루수",
+    "games": 138,
+    "plateAppearances": 561,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박시원",
+    "playerId": "50996",
+    "position": "우익수",
+    "games": 70,
+    "plateAppearances": 140,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박지한",
+    "playerId": "69994",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "배재환",
+    "playerId": "64995",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "버하겐",
+    "playerId": "56928",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "블레인",
+    "playerId": "56950",
+    "position": "1루수",
+    "games": 66,
+    "plateAppearances": 264,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "서호철",
+    "playerId": "69995",
+    "position": "3루수",
+    "games": 61,
+    "plateAppearances": 159,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "손주환",
+    "playerId": "54904",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "송명기",
+    "playerId": "69962",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "신민혁",
+    "playerId": "68902",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "신성호",
+    "playerId": "53989",
+    "position": "2루수",
+    "games": 1,
+    "plateAppearances": 1,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "신영우",
+    "playerId": "53919",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "신재인",
+    "playerId": "56909",
+    "position": "1루수",
+    "games": 68,
+    "plateAppearances": 146,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "안중열",
+    "playerId": "64022",
+    "position": "포수",
+    "games": 85,
+    "plateAppearances": 174,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "오영수",
+    "playerId": "68904",
+    "position": "1루수",
+    "games": 26,
+    "plateAppearances": 54,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "오장한",
+    "playerId": "51991",
+    "position": "우익수",
+    "games": 25,
+    "plateAppearances": 55,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "오태양",
+    "playerId": "51996",
+    "position": "중견수",
+    "games": 48,
+    "plateAppearances": 64,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "원종해",
+    "playerId": "54906",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "윤준혁",
+    "playerId": "50092",
+    "position": "우익수",
+    "games": 10,
+    "plateAppearances": 17,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이용준",
+    "playerId": "51948",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이우성",
+    "playerId": "63260",
+    "position": "좌익수",
+    "games": 123,
+    "plateAppearances": 446,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "이재학",
+    "playerId": "60263",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이준혁",
+    "playerId": "52992",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이희성",
+    "playerId": "56932",
+    "position": "포수",
+    "games": 5,
+    "plateAppearances": 4,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "임정호",
+    "playerId": "63959",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "임지민",
+    "playerId": "52902",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "전사민",
+    "playerId": "69969",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "천재환",
+    "playerId": "67905",
+    "position": "중견수",
+    "games": 111,
+    "plateAppearances": 333,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "최성영",
+    "playerId": "66920",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최요한",
+    "playerId": "56967",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최우석",
+    "playerId": "54903",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최정원",
+    "playerId": "69992",
+    "position": "중견수",
+    "games": 120,
+    "plateAppearances": 256,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "클레빈저",
+    "playerId": "56939",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "테일러",
+    "playerId": "56966",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "토다",
+    "playerId": "56911",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "하준영",
+    "playerId": "68639",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "한석현",
+    "playerId": "64101",
+    "position": "우익수",
+    "games": 60,
+    "plateAppearances": 143,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "한재환",
+    "playerId": "50903",
+    "position": "1루수",
+    "games": 24,
+    "plateAppearances": 52,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "허윤",
+    "playerId": "56904",
+    "position": "2루수",
+    "games": 18,
+    "plateAppearances": 6,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "홍재문",
+    "playerId": "55996",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "홍종표",
+    "playerId": "50600",
+    "position": "2루수",
+    "games": 31,
+    "plateAppearances": 28,
+    "photo": "club",
+    "cutout": true
+   }
+  ],
+  "kia": [
+   {
+    "name": "고종욱",
+    "playerId": "61353",
+    "position": "좌익수",
+    "games": 27,
+    "plateAppearances": 38,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "곽도규",
+    "playerId": "53609",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김건국",
+    "playerId": "76225",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김규성",
+    "playerId": "66614",
+    "position": "2루수",
+    "games": 105,
+    "plateAppearances": 219,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김기훈",
+    "playerId": "69620",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김도영",
+    "playerId": "52605",
+    "position": "3루수",
+    "games": 135,
+    "plateAppearances": 593,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김민규",
+    "playerId": "56637",
+    "position": "좌익수",
+    "games": 74,
+    "plateAppearances": 53,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김범수",
+    "playerId": "65769",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김석환",
+    "playerId": "67610",
+    "position": "외야수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김선빈",
+    "playerId": "78603",
+    "position": "2루수",
+    "games": 137,
+    "plateAppearances": 538,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김시훈",
+    "playerId": "68928",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김태군",
+    "playerId": "78122",
+    "position": "포수",
+    "games": 88,
+    "plateAppearances": 249,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김태형",
+    "playerId": "55610",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김현수",
+    "playerId": "69516",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김호령",
+    "playerId": "65653",
+    "position": "중견수",
+    "games": 141,
+    "plateAppearances": 581,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "나성범",
+    "playerId": "62947",
+    "position": "우익수",
+    "games": 140,
+    "plateAppearances": 581,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "네일",
+    "playerId": "54640",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "데일",
+    "playerId": "56632",
+    "position": "유격수",
+    "games": 34,
+    "plateAppearances": 135,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박민",
+    "playerId": "50657",
+    "position": "유격수",
+    "games": 91,
+    "plateAppearances": 206,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박상준",
+    "playerId": "52634",
+    "position": "1루수",
+    "games": 45,
+    "plateAppearances": 142,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박재현",
+    "playerId": "55636",
+    "position": "좌익수",
+    "games": 132,
+    "plateAppearances": 556,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박정우",
+    "playerId": "67609",
+    "position": "우익수",
+    "games": 110,
+    "plateAppearances": 157,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "변우혁",
+    "playerId": "69727",
+    "position": "1루수",
+    "games": 47,
+    "plateAppearances": 89,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "성영탁",
+    "playerId": "54610",
+    "position": "투수",
+    "games": 4,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "시라카와",
+    "playerId": "54843",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "아데를린",
+    "playerId": "56613",
+    "position": "1루수",
+    "games": 32,
+    "plateAppearances": 130,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "양현종",
+    "playerId": "77637",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "엄준현",
+    "playerId": "55631",
+    "position": "유격수",
+    "games": 3,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "오선우",
+    "playerId": "69636",
+    "position": "1루수",
+    "games": 32,
+    "plateAppearances": 85,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "올러",
+    "playerId": "55633",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "윤도현",
+    "playerId": "52667",
+    "position": "1루수",
+    "games": 34,
+    "plateAppearances": 81,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "이의리",
+    "playerId": "51648",
+    "position": "투수",
+    "games": 4,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이창진",
+    "playerId": "64560",
+    "position": "우익수",
+    "games": 3,
+    "plateAppearances": 4,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "이태양",
+    "playerId": "60768",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이호연",
+    "playerId": "68504",
+    "position": "2루수",
+    "games": 34,
+    "plateAppearances": 76,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "장재혁",
+    "playerId": "50641",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "전상현",
+    "playerId": "66609",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "정해영",
+    "playerId": "50662",
+    "position": "투수",
+    "games": 2,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "정현창",
+    "playerId": "55926",
+    "position": "유격수",
+    "games": 123,
+    "plateAppearances": 92,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "조상우",
+    "playerId": "63342",
+    "position": "투수",
+    "games": 2,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "주효상",
+    "playerId": "66354",
+    "position": "포수",
+    "games": 20,
+    "plateAppearances": 24,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "지현",
+    "playerId": "56633",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최지민",
+    "playerId": "52639",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "카스트로",
+    "playerId": "56626",
+    "position": "1루수",
+    "games": 99,
+    "plateAppearances": 431,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "하주석",
+    "playerId": "62700",
+    "position": "유격수",
+    "games": 71,
+    "plateAppearances": 248,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "한승연",
+    "playerId": "52628",
+    "position": "좌익수",
+    "games": 21,
+    "plateAppearances": 36,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "한재승",
+    "playerId": "51994",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "한준수",
+    "playerId": "68646",
+    "position": "포수",
+    "games": 115,
+    "plateAppearances": 390,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "홍건희",
+    "playerId": "61643",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "홍민규",
+    "playerId": "55267",
+    "position": "투수",
+    "games": 2,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "황대인",
+    "playerId": "65610",
+    "position": "1루수",
+    "games": 10,
+    "plateAppearances": 13,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "황동하",
+    "playerId": "52641",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   }
+  ],
+  "lg": [
+   {
+    "name": "강민균",
+    "playerId": "53103",
+    "position": "2루수",
+    "games": 7,
+    "plateAppearances": 7,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "고우석",
+    "playerId": "67119",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "구본혁",
+    "playerId": "69100",
+    "position": "3루수",
+    "games": 135,
+    "plateAppearances": 390,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김강률",
+    "playerId": "77263",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김대현",
+    "playerId": "66145",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김민수",
+    "playerId": "64793",
+    "position": "포수",
+    "games": 4,
+    "plateAppearances": 3,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김성진",
+    "playerId": "69105",
+    "position": "1루수",
+    "games": 4,
+    "plateAppearances": 6,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김영우",
+    "playerId": "55167",
+    "position": "투수",
+    "games": 2,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김유영",
+    "playerId": "64596",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김윤식",
+    "playerId": "50157",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김주성",
+    "playerId": "66162",
+    "position": "중견수",
+    "games": 1,
+    "plateAppearances": 2,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김진성",
+    "playerId": "75867",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김진수",
+    "playerId": "51154",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김현종",
+    "playerId": "54166",
+    "position": "좌익수",
+    "games": 23,
+    "plateAppearances": 14,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "리오스",
+    "playerId": "56146",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "문보경",
+    "playerId": "69102",
+    "position": "3루수",
+    "games": 108,
+    "plateAppearances": 428,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "문성주",
+    "playerId": "68119",
+    "position": "좌익수",
+    "games": 76,
+    "plateAppearances": 244,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "문정빈",
+    "playerId": "52121",
+    "position": "1루수",
+    "games": 91,
+    "plateAppearances": 330,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박동원",
+    "playerId": "79365",
+    "position": "포수",
+    "games": 128,
+    "plateAppearances": 420,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박시원",
+    "playerId": "55121",
+    "position": "투수",
+    "games": 2,
+    "plateAppearances": 1,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박해민",
+    "playerId": "62415",
+    "position": "중견수",
+    "games": 144,
+    "plateAppearances": 591,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "배재준",
+    "playerId": "63145",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "백승현",
+    "playerId": "65109",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "성동현",
+    "playerId": "68159",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "손용준",
+    "playerId": "54156",
+    "position": "3루수",
+    "games": 12,
+    "plateAppearances": 13,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "손주영",
+    "playerId": "67143",
+    "position": "투수",
+    "games": 2,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "송승기",
+    "playerId": "51111",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "송찬의",
+    "playerId": "68110",
+    "position": "좌익수",
+    "games": 118,
+    "plateAppearances": 434,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "신민재",
+    "playerId": "65207",
+    "position": "2루수",
+    "games": 138,
+    "plateAppearances": 458,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "양우진",
+    "playerId": "56165",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "오스틴",
+    "playerId": "53123",
+    "position": "1루수",
+    "games": 144,
+    "plateAppearances": 640,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "오스틴 딘",
+    "playerId": "53123",
+    "position": null,
+    "games": null,
+    "plateAppearances": null,
+    "photo": "kbo",
+    "cutout": true
+   },
+   {
+    "name": "오지환",
+    "playerId": "79109",
+    "position": "유격수",
+    "games": 126,
+    "plateAppearances": 452,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "우강훈",
+    "playerId": "51526",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "웰스",
+    "playerId": "55348",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "유영찬",
+    "playerId": "50106",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이민호",
+    "playerId": "50126",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이상영",
+    "playerId": "69168",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이영빈",
+    "playerId": "51100",
+    "position": "3루수",
+    "games": 70,
+    "plateAppearances": 98,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "이우찬",
+    "playerId": "61145",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이재원",
+    "playerId": "68106",
+    "position": "우익수",
+    "games": 60,
+    "plateAppearances": 143,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "이정용",
+    "playerId": "69134",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이종준",
+    "playerId": "50904",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이주헌",
+    "playerId": "52154",
+    "position": "포수",
+    "games": 76,
+    "plateAppearances": 154,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "임찬규",
+    "playerId": "61101",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "장현식",
+    "playerId": "63950",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "조건희",
+    "playerId": "51163",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "조원태",
+    "playerId": "52149",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "천성호",
+    "playerId": "50054",
+    "position": "3루수",
+    "games": 97,
+    "plateAppearances": 251,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "최원영",
+    "playerId": "52103",
+    "position": "중견수",
+    "games": 60,
+    "plateAppearances": 24,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "최지명",
+    "playerId": "68419",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "치리노스",
+    "playerId": "55146",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "카라스코",
+    "playerId": "56103",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "케네디",
+    "playerId": "56168",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "톨허스트",
+    "playerId": "55130",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "함덕주",
+    "playerId": "63248",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "함창건",
+    "playerId": "50108",
+    "position": "우익수",
+    "games": 1,
+    "plateAppearances": 3,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "홍창기",
+    "playerId": "66108",
+    "position": "우익수",
+    "games": 128,
+    "plateAppearances": 518,
+    "photo": "club",
+    "cutout": true
+   }
+  ],
+  "samsung": [
+   {
+    "name": "강민호",
+    "playerId": "74540",
+    "position": "포수",
+    "games": 111,
+    "plateAppearances": 344,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "구자욱",
+    "playerId": "62404",
+    "position": "좌익수",
+    "games": 114,
+    "plateAppearances": 497,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김도환",
+    "playerId": "69442",
+    "position": "포수",
+    "games": 66,
+    "plateAppearances": 132,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김무신",
+    "playerId": "68403",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김백산",
+    "playerId": "55420",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김상준",
+    "playerId": "55425",
+    "position": "유격수",
+    "games": 62,
+    "plateAppearances": 96,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김성윤",
+    "playerId": "67449",
+    "position": "우익수",
+    "games": 125,
+    "plateAppearances": 493,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김영웅",
+    "playerId": "52430",
+    "position": "3루수",
+    "games": 57,
+    "plateAppearances": 203,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김재상",
+    "playerId": "53400",
+    "position": "2루수",
+    "games": 8,
+    "plateAppearances": 16,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김재성",
+    "playerId": "65132",
+    "position": "포수",
+    "games": 6,
+    "plateAppearances": 1,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김재윤",
+    "playerId": "65062",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김재혁",
+    "playerId": "52424",
+    "position": "좌익수",
+    "games": 10,
+    "plateAppearances": 6,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김지찬",
+    "playerId": "50458",
+    "position": "중견수",
+    "games": 134,
+    "plateAppearances": 530,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김태훈",
+    "playerId": "62360",
+    "position": "투수",
+    "games": 13,
+    "plateAppearances": 24,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "김헌곤",
+    "playerId": "61404",
+    "position": "좌익수",
+    "games": 85,
+    "plateAppearances": 118,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김현준",
+    "playerId": "51417",
+    "position": "중견수",
+    "games": 38,
+    "plateAppearances": 65,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "디아즈",
+    "playerId": "54400",
+    "position": "1루수",
+    "games": 144,
+    "plateAppearances": 625,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "류지혁",
+    "playerId": "62234",
+    "position": "2루수",
+    "games": 139,
+    "plateAppearances": 531,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "미야지",
+    "playerId": "56415",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박계범",
+    "playerId": "64468",
+    "position": "유격수",
+    "games": 52,
+    "plateAppearances": 57,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박세혁",
+    "playerId": "62244",
+    "position": "포수",
+    "games": 39,
+    "plateAppearances": 57,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박승규",
+    "playerId": "69418",
+    "position": "우익수",
+    "games": 106,
+    "plateAppearances": 381,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "박용재",
+    "playerId": "56468",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "배찬승",
+    "playerId": "55455",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "백정현",
+    "playerId": "77446",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "보스",
+    "playerId": "56402",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "사토시",
+    "playerId": "56474",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "심재훈",
+    "playerId": "55438",
+    "position": "유격수",
+    "games": 41,
+    "plateAppearances": 53,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "양우현",
+    "playerId": "69403",
+    "position": "유격수",
+    "games": 79,
+    "plateAppearances": 117,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "양창섭",
+    "playerId": "68415",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "양현",
+    "playerId": "61268",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "오러클린",
+    "playerId": "56464",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "원태인",
+    "playerId": "69446",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "육선엽",
+    "playerId": "54404",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "윤정빈",
+    "playerId": "68463",
+    "position": "우익수",
+    "games": 4,
+    "plateAppearances": 7,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "이병헌",
+    "playerId": "69428",
+    "position": "포수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "이성규",
+    "playerId": "66409",
+    "position": "좌익수",
+    "games": 28,
+    "plateAppearances": 30,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "이승민",
+    "playerId": "50464",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이승현",
+    "playerId": "51454",
+    "position": "투수",
+    "games": 3,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이재익",
+    "playerId": "63492",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이재현",
+    "playerId": "52415",
+    "position": "유격수",
+    "games": 85,
+    "plateAppearances": 304,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "이재희",
+    "playerId": "51460",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이진용",
+    "playerId": "55417",
+    "position": "우익수",
+    "games": 7,
+    "plateAppearances": 2,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이창용",
+    "playerId": "51407",
+    "position": "1루수",
+    "games": 14,
+    "plateAppearances": 15,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "이해승",
+    "playerId": "69416",
+    "position": "유격수",
+    "games": 31,
+    "plateAppearances": 20,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "임기영",
+    "playerId": "62754",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "장승현",
+    "playerId": "63202",
+    "position": "포수",
+    "games": 71,
+    "plateAppearances": 37,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "장찬희",
+    "playerId": "56460",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "전병우",
+    "playerId": "65586",
+    "position": "3루수",
+    "games": 118,
+    "plateAppearances": 409,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "정재훈",
+    "playerId": "56469",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "차승준",
+    "playerId": "55435",
+    "position": "지명타자",
+    "games": 1,
+    "plateAppearances": 1,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최원태",
+    "playerId": "65320",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최지광",
+    "playerId": "67421",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최형우",
+    "playerId": "72443",
+    "position": "좌익수",
+    "games": 137,
+    "plateAppearances": 574,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "페덱",
+    "playerId": "56459",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "함수호",
+    "playerId": "55440",
+    "position": "우익수",
+    "games": 11,
+    "plateAppearances": 18,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "홍원표",
+    "playerId": "50430",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "홍현빈",
+    "playerId": "67005",
+    "position": "좌익수",
+    "games": 11,
+    "plateAppearances": 8,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "후라도",
+    "playerId": "53375",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   }
+  ],
+  "kt": [
+   {
+    "name": "강민성",
+    "playerId": "69064",
+    "position": "1루수",
+    "games": 9,
+    "plateAppearances": 4,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "강현우",
+    "playerId": "50066",
+    "position": "포수",
+    "games": 28,
+    "plateAppearances": 32,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "고영표",
+    "playerId": "64001",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "권동진",
+    "playerId": "51003",
+    "position": "유격수",
+    "games": 127,
+    "plateAppearances": 261,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김민석",
+    "playerId": "54097",
+    "position": "포수",
+    "games": 2,
+    "plateAppearances": 3,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김민수",
+    "playerId": "65048",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김민혁",
+    "playerId": "64004",
+    "position": "좌익수",
+    "games": 117,
+    "plateAppearances": 420,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김상수",
+    "playerId": "79402",
+    "position": "2루수",
+    "games": 131,
+    "plateAppearances": 489,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "김정운",
+    "playerId": "53029",
+    "position": "투수",
+    "games": 2,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "김현수",
+    "playerId": "76290",
+    "position": "1루수",
+    "games": 142,
+    "plateAppearances": 622,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "대니엘",
+    "playerId": "56002",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "로건",
+    "playerId": "55912",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "류현인",
+    "playerId": "53036",
+    "position": "2루수",
+    "games": 90,
+    "plateAppearances": 238,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "문상철",
+    "playerId": "64007",
+    "position": "1루수",
+    "games": 6,
+    "plateAppearances": 8,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "문용익",
+    "playerId": "67419",
+    "position": "투수",
+    "games": 2,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박영현",
+    "playerId": "52060",
+    "position": "투수",
+    "games": 9,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "박지훈",
+    "playerId": "56066",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "배정대",
+    "playerId": "64166",
+    "position": "중견수",
+    "games": 95,
+    "plateAppearances": 129,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "배제성",
+    "playerId": "65516",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "보쉴리",
+    "playerId": "56036",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "사우어",
+    "playerId": "56032",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "소형준",
+    "playerId": "50030",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "손동현",
+    "playerId": "69041",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "손민석",
+    "playerId": "53057",
+    "position": "유격수",
+    "games": 14,
+    "plateAppearances": 12,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "스기모토",
+    "playerId": "56011",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "안인산",
+    "playerId": "50901",
+    "position": "지명타자",
+    "games": 2,
+    "plateAppearances": 2,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "안치영",
+    "playerId": "67006",
+    "position": "우익수",
+    "games": 23,
+    "plateAppearances": 6,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "안현민",
+    "playerId": "52001",
+    "position": "우익수",
+    "games": 94,
+    "plateAppearances": 417,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "오서진",
+    "playerId": "55005",
+    "position": "2루수",
+    "games": 3,
+    "plateAppearances": 1,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "오원석",
+    "playerId": "50859",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "오윤석",
+    "playerId": "64504",
+    "position": "1루수",
+    "games": 113,
+    "plateAppearances": 215,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "우규민",
+    "playerId": "73117",
+    "position": "투수",
+    "games": 3,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "유준규",
+    "playerId": "51013",
+    "position": "중견수",
+    "games": 54,
+    "plateAppearances": 64,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "이강민",
+    "playerId": "56006",
+    "position": "유격수",
+    "games": 56,
+    "plateAppearances": 163,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "이상동",
+    "playerId": "69054",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이재원",
+    "playerId": "56005",
+    "position": "우익수",
+    "games": 8,
+    "plateAppearances": 7,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이정범",
+    "playerId": "67807",
+    "position": "1루수",
+    "games": 9,
+    "plateAppearances": 22,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이정현",
+    "playerId": "67048",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "이정훈",
+    "playerId": "67644",
+    "position": "좌익수",
+    "games": 81,
+    "plateAppearances": 92,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "임상우",
+    "playerId": "56001",
+    "position": "내야수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": "kbo",
+    "cutout": false
+   },
+   {
+    "name": "임준형",
+    "playerId": "69113",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "장민호",
+    "playerId": "55010",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "장성우",
+    "playerId": "78548",
+    "position": "포수",
+    "games": 76,
+    "plateAppearances": 269,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "장준원",
+    "playerId": "64115",
+    "position": "유격수",
+    "games": 100,
+    "plateAppearances": 166,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "장진혁",
+    "playerId": "66706",
+    "position": "좌익수",
+    "games": 70,
+    "plateAppearances": 67,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "전용주",
+    "playerId": "69047",
+    "position": "투수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "정준영",
+    "playerId": "53058",
+    "position": "좌익수",
+    "games": 1,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "조대현",
+    "playerId": "68089",
+    "position": "포수",
+    "games": 57,
+    "plateAppearances": 66,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "주권",
+    "playerId": "65060",
+    "position": "투수",
+    "games": 3,
+    "plateAppearances": 0,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "최원준",
+    "playerId": "66606",
+    "position": "우익수",
+    "games": 140,
+    "plateAppearances": 676,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "한승주",
+    "playerId": "50726",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "한승택",
+    "playerId": "63722",
+    "position": "포수",
+    "games": 128,
+    "plateAppearances": 365,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "한승혁",
+    "playerId": "61666",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "한차현",
+    "playerId": "51058",
+    "position": "투수",
+    "games": null,
+    "plateAppearances": null,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "허경민",
+    "playerId": "79240",
+    "position": "3루수",
+    "games": 109,
+    "plateAppearances": 396,
+    "photo": "club",
+    "cutout": true
+   },
+   {
+    "name": "황재균",
+    "playerId": "76313",
+    "position": "지명타자",
+    "games": 1,
+    "plateAppearances": 1,
+    "photo": null,
+    "cutout": false
+   },
+   {
+    "name": "힐리어드",
+    "playerId": "56034",
+    "position": "좌익수",
+    "games": 142,
+    "plateAppearances": 639,
+    "photo": "club",
+    "cutout": true
+   }
+  ]
+ }
+}

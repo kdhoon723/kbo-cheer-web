@@ -1,6 +1,7 @@
 //20241476-김도훈-(2026-11-15)
 import { LazyMotion, MotionConfig, domAnimation } from 'motion/react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { HistoryProvider } from './context/HistoryContext.tsx'
 import { NoticeProvider } from './context/NoticeContext.tsx'
 import { PlayerProvider } from './context/PlayerContext.tsx'
 import { PrefsProvider } from './context/PrefsContext.tsx'
@@ -22,6 +23,7 @@ export default function App() {
       <BrowserRouter>
         <NoticeProvider>
           <PrefsProvider>
+            <HistoryProvider>
             <SongsProvider>
               <PlayerProvider>
                 <Routes>
@@ -39,6 +41,7 @@ export default function App() {
                 </Routes>
               </PlayerProvider>
             </SongsProvider>
+            </HistoryProvider>
           </PrefsProvider>
         </NoticeProvider>
       </BrowserRouter>

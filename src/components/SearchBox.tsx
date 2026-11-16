@@ -6,9 +6,11 @@ interface Props {
   value: string
   onChange: (v: string) => void
   inputRef: RefObject<HTMLInputElement | null>
+  onFocus?: () => void
+  onBlur?: () => void
 }
 
-export default function SearchBox({ value, onChange, inputRef }: Props) {
+export default function SearchBox({ value, onChange, inputRef, onFocus, onBlur }: Props) {
   return (
     <div className="search-field">
       <Search className="search-icon" size={20} strokeWidth={1.75} aria-hidden="true" />
@@ -21,6 +23,8 @@ export default function SearchBox({ value, onChange, inputRef }: Props) {
         aria-label="곡 검색"
         aria-keyshortcuts="/"
         onChange={(e) => onChange(e.target.value)}
+        onFocus={onFocus}
+        onBlur={onBlur}
       />
       <kbd className="search-key" aria-hidden="true">
         /

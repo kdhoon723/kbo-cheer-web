@@ -3,12 +3,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   BROKEN_KEY,
   DEFAULT_SETTINGS,
+  HISTORY_KEY,
   SETTINGS_KEY,
   SONGS_KEY,
   TEAM_KEY,
+  loadHistory,
   loadSettings,
   loadSongs,
   loadTeamState,
+  saveHistory,
   saveSettings,
   saveSongs,
   saveTeamState,
@@ -101,11 +104,59 @@ describe('settings', () => {
   })
 
   it.each([
-    ['소수 볼륨', { version: 1, volume: 50.5, gridSort: 'chapter' }],
-    ['범위 밖 볼륨', { version: 1, volume: 101, gridSort: 'chapter' }],
-    ['잘못된 정렬', { version: 1, volume: 50, gridSort: 'x' }],
+    ['소수 볼륨', { version: 1, volume: 50.5, gridSort: 'name' }],
+    ['범위 밖 볼륨', { version: 1, volume: 101, gridSort: 'name' }],
+    ['version이 다름', { version: 2, volume: 50, gridSort: 'name' }],
   ])('%s이면 기본값과 corrupt', (_name, data) => {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(data))
     expect(loadSettings()).toEqual({ value: DEFAULT_SETTINGS, status: 'corrupt' })
+  })
+
+  it.each([['chapter'], ['x'], [7], [null]])('알 수 없는 정렬 %j은 기본 정렬로 두고 볼륨은 지키며 ok', (gridSort) => {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ version: 1, volume: 50, gridSort }))
+    expect(loadSettings()).toEqual({ value: { volume: 50, gridSort: 'starters' }, status: 'ok' })
+  })
+
+  it('정렬이 빠진 예전 값도 볼륨을 지킨다', () => {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ version: 1, volume: 20 }))
+    expect(loadSettings()).toEqual({ value: { volume: 20, gridSort: 'starters' }, status: 'ok' })
+  })
+})
+
+describe('history', () => {
+  it('왕복한다', () => {
+    const history = { counts: { a: 2, b: 1 }, recent: ['b', 'a'] }
+    saveHistory(history)
+    expect(loadHistory()).toEqual({ value: history, status: 'ok' })
+  })
+
+  it('없으면 빈 기록과 missing', () => {
+    expect(loadHistory()).toEqual({ value: { counts: {}, recent: [] }, status: 'missing' })
+  })
+
+  it('곡 목록 키와 따로 저장한다', () => {
+    saveHistory({ counts: { a: 1 }, recent: ['a'] })
+    saveSongs(seed)
+    expect(localStorage.getItem(HISTORY_KEY)).toContain('"a"')
+    localStorage.removeItem(SONGS_KEY)
+    expect(loadHistory().status).toBe('ok')
+  })
+
+  it.each([
+    ['깨진 JSON', '{'],
+    ['version이 다름', JSON.stringify({ version: 2, counts: {}, recent: [] })],
+    ['counts가 배열', JSON.stringify({ version: 1, counts: [], recent: [] })],
+    ['recent가 없음', JSON.stringify({ version: 1, counts: {} })],
+  ])('%s이면 빈 기록과 corrupt', (_name, raw) => {
+    localStorage.setItem(HISTORY_KEY, raw)
+    expect(loadHistory()).toEqual({ value: { counts: {}, recent: [] }, status: 'corrupt' })
+  })
+
+  it('저장소를 못 쓰면 unavailable', () => {
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('blocked')
+    })
+    expect(loadHistory().status).toBe('unavailable')
+    vi.restoreAllMocks()
   })
 })

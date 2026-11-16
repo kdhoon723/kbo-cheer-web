@@ -5,6 +5,7 @@ import { ChevronsRight, EllipsisVertical, Flag, Square } from 'lucide-react'
 import { useReducedMotionConfig } from 'motion/react'
 import { useAnimate } from 'motion/react-mini'
 import * as m from 'motion/react-m'
+import { playerOf } from '../data/players.ts'
 import { getTeam } from '../data/teams.ts'
 import { usePlayer } from '../context/PlayerContext.tsx'
 import { usePrefs } from '../context/PrefsContext.tsx'
@@ -16,6 +17,7 @@ import { TapButton } from '../ui/Press.tsx'
 import { distance, ease, quick, row, rowTextDelay, swap } from '../ui/motionTokens.ts'
 import { bandStyle } from './band.ts'
 import PlayerHost from './PlayerHost.tsx'
+import PlayerPortrait from './PlayerPortrait.tsx'
 import Sheet from './Sheet.tsx'
 import TeamLogo from './TeamLogo.tsx'
 import Toast from './Toast.tsx'
@@ -146,7 +148,12 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
           )}
         </div>
         <div className="play-row" ref={rowRef}>
-          {song && <TeamLogo teamId={song.teamId} size={36} />}
+          {song &&
+            (song.kind === 'player' ? (
+              <PlayerPortrait teamId={song.teamId} player={playerOf(song)} size="dock" />
+            ) : (
+              <TeamLogo teamId={song.teamId} size={36} />
+            ))}
           <NowText
             key={hasPlayed ? 'live' : 'idle'}
             rise={hasPlayed}

@@ -34,3 +34,6 @@ test-results/
 # Cloudflare wrangler 로컬 상태
 .wrangler/
 e2e/.auth/
+
+# 구단·KBO 선수 사진이 보이는 캡처는 공개 저장소에 올리지 않는다
+docs/screenshots/with-photos/

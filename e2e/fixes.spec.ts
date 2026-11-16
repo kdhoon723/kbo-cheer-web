@@ -61,12 +61,12 @@ test.describe('11. 오류 수정 회귀', () => {
         original.call(this, key, value)
       }
     })
-    await page.getByRole('button', { name: '가나다 순' }).click()
+    await page.getByRole('button', { name: '가나다', exact: true }).click()
     await expect(toast(page)).toHaveText('설정을 저장하지 못했습니다. 새로고침하면 팀·볼륨·정렬이 이전 값으로 돌아갈 수 있습니다')
     await toast(page).click()
     await expect(toast(page)).toHaveCount(0)
     // 다시 성공할 때까지 같은 알림을 되풀이하지 않는다
-    await page.getByRole('button', { name: '챕터 순' }).click()
+    await page.getByRole('button', { name: '주전순', exact: true }).click()
     await page.waitForTimeout(500)
     await expect(toast(page)).toHaveCount(0)
   })

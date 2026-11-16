@@ -1,11 +1,13 @@
 //20241476-김도훈-(2026-11-15)
 import { useState } from 'react'
 import * as m from 'motion/react-m'
+import { playerOf } from '../data/players.ts'
 import type { SearchHit } from '../lib/search.ts'
 import type { Song } from '../types.ts'
 import { PressCell } from '../ui/Press.tsx'
 import { listItemMotion } from '../ui/motionTokens.ts'
 import { bandStyle } from './band.ts'
+import PlayerPortrait from './PlayerPortrait.tsx'
 import StatusMessage from './StatusMessage.tsx'
 import TeamLogo from './TeamLogo.tsx'
 
@@ -23,15 +25,17 @@ export default function SearchResults({ hits, nowPlayingId, onPick }: Props) {
     <ul className="result-list">
       {hits.map(({ song, team, isCurrentTeam }, i) => {
         const playing = song.id === nowPlayingId
+        const isPlayer = song.kind === 'player'
         return (
           <m.li key={song.id} {...listItemMotion(i, firstIds.has(song.id))}>
             <PressCell
               type="button"
-              className={playing ? 'song-line is-playing' : 'song-line'}
+              className={['song-line', isPlayer && 'has-portrait', playing && 'is-playing'].filter(Boolean).join(' ')}
               style={playing ? bandStyle(song.teamId) : undefined}
               aria-pressed={playing}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => onPick(song)}
+              extra={isPlayer ? <PlayerPortrait teamId={song.teamId} player={playerOf(song)} size="row" /> : undefined}
             >
               <span className="song-line-title">{song.title}</span>
               {!isCurrentTeam && (

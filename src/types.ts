@@ -33,7 +33,26 @@ export type TeamState =
   | { currentTeamId: null; prevTeamId: null }
   | { currentTeamId: TeamId; prevTeamId: TeamId | null }
 
-export type GridSort = 'chapter' | 'name'
+export type GridSort = 'starters' | 'name' | 'frequent'
+
+export type PhotoSource = 'club' | 'kbo'
+
+export interface PlayerInfo {
+  name: string
+  playerId: string
+  position: string | null
+  games: number | null
+  plateAppearances: number | null
+  photo: PhotoSource | null
+  cutout: boolean
+}
+
+export type PlayersByTeam = Record<TeamId, PlayerInfo[]>
+
+export interface PlayHistory {
+  counts: Record<string, number>
+  recent: string[]
+}
 
 export interface Settings {
   volume: number
