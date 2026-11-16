@@ -14,7 +14,7 @@ interface Props {
 
 /**
  * 지금 곡의 가사. 처음에는 펼쳐 두고, 접거나 펼친 것은 설정에 남아 다음 곡에도 이어진다 [STEP 3-㉗].
- * 가사 아래에 출처 문서와 라이선스를 쓴다
+ * 가사 아래에 출처를 쓴다(나무위키는 라이선스도) [STEP 3-㉘]
  */
 export default function LyricsBlock({ lyric, open, onToggle }: Props) {
   const bodyId = useId()
@@ -30,12 +30,18 @@ export default function LyricsBlock({ lyric, open, onToggle }: Props) {
           <p className="lyrics-source">
             출처:{' '}
             <a href={lyric.source} target="_blank" rel="noopener noreferrer">
-              {sourceLabel(lyric.source)}
-            </a>{' '}
-            ·{' '}
-            <a href={LYRICS_LICENSE.url} target="_blank" rel="noopener noreferrer license">
-              {LYRICS_LICENSE.name}
+              {sourceLabel(lyric)}
             </a>
+            {/* 나무위키 글만 CC BY-NC-SA다. 구단 공식 사이트 가사에는 라이선스 문구를 붙이지 않는다 */}
+            {lyric.sourceKind === 'namuwiki' && (
+              <>
+                {' '}
+                ·{' '}
+                <a href={LYRICS_LICENSE.url} target="_blank" rel="noopener noreferrer license">
+                  {LYRICS_LICENSE.name}
+                </a>
+              </>
+            )}
           </p>
         </m.div>
       )}

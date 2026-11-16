@@ -58,7 +58,7 @@ test.describe('24. 가사 기본으로 펼치기 [STEP 3-㉗]', () => {
   test('TC-156 가사가 가장 긴 곡을 틀어도 누르는 자리가 그대로이고 가사는 칸 안에서 스크롤한다 [YT]', async ({ page }, testInfo) => {
     test.setTimeout(90_000)
     await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto('/team/lg')
+    await page.goto('/team/lotte')
     await expectPlayerReady(page)
     const places = () =>
       page.evaluate(() => {
@@ -73,13 +73,13 @@ test.describe('24. 가사 기본으로 펼치기 [STEP 3-㉗]', () => {
           tools: tools ? at(tools) : null,
         }
       })
-    // 가사가 없는 곡(오스틴)
-    await playerButton(page, '오스틴').click()
-    await expect(nowTitle(page)).toHaveText('오스틴')
+    // 가사가 없는 곡(김민성). [STEP 3-㉘] 가사 자료가 바뀌어 LG에서 롯데로 옮겼다(오스틴에 구단 공식 사이트 가사가 생김)
+    await playerButton(page, '김민성').click()
+    await expect(nowTitle(page)).toHaveText('김민성')
     await expect(page.locator('.player-lyrics')).toHaveCount(0)
     const without = await places()
-    // 가사가 가장 긴 곡(67줄)
-    await playTeamSong(page, '엘팬의 북소리')
+    // 처음 데이터 곡 중 가사가 가장 긴 곡(58줄)
+    await playTeamSong(page, '챔피언 롯데')
     await expect(page.locator('.player-lyrics .lyrics-text')).toBeVisible()
     const withLyrics = await places()
     note(testInfo, '누르는 자리(가사 없음 / 가장 긴 가사)', { without, withLyrics })

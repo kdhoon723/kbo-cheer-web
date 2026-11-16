@@ -29,8 +29,6 @@ const DEFAULT_ORDER = ['키움', '한화', '롯데', 'SSG', '두산', 'NC', 'KIA
 const LYRICS_DIR = new URL('../media-build/lyrics/', import.meta.url)
 
 interface LyricRow {
-  videoId: string
-  start: number
   title: string
   lyrics: string
   source: string

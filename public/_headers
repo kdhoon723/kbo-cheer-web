@@ -16,5 +16,11 @@
 # 팀별 가사: 이름이 고정이라 그림과 같이 하루 두고 다시 확인한다
 /lyrics/*
   Cache-Control: public, max-age=86400, must-revalidate
-/favicon.svg
+
+# KBO 아이콘(scripts/make-icons.mjs로 만든다): 이름이 고정이라 그림과 같이 하루 두고 다시 확인한다
+/favicon-16.png
+  Cache-Control: public, max-age=86400, must-revalidate
+/favicon-32.png
+  Cache-Control: public, max-age=86400, must-revalidate
+/apple-touch-icon.png
   Cache-Control: public, max-age=86400, must-revalidate
