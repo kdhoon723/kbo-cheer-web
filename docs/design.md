@@ -2,7 +2,7 @@
 
 - 과목: 2026-2학기 스크립트프로그래밍 / 작성: 20241476 김도훈 / 작성일: 2026-11-15
 - 단계: STEP 2 설계 (최종판, 설계 검토 반영)
-- 기준 문서: `docs/requirements.md` (FR-01~33, NFR-01~14, BR-01~51, EX-01~31). [STEP 3-⑪] FR-29~33, BR-45~51, EX-30·31, NFR-14는 5.5절. [STEP 3-⑲] FR-37~39, BR-57·58은 3.1·5.7·11절. [STEP 3-⑳] FR-40~42, BR-59~61은 3.1·5.8절. [STEP 3-㉑] BR-62·63은 8.6절. [STEP 3-㉓] FR-43~47은 5.9절. [STEP 3-㉔] FR-48~50은 5.10·10.4절, NFR-16은 5.11절. [STEP 3-㉕] FR-51·52는 5.12절. [STEP 3-㉖] FR-53~55, BR-64·65는 4.8·5.13·10.4절
+- 기준 문서: `docs/requirements.md` (최종: FR-01~55, NFR-01~16, BR-01~65, EX-01~31, 알려진 한계 L-01~13. STEP 3 시작 때는 FR-01~33, NFR-01~14, BR-01~51). [STEP 3-⑪] FR-29~33, BR-45~51, EX-30·31, NFR-14는 5.5절. [STEP 3-⑲] FR-37~39, BR-57·58은 3.1·5.7·11절. [STEP 3-⑳] FR-40~42, BR-59~61은 3.1·5.8절. [STEP 3-㉑] BR-62·63은 8.6절. [STEP 3-㉓] FR-43~47은 5.9절. [STEP 3-㉔] FR-48~50은 5.10·10.4절, NFR-16은 5.11절. [STEP 3-㉕] FR-51·52는 5.12절. [STEP 3-㉖] FR-53~55, BR-64·65는 4.8·5.13·10.4절. [STEP 3-㉗~㉛] 가사 펼침·이름으로 찾기·카드 자리·접기는 5.8·11.1절, [STEP 3-㉘] 아이콘은 5.4절, [STEP 3-㉚] 사진·가사 버전은 캐시 정책(「사진·가사 버전」)
 - 검토 문서: `docs/reviews/design-review-claude.md`(R-01~28), `docs/reviews/design-review-codex.md`(C-01~18). 본문에서 검토 때문에 바뀐 곳에는 `[R-xx]`, `[C-xx]`를 붙였다. 전체 반영 내역은 15절.
 - 배포: `https://kbocheer.kdhoon.me`(Cloudflare Workers 정적 자산, `wrangler.jsonc`의 `assets.directory: ./dist`, `not_found_handling: single-page-application`으로 모든 경로에 index.html을 돌려준다) [공개 배포]
 - 기술 환경: React, TypeScript, Vite(포트 5173 고정, LAN 접속 허용), React Router(`react-router-dom`), YouTube IFrame Player API, YouTube Data API v3, LocalStorage, CSS
@@ -557,26 +557,24 @@ splitTeamPrefixes(candidates, songs):
 수업에서 배운 `BrowserRouter` + 중첩 `Route` + `Outlet` + `useParams` 구조로 만들었다. [STEP 3-㉓] 곡 수정의 저장하지 않은 변경 확인(`useBlocker`)은 데이터 라우터에서만 동작해 `createBrowserRouter` + `RouterProvider`로 바꿨다. 경로 모양과 중첩은 그대로이고, `Route` 요소 대신 같은 구조의 객체 배열로 적는다. Provider들은 라우터 훅을 쓰지 않아 `RouterProvider` 바깥에 둔다. 곡 수정 경로는 곡 목록(`songs`)의 자식 라우트가 되어 넓은 화면에서 목록 옆에 그린다.
 
 ```tsx
-<BrowserRouter>
-  <Providers>
-    <Routes>
-      <Route path="/" element={<AppLayout />}>                  {/* 머리말, 플레이어, 알림 */}
-        <Route index element={<HomeRedirect />} />
-        <Route path="team/:teamId" element={<TeamLayout />}>     {/* teamId 검사, 팀 방문 기록 */}
-          <Route index element={<MainPage />} />                  {/* 응원 화면 */}
-          <Route path="songs" element={<SongListPage />}>         {/* 곡 관리. [STEP 3-㉓] 수정 칸을 자식으로 품는다 */}
-            <Route path=":songId/edit" element={<SongEditPage />} />
-          </Route>
-          <Route path="songs/add" element={<ImportPage />} />     {/* 곡 추가(가져오기) [STEP 3-⑰] */}
-          <Route path="import" element={<Navigate to="../songs/add" replace />} />  {/* 예전 주소 */}
-        </Route>
-        <Route path="songs/data" element={<SongDataPage />} />  {/* 백업·초기화, 팀 경로 안 [STEP 3-⑱] */}
-        <Route path="settings" element={<SettingsRedirect />} /> {/* 예전 주소 → 마지막 팀의 songs/data, 팀 없으면 / */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Route>
-    </Routes>
-  </Providers>
-</BrowserRouter>
+// 최종(src/App.tsx). Provider들은 RouterProvider 바깥에 둔다
+createBrowserRouter([
+  { path: '/', element: <AppLayout />, children: [                   // 머리말, 플레이어, 알림
+    { index: true, element: <HomeRedirect /> },
+    { path: 'team/:teamId', element: <TeamLayout />, children: [     // teamId 검사, 팀 방문 기록
+      { index: true, element: <MainPage /> },                         // 응원 화면
+      { path: 'songs', lazy: SongListPage, children: [                // 곡 관리. [STEP 3-㉓] 수정 칸을 자식으로 품는다
+        { path: ':songId/edit', lazy: SongEditPage },
+      ] },
+      { path: 'songs/add', lazy: ImportPage },                        // 곡 추가(가져오기) [STEP 3-⑰]
+      { path: 'songs/data', lazy: SongDataPage },                     // 백업·초기화 [STEP 3-⑱]
+      { path: 'import', element: <Navigate to="../songs/add" replace /> },  // 예전 주소
+    ] },
+    { path: 'settings', element: <SettingsRedirect /> },             // 예전 주소 → 마지막 팀의 songs/data, 팀 없으면 /
+    { path: '*', element: <Navigate to="/" replace /> },
+  ] },
+])
+// lazy 라우트는 처음 묶음에서 빠지고 그 화면으로 갈 때 받는다. 받는 동안 HydrateFallback은 빈 화면(NothingYet) [STEP 3-㉔]
 ```
 
 | 경로 | 화면 | 관련 요구사항 |
@@ -836,7 +834,7 @@ splitTeamPrefixes(candidates, songs):
 | 그 밖(`/`, `/index.html`, `/team/...` 같은 앱 주소) | 정하지 않음 → Cloudflare 기본 `public, max-age=0, must-revalidate` | 새 배포가 바로 보여야 한다. index.html이 새 해시 이름의 `/assets`를 가리키므로 앱 코드도 바로 바뀐다 |
 
 - `/*` 규칙은 두지 않았다. 여러 규칙이 겹치면 같은 헤더가 합쳐지므로 경로별 규칙과 섞이지 않게 하기 위해서다.
-- 로컬 확인(`npx wrangler@4.162.0 dev`, build:deploy 결과): `/`·`/team/hanwha`는 `max-age=0, must-revalidate`, `/assets/index-*.js`는 `max-age=31536000, immutable`, `/teams/hanwha.webp`·`/avatars/hanwha.webp`·`/players/hanwha/50704.webp`·`/favicon.svg`는 `max-age=86400, must-revalidate`였다.
+- 로컬 확인(3-⑯ 당시. [STEP 3-㉘·㉚] 뒤 값은 아래 「사진·가사 버전」과 test-results 20·22절)(`npx wrangler@4.162.0 dev`, build:deploy 결과): `/`·`/team/hanwha`는 `max-age=0, must-revalidate`, `/assets/index-*.js`는 `max-age=31536000, immutable`, `/teams/hanwha.webp`·`/avatars/hanwha.webp`·`/players/hanwha/50704.webp`·`/favicon.svg`는 `max-age=86400, must-revalidate`였다.
 - 한계: 없는 `/players/...` 주소는 SPA 설정 때문에 index.html(200)이 온다. 앱은 사진이 있다고 표시된 선수만 요청하므로 실제로는 생기지 않는다.
 
 **사진·가사 버전 [STEP 3-㉚].** 배포판에서 가사가 전혀 안 보이는 사용자가 있었다. `/lyrics/<팀>.json`은 하루 캐시였다. 3-⑳ 때 받은 예전 형식 파일(행에 videoId·start, key 없음)이 브라우저에 남았고, 3-㉘ 앱이 같은 주소에서 그 파일을 캐시로 읽었다. `parseLyricsFile`이 key 없는 행을 모두 버려 빈 표가 되어 가사 칸이 없었다. 사진도 다시 만들어 배포하면 하루 동안 옛 그림이 남는 같은 구조다.
@@ -923,12 +921,12 @@ splitTeamPrefixes(candidates, songs):
 
 **가사(FR-40).**
 
-- 자료: 저장소 밖 `data/lyrics.json`(413곡, 나무위키 CC BY-NC-SA 2.0 KR). 선수 사진과 같은 길로 다룬다. `npm run media`(`scripts/media.mjs`)가 `scripts/build-lyrics.mjs`로 팀별 `media-build/lyrics/<팀ID>.json`(gitignore)을 만들고, 개발 서버는 `playerMediaPlugin.ts`가 `/lyrics/*`를 그 폴더에서 내주며(`.json`만, 폴더 밖 경로는 404), `npm run build:deploy`는 다시 만들어 `dist/lyrics/`로 복사한다. 가사 파일 모양은 `{ teamId, songs: [{ videoId, start, kind, title, lyrics, source }] }`이고 앱은 `parseLyricsFile(teamId, unknown)`으로 검사한다(다른 팀 파일, 빈 가사, https가 아닌 출처 줄은 버린다). 곡과는 응원가 시작·순위와 같은 열쇠(`songKey`)로 잇는다.
+- 자료: 저장소 밖 `data/lyrics.json`(3-⑳에는 413곡 나무위키, [STEP 3-㉘]부터 616곡 구단 공식 사이트·나무위키, 11.1절). 선수 사진과 같은 길로 다룬다. `npm run media`(`scripts/media.mjs`)가 `scripts/build-lyrics.mjs`로 팀별 `media-build/lyrics/<팀ID>.json`(gitignore)을 만들고, 개발 서버는 `playerMediaPlugin.ts`가 `/lyrics/*`를 그 폴더에서 내주며(`.json`만, 폴더 밖 경로는 404), `npm run build:deploy`는 다시 만들어 `dist/lyrics/`로 복사한다. 가사 파일 모양은 `{ teamId, songs: [{ videoId, start, kind, title, lyrics, source }] }`이고 앱은 `parseLyricsFile(teamId, unknown)`으로 검사한다(다른 팀 파일, 빈 가사, https가 아닌 출처 줄은 버린다). 곡과는 응원가 시작·순위와 같은 열쇠(`songKey`)로 잇는다.
 - 가사 파일이 없는 실행: `vite.config.ts`의 `__LYRICS__`(`src/lib/media.ts`의 `LYRICS`)가 사진의 `__PLAYER_PHOTOS__`와 같은 규칙이다. 개발 서버는 `media-build/lyrics`가 있을 때, 빌드는 `KBO_LYRICS=1`(build:deploy가 줌)일 때만 true다. false면 `useSongLyrics`가 아무것도 요청하지 않고 가사 칸도 그리지 않는다. 빌드 결과에서는 가사 받는 코드가 지워져 `/lyrics/` 문자열도 남지 않는다.
 - 언제 받나: 곡을 실제로 틀 때(`nowPlaying`이 있을 때) 그 곡 팀의 파일 하나를 받는다. 화면을 열거나 새로고침해 멈춘 마지막 곡이 보일 때는 받지 않아 첫 화면 전송량이 그대로다. 받은 팀 파일은 모듈 안 `Map<TeamId, Promise>`에 두어 넓은 화면 칸과 휴대폰 시트가 함께 쓰고 다시 받지 않는다. 실패하면 지워 다음 재생 때 다시 받는다.
 - 팀별로 나눈 이유(잼): 한 파일이면 250 KB(gzip 40.0 KB)를 첫 곡에 받아야 한다. 팀별로는 8.0~30.7 KB(gzip 1.7~6.0 KB, 한화 19.6 KB·gzip 3.9 KB)라 경기에 나오는 두 팀 파일만 받는다.
 - 자리: 휴대폰은 지금 재생 시트(카드·진행 막대·시간 아래). 경기 중 휴대폰 화면은 격자와 상황 칸이 차지하고, 가사는 시트를 열어 읽는 일이라 재생 줄에 자리를 더하지 않는다. 넓은 화면은 오른쪽 열의 상황 칸·단축키 안내 아래. 선수 카드 바로 아래에 두면 펼칠 때 상황 칸이 아래로 밀려 경기 중에 누르는 자리가 바뀐다. [STEP 3-㉗] 펼쳐 두는 것이 기본이 되면서 재생 도구(「지금을 응원가 시작으로」, 볼륨)를 가사 위로 올렸다(도구 `order: 2`, 가사 3). 전에는 가사가 도구 위라, 가장 긴 「엘팬의 북소리」를 펼치면 도구가 749px에서 2,590px로 밀리고 열이 2,702px가 됐다.
-- 모양(`LyricsBlock`): 1px 선 아래 44px 버튼 「가사 보기」/「가사 접기」와 ChevronDown(펼치면 뒤집힘). 펼치면 15px/1.7 줄 간격의 가사(줄바꿈 그대로), 그 아래 13px `#ABA49A` 「출처: 나무위키 「한화 이글스/응원가/선수」 · CC BY-NC-SA 2.0 KR」. 두 링크는 새 창(`noopener noreferrer`)이고 누르는 높이 44px이다. [STEP 3-㉘] 출처가 구단 공식 사이트이면 「출처: 구단 공식 사이트」(링크) 하나이고 라이선스 문구가 없다(`Lyric.sourceKind`, `sourceLabel`). [STEP 3-㉗·㉛] 늘 펼친 채로 시작한다. 접기는 지금 곡에만 적용된다(PlayerPanel의 `collapsedSongId` 상태, 저장하지 않음). 다른 곡을 틀면 그 곡 id가 달라 다시 펼쳐지고, 새로고침하면 상태가 없어 펼침이다. 넓은 화면 칸과 휴대폰 시트가 같은 상태를 쓴다. 3-㉗~㉚에는 설정 `lyricsOpen`에 저장해 한 번 접으면 그 뒤 모든 곡이 접혔고, 사용자에게 기본 펼침이 아닌 것처럼 보였다. 가사가 나타날 때 위에서 8px(`distance.row`) 내려오며 opacity가 켜지고(`swap` 200ms), 접을 때는 바로 사라진다. 높이는 움직이지 않는다. 동작 줄이기면 옮기기가 빠지고 페이드만 남는다(`MotionConfig reducedMotion="user"`).
+- 모양(`LyricsBlock`, 휴대폰 시트와 900~1199px 맨 아래 칸): 1px 선 아래 44px 버튼 「가사 보기」/「가사 접기」와 ChevronDown(펼치면 뒤집힘). 펼치면 15px/1.7 줄 간격의 가사(줄바꿈 그대로), 그 아래 13px `#ABA49A` 「출처: 나무위키 「한화 이글스/응원가/선수」 · CC BY-NC-SA 2.0 KR」. 두 링크는 새 창(`noopener noreferrer`)이고 누르는 높이 44px이다. [STEP 3-㉘] 출처가 구단 공식 사이트이면 「출처: 구단 공식 사이트」(링크) 하나이고 라이선스 문구가 없다(`Lyric.sourceKind`, `sourceLabel`). [STEP 3-㉗·㉛] 늘 펼친 채로 시작한다. 접기는 지금 곡에만 적용된다(PlayerPanel의 `collapsedSongId` 상태, 저장하지 않음). 다른 곡을 틀면 그 곡 id가 달라 다시 펼쳐지고, 새로고침하면 상태가 없어 펼침이다. 넓은 화면 칸과 휴대폰 시트가 같은 상태를 쓴다. 3-㉗~㉚에는 설정 `lyricsOpen`에 저장해 한 번 접으면 그 뒤 모든 곡이 접혔고, 사용자에게 기본 펼침이 아닌 것처럼 보였다. 가사가 나타날 때 위에서 8px(`distance.row`) 내려오며 opacity가 켜지고(`swap` 200ms), 접을 때는 바로 사라진다. 높이는 움직이지 않는다. 동작 줄이기면 옮기기가 빠지고 페이드만 남는다(`MotionConfig reducedMotion="user"`).
 - [STEP 3-㉙] 1200px 이상에서 펼친 가사는 선수 카드 자리에 둔다(`CardLyrics`). 3-㉗처럼 맨 아래에 두면 1440×900에서 누르는 자리 아래 남는 높이가 약 40px라 펼친 가사 칸이 화면 밖에 걸려, 기본 펼침인데도 보이는 가사가 0줄이었다. 세 방법을 견줬다.
   - (a) 카드 자리(높이 200px: 판 140 + 이름 12·28 + 아래 줄 20)는 그대로 두고, 가사가 펼쳐져 있으면 카드를 머리줄(사진 32×40 또는 로고 36, 이름 17/700, 「구단 · 포지션」, 「가사 접기」, 44px)로 줄이고 남는 152px에 가사를 둔다. 가사 줄 간격을 24px로 두면 여섯 줄이 든다. 자리 높이가 같아 아래가 움직이지 않고, 화면 높이와 상관없이 여섯 줄이 보인다. 고른 방법이다.
   - (b) 단축키 안내(약 40px)와 재생 도구(96px)를 줄이거나 옮기기. 다 치워도 1440×900에서 약 180px이고 「가사 접기」 줄을 빼면 다섯 줄 남짓이며, 1280×800에서는 더 모자란다. 볼륨과 「지금을 응원가 시작으로」를 시트나 다른 화면으로 보내야 해서 쓰지 않았다.

@@ -1,10 +1,23 @@
 # 테스트 실행 결과
 
-- 과목: 2026-2학기 스크립트프로그래밍 / 작성: 20241476 김도훈 / 실행일: 2026-11-15
-- 테스트 명세: `docs/test-cases.md`(TC-01~69. TC-60과 디자인 개편 이후 회귀 결과는 8절, TC-61~69와 오류 분석은 9절)
+- 과목: 2026-2학기 스크립트프로그래밍 / 작성: 20241476 김도훈 / 실행일: 2026-11-15(STEP 4) ~ 2026-11-16(최종)
+- 테스트 명세: `docs/test-cases.md`(최종 TC-01~164. 1~9절은 STEP 4 당시 TC-01~69, 10절부터 STEP 3 후반 단계별 결과)
 - 환경: Ubuntu 서버, Node 22.21, Chromium(Playwright 1.65.1, headless shell 1255), 개발 서버 `http://localhost:5173`, 실제 YouTube 재생과 YouTube Data API 호출
 
-## 1. 요약
+## 0. 최종 요약(2026-11-16 22:20~22:26, 커밋 1a448c0 기준)
+
+| 구분 | 결과 |
+| --- | --- |
+| 단위 테스트(Vitest, `npm test`) | 32개 파일 391개 테스트 모두 통과 |
+| E2E 테스트(Playwright, `npm run test:e2e`) | 118개(TC 117개, TC-156은 1440×900·1280×800 두 번) 중 117개 통과, 1개(TC-144) 첫 재생 준비 대기 간헐 실패(F-01) → 그 테스트만 두 번 다시 돌려 모두 통과. 5.1분 |
+| 빌드(`npm run build`) | 통과. 응원 화면 앱 JS 359.20 kB = index 246.38 + 공유 112.82(gzip 106.02), React 묶음 218.75 kB |
+| 린트(`npm run lint`) | 오류 0, 경고 4(Context 파일의 only-export-components) |
+| 명세 TC 164개 | E2E 113, 단위 31, 수동 15, E2E와 단위 3, E2E와 수동(성능) 1, 수동(할당량) 1. E2E로 표시한 117개는 모두 `e2e/`의 테스트 제목과 1:1로 맞음(스크립트로 대조) |
+
+- 알려진 한계: requirements.md 11절(L-01~13). 테스트에 걸리는 것은 F-01(쿠키 없는 새 방문자는 YouTube가 가끔 첫 영상을 늦게 준다. 전역 준비로 줄였지만 플레이어 준비 대기 20초를 넘는 일이 드물게 남는다)이다. 가사·사진 테스트는 저장소 밖 자료(`media-build/`)가 있을 때만 돌고, 없는 실행에서는 건너뛴다. 실기기(휴대폰) 확인은 학생(김도훈)이 배포판에서 했다.
+- 단계별 결과와 측정은 아래 절에 있다. 1~9절은 STEP 4 당시 수치(164개 단위 테스트 등)이고 지금 수치는 이 절이다.
+
+## 1. 요약(STEP 4 당시)
 
 | 구분 | 개수 | 통과 | 실패 | 실행 안 함 |
 | --- | --- | --- | --- | --- |
@@ -761,3 +774,23 @@ STEP 4 뒤에 바꾼 단계마다 같은 명령을 다시 돌린 결과다. 앞 
 ### 22.4 다시 실행한 테스트
 
 - `npm test` 32 files 394 passed, `npm run test:e2e` 118 passed(4.8m, 첫 실행에서 TC-83 하나가 사진 주소 비교로 실패해 위처럼 고친 뒤), `npm run build` 통과(응원 화면 앱 JS 359.10 kB = index 246.10 + 공유 113.00, gzip 106.00), `npm run lint` 종료 코드 0·경고 4.
+
+## 23. 넓은 화면 가사 여닫기를 한 자리로, 접기는 그 곡에만(STEP 3-㉛)
+
+- 1440×900·1280×800에서 접은 상태의 「가사」 버튼은 66×44px이고 카드 자리 오른쪽·위에 붙으며 팀 색 판보다 위다. 맨 아래 「가사 보기」 줄은 없고, 누르는 자리 위치는 펼친 때·가사 없는 곡과 같다(TC-156).
+- 접기는 그 곡에만 적용된다. 다른 곡을 틀거나 새로고침하면 다시 펼치고, 설정에 `lyricsOpen`이 남지 않는다(TC-155, TC-157). 예전에 저장한 `lyricsOpen` 값은 읽지 않는다(단위).
+- TC-89·90·97은 선수 카드를 보는 테스트라 설정 프리셋 대신 가사 요청을 막고 본다.
+- 그 단계의 실행: `npm test` 391 passed, `npm run test:e2e` 118 passed(4.8m), build·lint 통과.
+- 캡처: `lyrics-card-closed-{1440,1280}.png`, `lyrics-card-closed-panel-{1440,1280}.png`. 펼친 상태는 `with-lyrics/lyrics-card-open-{1440,1280}.png`(저장소에 넣지 않음).
+- 이 단계부터 작은 화면 수정은 관련 테스트만 돌리고 문서는 `docs/pending-doc-notes.md`에 메모했다가 마무리 정리에서 옮겼다(24절).
+
+## 24. 마무리 정리
+
+- 전체 실행(2026-11-16 22:20~22:26): `npm test` 32 files 391 passed, `npm run test:e2e` 117 passed·1 failed(TC-144, 플레이어 준비 20초 초과, F-01) → `npx playwright test e2e/progress.spec.ts -g TC-144 --repeat-each 2` 2 passed, `npm run build` 통과, `npm run lint` 오류 0·경고 4.
+- 문서 맞춤: requirements(BR-59 첫 문장), design(기준 문서 줄, 5.1 라우트 그림을 지금 `createBrowserRouter`·lazy 구조로, 5.8 가사 자료 수와 모양 설명, 3-⑯ 캐시 확인 줄에 3-㉚ 안내), test-cases·test-results 머리말과 최종 요약, README(응원가 시작 146곡, 가사 설명), 메모 파일을 옮기고 지움.
+
+- 저장소 점검:
+  - 추적 파일 415개 중 `.env.local`, `media-build/`, `dist/`, 선수 사진(`players/`, jpg), `with-photos/`, `with-lyrics/`가 없다(`git ls-files`). 커밋 기록 전체에도 그런 경로가 없다(`git log --all --name-only`). `.env.local`은 `.gitignore`의 `*.local`로 빠진다.
+  - `git log --all -p`(3.5 MB)에서 API 키 문자열 0건, Google API 키 모양(정해진 접두어와 길이) 문자열 0건이다. 가사 원본의 18자 이상 줄 1,053개와 3-⑳ 예전 가사 줄 866개도 모두 0건이다(값과 가사는 출력하지 않고 셈만).
+  - 쓰지 않는 것: `scripts/*.mjs` 8개는 모두 package.json·README·설계·다른 스크립트에서 부른다. `src`의 모듈은 모두 어딘가에서 불러 쓴다. `index.css`의 클래스 244개는 모두 소스에서 쓰인다(동적 접두어 포함). 의존성도 모두 쓴다(`@types/*`는 타입).
+  - README 실행 방법: 저장소를 새로 복제해 `npm install`(0 vulnerabilities) → 개발 서버(`npm run dev`가 실행하는 vite, 5173 고정)를 띄웠다. `/`와 `/team/hanwha`는 200이고 한화 선수 22명이 나온다. 노시환을 틀면 카드가 나오고, 사진·가사 요청은 0건이며 가사 칸이 없다(자료 없는 소스). 키가 없어 곡 추가는 「API 키가 없어 곡 가져오기를 쓸 수 없습니다」이고 「불러오기」가 비활성이다. 확인 뒤 띄운 PID로 껐다.
