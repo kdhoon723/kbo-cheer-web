@@ -44,10 +44,14 @@ function isHttpsUrl(x: string): boolean {
   }
 }
 
-/** 팀 가사 파일을 읽는다. 다른 팀 파일, 빈 가사, https가 아닌 출처, 알 수 없는 구분·출처는 건너뛴다 */
-export function parseLyricsFile(teamId: TeamId, x: unknown): LyricTable {
+/**
+ * 팀 가사 파일을 읽는다. 빈 가사, https가 아닌 출처, 알 수 없는 구분·출처인 줄은 건너뛴다.
+ * 구조가 틀렸거나 다른 팀 파일이거나 곡이 있는데 읽은 줄이 하나도 없으면(예전 형식 파일) null이다.
+ * 빈 표로 두면 그 팀은 가사가 없는 것처럼 보이므로, 받지 못한 것과 같이 다음 재생 때 다시 받게 한다 [STEP 3-㉚]
+ */
+export function parseLyricsFile(teamId: TeamId, x: unknown): LyricTable | null {
+  if (!isRecord(x) || x.teamId !== teamId || !Array.isArray(x.songs)) return null
   const table = new Map<string, Lyric>()
-  if (!isRecord(x) || x.teamId !== teamId || !Array.isArray(x.songs)) return table
   const rows: unknown[] = x.songs
   for (const row of rows) {
     if (!isRecord(row)) continue
@@ -58,7 +62,7 @@ export function parseLyricsFile(teamId: TeamId, x: unknown): LyricTable {
     if (!sourceKind) continue
     table.set(tableKey(kind, key), { lyrics: lyrics.trim(), source, sourceKind })
   }
-  return table
+  return rows.length > 0 && table.size === 0 ? null : table
 }
 
 /** 곡의 종류와 이름(제목)으로 찾는다. 다른 영상으로 넣은 같은 곡, 이름을 고친 곡도 이름이 맞으면 붙는다 */

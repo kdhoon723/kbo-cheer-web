@@ -22,6 +22,12 @@ const row = (kind: string, title: string, extra: object = {}) => ({
   ...extra,
 })
 
+function parsed(teamId: TeamId, x: unknown): LyricTable {
+  const table = parseLyricsFile(teamId, x)
+  if (!table) throw new Error('가사 파일을 읽지 못함')
+  return table
+}
+
 describe('lyricKey', () => {
   it.each([
     ['Jump up Lions!', 'jumpuplions'],
@@ -38,7 +44,7 @@ describe('lyricKey', () => {
 
 describe('parseLyricsFile와 findLyric', () => {
   it('선수 곡은 선수 이름, 상황·팀 응원가는 제목으로 같이 찾는다', () => {
-    const table = parseLyricsFile('hanwha', { teamId: 'hanwha', songs: [row('player', '노시환'), row('song', '불타는 태양')] })
+    const table = parsed('hanwha', { teamId: 'hanwha', songs: [row('player', '노시환'), row('song', '불타는 태양')] })
     expect(findLyric(table, makeSong({ kind: 'player', title: '노시환' }))).toEqual({
       lyrics: '가사\n둘째 줄',
       source: NAMU,
@@ -53,12 +59,12 @@ describe('parseLyricsFile와 findLyric', () => {
   })
 
   it('구단 공식 사이트 출처를 읽는다', () => {
-    const table = parseLyricsFile('kt', { teamId: 'kt', songs: [row('song', '마법의 성', { source: KT, sourceName: '구단 공식 사이트' })] })
+    const table = parsed('kt', { teamId: 'kt', songs: [row('song', '마법의 성', { source: KT, sourceName: '구단 공식 사이트' })] })
     expect(findLyric(table, { kind: 'team', title: '마법의 성' })?.sourceKind).toBe('official')
   })
 
   it('형식이 틀린 줄, https가 아닌 출처, 알 수 없는 구분·출처는 건너뛴다', () => {
-    const table = parseLyricsFile('hanwha', {
+    const table = parsed('hanwha', {
       teamId: 'hanwha',
       songs: [
         row('player', '가', { lyrics: '  ' }),
@@ -74,8 +80,17 @@ describe('parseLyricsFile와 findLyric', () => {
     expect([...table.keys()]).toEqual(['song|바'])
   })
 
-  it.each([[null], [[]], [{ teamId: 'lg', songs: [row('song', '가')] }], [{ teamId: 'hanwha' }]])('구조가 틀리거나 다른 팀 파일이면 빈 표: %j', (x) => {
-    expect(parseLyricsFile('hanwha', x).size).toBe(0)
+  it.each([[null], [[]], [{ teamId: 'lg', songs: [row('song', '가')] }], [{ teamId: 'hanwha' }]])('구조가 틀리거나 다른 팀 파일이면 null(다시 받기): %j', (x) => {
+    expect(parseLyricsFile('hanwha', x)).toBeNull()
+  })
+
+  it('예전 형식(녹음 기준, key 없음) 파일은 null이라 다시 받는다 [STEP 3-㉚]', () => {
+    const old = { teamId: 'hanwha', songs: [{ videoId: 'abcdefghijk', start: 10, kind: 'player', title: '노시환', lyrics: '가사', source: NAMU }] }
+    expect(parseLyricsFile('hanwha', old)).toBeNull()
+  })
+
+  it('곡이 없는 파일은 빈 표다(가사가 없는 팀)', () => {
+    expect(parseLyricsFile('hanwha', { teamId: 'hanwha', songs: [] })?.size).toBe(0)
   })
 })
 
@@ -103,7 +118,7 @@ describe.skipIf(Object.keys(LYRICS_FILES).length === 0)('처음 데이터에 붙
   if (!parsed.ok) throw new Error('seed-songs.json 형식 오류')
   const seed: Song[] = parsed.songs
   const tables = new Map<TeamId, LyricTable>(
-    TEAM_IDS.map((id) => [id, parseLyricsFile(id, LYRICS_FILES[`../../media-build/lyrics/${id}.json`])]),
+    TEAM_IDS.map((id) => [id, parseLyricsFile(id, LYRICS_FILES[`../../media-build/lyrics/${id}.json`]) ?? new Map()]),
   )
   const lyricOf = (s: Song) => findLyric(tables.get(s.teamId) ?? new Map(), s)
 

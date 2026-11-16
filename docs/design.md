@@ -831,12 +831,22 @@ splitTeamPrefixes(candidates, songs):
 | 경로 | Cache-Control | 이유 |
 | --- | --- | --- |
 | `/assets/*` | `public, max-age=31536000, immutable` | Vite가 이름에 내용 해시를 붙여, 내용이 바뀌면 이름도 바뀐다. 다시 확인할 필요가 없다 |
-| `/teams/*`, `/avatars/*`, `/players/*`, [STEP 3-㉘] `/favicon-16.png`·`/favicon-32.png`·`/apple-touch-icon.png`(전에는 `/favicon.svg`) | `public, max-age=86400, must-revalidate` | 이름이 고정이라 바꿔 다시 배포하면 같은 주소에 새 파일이 들어간다. 이미 받은 브라우저는 길어야 하루 동안 옛 그림을 보고, 그 뒤 ETag로 확인해 새 그림을 받는다. 2026 시즌 로스터가 열리면 사진을 바꿀 예정이고(사진 폴더 README), 경기 중 화면 그림이 하루 늦게 바뀌는 것은 문제가 없지만 몇 주씩 남으면 곤란해 하루로 정했다. 하루 안에 다시 열면 그림마다 확인 요청(304)도 보내지 않는다 |
+| [STEP 3-㉚] `/players/*`, `/lyrics/*` | `public, max-age=31536000, immutable` | 앱이 묶음 내용 버전을 붙여(`?v=<버전>`) 요청한다. 내용이 바뀌면 주소가 바뀌므로 다시 확인할 필요가 없다(아래 「사진·가사 버전」) |
+| `/teams/*`, `/avatars/*`, [STEP 3-㉘] `/favicon-16.png`·`/favicon-32.png`·`/apple-touch-icon.png`(전에는 `/favicon.svg`). 3-㉙까지는 `/players/*`, `/lyrics/*`도 | `public, max-age=86400, must-revalidate` | 이름이 고정이라 바꿔 다시 배포하면 같은 주소에 새 파일이 들어간다. 이미 받은 브라우저는 길어야 하루 동안 옛 그림을 보고, 그 뒤 ETag로 확인해 새 그림을 받는다. 2026 시즌 로스터가 열리면 사진을 바꿀 예정이고(사진 폴더 README), 경기 중 화면 그림이 하루 늦게 바뀌는 것은 문제가 없지만 몇 주씩 남으면 곤란해 하루로 정했다. 하루 안에 다시 열면 그림마다 확인 요청(304)도 보내지 않는다 |
 | 그 밖(`/`, `/index.html`, `/team/...` 같은 앱 주소) | 정하지 않음 → Cloudflare 기본 `public, max-age=0, must-revalidate` | 새 배포가 바로 보여야 한다. index.html이 새 해시 이름의 `/assets`를 가리키므로 앱 코드도 바로 바뀐다 |
 
 - `/*` 규칙은 두지 않았다. 여러 규칙이 겹치면 같은 헤더가 합쳐지므로 경로별 규칙과 섞이지 않게 하기 위해서다.
 - 로컬 확인(`npx wrangler@4.162.0 dev`, build:deploy 결과): `/`·`/team/hanwha`는 `max-age=0, must-revalidate`, `/assets/index-*.js`는 `max-age=31536000, immutable`, `/teams/hanwha.webp`·`/avatars/hanwha.webp`·`/players/hanwha/50704.webp`·`/favicon.svg`는 `max-age=86400, must-revalidate`였다.
-- 한계: 없는 `/players/...` 주소는 SPA 설정 때문에 index.html(200)이 오고 이 하루 캐시 헤더가 붙는다. 앱은 사진이 있다고 표시된 선수만 요청하므로 실제로는 생기지 않는다.
+- 한계: 없는 `/players/...` 주소는 SPA 설정 때문에 index.html(200)이 온다. 앱은 사진이 있다고 표시된 선수만 요청하므로 실제로는 생기지 않는다.
+
+**사진·가사 버전 [STEP 3-㉚].** 배포판에서 가사가 전혀 안 보이는 사용자가 있었다. `/lyrics/<팀>.json`은 하루 캐시였다. 3-⑳ 때 받은 예전 형식 파일(행에 videoId·start, key 없음)이 브라우저에 남았고, 3-㉘ 앱이 같은 주소에서 그 파일을 캐시로 읽었다. `parseLyricsFile`이 key 없는 행을 모두 버려 빈 표가 되어 가사 칸이 없었다. 사진도 다시 만들어 배포하면 하루 동안 옛 그림이 남는 같은 구조다.
+
+- 방법: 빌드할 때 `vite.config.ts`가 `media-build/lyrics`, `media-build/players` 각 묶음 전체의 내용으로 버전(FNV-1a 32비트, 16진수 8자리, `src/lib/mediaVersion.ts`의 `mediaVersion`)을 만든다. 이 버전을 `__LYRICS__`, `__PLAYER_PHOTOS__`(전에는 참·거짓, 이제 버전 문자열 또는 null)로 앱 JS에 넣고, 앱은 `/lyrics/<팀>.json?v=<버전>`, `/players/…webp?v=<버전>`으로 요청한다(`src/lib/media.ts`의 `lyricsSrc`, `photoSrc`). 앱 JS는 이름에 내용 해시가 붙어 있어 배포하면 새로 받고, 버전도 함께 새것이 된다. 개발 서버도 서버를 켤 때 같은 방법으로 버전을 만들고, `/players/*`, `/lyrics/*`를 내주는 미들웨어는 `?` 뒤를 무시한다.
+- 파일 이름에 해시를 넣지 않고 질의 문자열로 한 까닭: 파일 이름과 `build-lyrics.mjs`·`optimize-player-media.mjs`·개발 서버 경로를 그대로 둘 수 있고, Cloudflare 정적 자산은 질의 문자열을 무시하고 같은 파일을 내준다. 이름을 바꾸면 예전 앱(이미 열린 탭)이 예전 이름을 요청할 때 404가 난다.
+- 팀마다 버전을 따로 두지 않고 묶음 하나에 버전 하나다. 가사 10개 파일과 사진 655장은 한 스크립트가 한 원본에서 함께 만들고, 사진마다 버전을 넣으면 앱 JS가 수십 KB 늘어난다. 대신 하나가 바뀌면 그 묶음 전체를 새로 받는다(가사 gzip 합계 58 KB, 사진은 보는 팀 것만 다시 받음). 사진은 시즌이 바뀔 때만 다시 만든다.
+- 버전이 붙으니 `/players/*`, `/lyrics/*`를 1년 `immutable`로 바꿨다. 같은 버전이면 내용이 같다. 로고·아바타·아이콘은 `public/` 안 고정 이름이라 하루 그대로다.
+- 형식이 맞지 않는 가사 파일: `parseLyricsFile`이 구조가 틀렸거나 곡이 있는데 읽은 줄이 0이면 null을 돌려준다. `useSongLyrics`는 받지 못한 것과 같이 다루어 지우고, 다음 재생 때(같은 팀 다른 곡 포함) `fetch(…, { cache: 'no-cache' })`로 서버에 확인해 다시 받는다. 전에는 팀이 바뀔 때만 다시 보아, 같은 팀 다른 곡을 틀어도 다시 받지 않았다(E2E TC-163에서 찾음).
+- 확인(`npm run build:deploy` → `npx wrangler@4.162.0 dev`): 앱 JS에 가사 `49570c0d`, 사진 `ed48b6cc`(dist 파일로 다시 계산한 값과 같음). 노시환을 틀면 `/lyrics/hanwha.json?v=49570c0d` 하나와 사진 26장 모두 `?v=ed48b6cc`(버전 없는 요청 0). `/lyrics/hanwha.json?v=…`, `/players/hanwha/50704.webp?v=…`는 `public, max-age=31536000, immutable`, `/teams/hanwha.webp`·`/favicon-32.png`는 하루, `/`는 `max-age=0`.
 
 **연결 미리 열기와 지연 로딩은 넣지 않았다 [STEP 3-⑯].** 배포 빌드(`vite preview`, 사진 포함, YouTube 쿠키 있는 새 창)에서 세 가지를 번갈아 12번씩 쟀다.
 - 비교한 판: 지금 판, `www.youtube.com`·`www.google.com`·`i.ytimg.com` preconnect를 더한 판, 격자 사진의 `loading="lazy"`를 뺀 판.

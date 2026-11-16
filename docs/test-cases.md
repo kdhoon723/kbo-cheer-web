@@ -2,7 +2,7 @@
 
 - 과목: 2026-2학기 스크립트프로그래밍 / 작성: 20241476 김도훈 / 작성일: 2026-11-15
 - 단계: STEP 4 테스트
-- 기준 문서(STEP 4-2에서 TC-60~69, STEP 3-⑪에서 TC-70~88, STEP 3-⑫에서 TC-89~95, STEP 3-⑲에서 TC-103~109, STEP 3-⑳에서 TC-110~121, STEP 3-㉑에서 TC-122~126, STEP 3-㉓에서 TC-127~133, STEP 3-㉔에서 TC-134~140, STEP 3-㉕에서 TC-141~147, STEP 3-㉖에서 TC-148~154, STEP 3-㉗에서 TC-155~157, STEP 3-㉘에서 TC-158~161, STEP 3-㉙에서 TC-155·156 수정): `docs/requirements.md`(FR-01~55, NFR-01~16, BR-01~65, EX-01~31), `docs/design.md`
+- 기준 문서(STEP 4-2에서 TC-60~69, STEP 3-⑪에서 TC-70~88, STEP 3-⑫에서 TC-89~95, STEP 3-⑲에서 TC-103~109, STEP 3-⑳에서 TC-110~121, STEP 3-㉑에서 TC-122~126, STEP 3-㉓에서 TC-127~133, STEP 3-㉔에서 TC-134~140, STEP 3-㉕에서 TC-141~147, STEP 3-㉖에서 TC-148~154, STEP 3-㉗에서 TC-155~157, STEP 3-㉘에서 TC-158~161, STEP 3-㉙에서 TC-155·156 수정, STEP 3-㉚에서 TC-162~164 추가): `docs/requirements.md`(FR-01~55, NFR-01~16, BR-01~65, EX-01~31), `docs/design.md`
 - 실행 결과: `docs/test-results.md`
 
 ## 1. 테스트 방식
@@ -176,7 +176,7 @@
 | TC-95 | 넓은 화면과 휴대폰 화면 비교 | NFR-01, NFR-02, NFR-13, FR-34 | 개발 서버, 사진 폴더 있음 | 1280×800, 1440×900, 1920×1080, 360×640, 390×844 | 넓은 화면: 한화(전 팀 삼성)에서 두 열의 곡을 하나씩 누르고 가로 넘침·조작 요소 크기·글자 대비를 잼. 휴대폰: 이 단계 전 코드와 뒤 코드에서 첫 곡 전·재생 중 화면을 찍어 비교 | 넓은 화면: 가로 넘침 0, 44×44 미만 조작 요소 없음, 글자 대비 4.5 이상, 1920에서 앱 폭 1680. 휴대폰: 주요 요소 위치·크기가 같고 화면 차이는 플레이어 영상 안쪽뿐 | 수동 |
 | TC-96 | 휴대폰 정렬 선택 시트 | FR-27 | 한화 화면, 360×640 | 가나다, 자주 튼, 주전순 | 탭 오른쪽 정렬 버튼 → 시트에서 고르기를 세 번, 새로고침 | 탭 줄 한 줄(높이 60 미만), 세 버튼 줄은 숨김, 버튼 글자가 고른 정렬, 가나다는 사전 순, 새로고침 뒤에도 마지막 정렬 | E2E |
 | TC-97 | 누끼와 격자 사진 비율 [STEP 3-⑮] | BR-51, FR-35 | 매치업 보드(1440×900, 한화 vs 삼성), `media-build/` 있음(없으면 건너뜀) | 류지혁(누끼 300×260) | 오른쪽 열 류지혁 누름 → 카드 누끼와 격자 사진의 그려진 상자 비율·object-fit 측정 | 누끼 contain, 격자 cover, 상자 비율과 원래 비율 차이 1% 미만 | E2E |
-| TC-98 | 경로별 캐시 헤더 [STEP 3-⑯] | NFR-15 | `npm run build:deploy` 결과를 `npx wrangler dev`로 띄움 | `/`, `/team/hanwha`, `/assets/index-*.js`, `/teams/…`, `/avatars/…`, `/players/…`, `/favicon.svg`([STEP 3-㉘] `/favicon-16.png`, `/favicon-32.png`, `/apple-touch-icon.png`) | `curl -I` | 앱 주소 max-age=0·must-revalidate, `/assets` 1년·immutable, 그림 하루·must-revalidate | 수동 |
+| TC-98 | 경로별 캐시 헤더 [STEP 3-⑯] | NFR-15 | `npm run build:deploy` 결과를 `npx wrangler dev`로 띄움 | `/`, `/team/hanwha`, `/assets/index-*.js`, `/teams/…`, `/avatars/…`, `/players/…`, `/favicon.svg`([STEP 3-㉘] `/favicon-16.png`, `/favicon-32.png`, `/apple-touch-icon.png`) | `curl -I` | 앱 주소 max-age=0·must-revalidate, `/assets` 1년·immutable, 그림 하루·must-revalidate. [STEP 3-㉚] `/players/…?v=…`, `/lyrics/…?v=…`는 1년·immutable | 수동 |
 | TC-99 | 사진 없는 실행의 사진 요청 [STEP 3-⑯] | NFR-15, EX-30 | 개발 서버(`media-build` 있음/없음), `npm run build`, `npm run build:deploy`를 `vite preview`로 | 한화(전 팀 삼성), 360×640·1440×900, 노시환 재생 | `/players/` 요청 수와 보인 사진 수 | 사진 없음: 요청 0, 아바타만. 사진 있음: 요청이 모두 200이고 사진이 보임 | 수동 |
 | TC-100 | 메뉴와 예전 주소 [STEP 3-⑰] | FR-12 | 한화 화면 | 1280×800 머리말, 360×640 머리말([STEP 3-⑱]부터), `/team/hanwha/import` | 메뉴 링크 읽기, 예전 주소 열기, 「곡 관리」 링크 | 두 메뉴 모두 응원·곡 관리·설정, 예전 주소는 `/team/hanwha/songs/add`(제목 「곡 추가」), 「곡 관리」로 목록 복귀 | E2E |
 | TC-101 | 곡 관리 → 곡 추가 → 저장 → 곡 관리 [API] [STEP 3-⑰] | FR-11, FR-12, EX-16 | 한화 곡을 뺀 처음 데이터 | 삼성 곡 관리, 한화 곡 관리(빈 상태), 한화 모음 영상 URL | 제목 옆·빈 상태의 「곡 추가」 → 불러오기 → 저장 | 두 「곡 추가」 모두 `/songs/add`, 저장 44곡 뒤 `/team/hanwha/songs`에 44줄 | E2E |
@@ -305,4 +305,12 @@
 | TC-159 | 새로 넣은 곡의 가사 [API][YT] | FR-40, FR-54, BR-59 | 처음 데이터, 가사 폴더 | `hWF7dU4-fQU` 구단별로 나눠 넣기 → 17곡 저장 | 한화 「하나 되어 외쳐」, 키움 「승리의 함성」 틀기 | 처음 데이터에 없던 두 곡에 가사(각각 나무위키, 구단 공식 사이트) | E2E |
 | TC-160 | 이름 열쇠와 가사 표 | BR-59 | 픽스처 `__fixtures__/lyrics-v1-songs.json`(예전 413곡 열쇠, 가사 글 없음), `media-build/lyrics`(없으면 그 묶음만 건너뜀) | `lyricKey`, `parseLyricsFile`, `findLyric`, `sourceLabel` | 단위 | 공백·괄호·기호 제거와 소문자, 선수와 그 밖을 따로 찾고 상황·팀 응원가는 같이, 다른 영상·시각도 이름이 같으면 찾음, 틀린 줄 건너뜀. 616곡을 읽고 처음 데이터 461곡(선수 218, 팀 응원가 210, 상황 33), 예전 413곡 모두, KT 공식·한화 나무위키 | 단위 |
 | TC-161 | KBO 아이콘 | 없음(디자인) | `node scripts/make-icons.mjs`, `npm run build`, `npx wrangler dev` | 16·32·180px 아이콘 | 실제 크기·확대 캡처, 창이 있는 Chromium(가상 화면)으로 탭 캡처, `curl -I` | 밝은 판 위 심볼(16·32), 심볼 + KBO(180). 탭 아이콘이 Vite 기본 그림에서 KBO 심볼로 바뀜. `dist`에 세 파일과 `_headers`, 세 주소 모두 하루·must-revalidate, `/favicon.svg`는 없음(앱 주소로 감) | 수동 |
+
+## 24. 배포 때 바뀐 가사·사진 파일을 바로 받기 [STEP 3-㉚]
+
+| ID | 이름 | 근거 | 사전 조건 | 입력 | 절차 | 기대 결과 | 자동 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TC-162 | 캐시에 남은 예전 형식 가사 [YT] | NFR-15, BR-59 | 가사 폴더, 버전 없는 `/lyrics/hanwha.json`은 예전 형식을 돌려줌(route로 흉내, 하루 캐시 헤더) | 같은 페이지에서 예전 주소를 먼저 받음 → 노시환 | 순서대로 | 예전 주소는 「예전 가사」, 앱은 `/lyrics/hanwha.json?v=<8자리>`로 받아 새 가사가 보인다 | E2E |
+| TC-163 | 형식이 틀린 가사 파일은 다시 받기 [YT] | BR-59 | 첫 `/lyrics/hanwha.json` 응답만 예전 형식 | 노시환 → 불타는 태양 | 순서대로 | 노시환에는 가사 칸 없음, 같은 팀 다음 곡에서 다시 받아 가사가 보임(요청 2번, 두 번째 fetch는 `cache: 'no-cache'`) | E2E |
+| TC-164 | 버전 문자열과 형식 판정 | NFR-15, BR-59 | 없음 | 파일 묶음, 가사 파일 | `mediaVersion`, `withVersion`, `parseLyricsFile` | 16진수 8자리, 순서와 상관없음, 내용·이름·파일 수가 바뀌면 다름, 경로·내용 경계 구별. 버전 없으면 주소 그대로. 구조가 틀렸거나 예전 형식이면 null, 곡 없는 파일은 빈 표 | 단위 |
 

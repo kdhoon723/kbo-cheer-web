@@ -735,3 +735,29 @@ STEP 4 뒤에 바꾼 단계마다 같은 명령을 다시 돌린 결과다. 앞 
 
 - 첫 전체 실행에서 5개가 실패했다. TC-89·90·97은 선수 카드를 보는 테스트라 가사가 있는 곡에서 카드 자리에 가사가 들어가 실패해, 그 테스트만 가사를 접은 설정으로 시작하게 했다. TC-110은 휴대폰 폭에서 맨 아래 가사 칸이 숨은 채 남아 있어(두 요소) 앱에서 휴대폰은 그 칸을 그리지 않게 고쳤다. TC-112는 YouTube 플레이어 준비 대기 시간 초과(F-01과 같은 간헐)로, 다시 돌리면 통과했다.
 - `npm test` 31 files 388 passed, `npm run test:e2e` 116 passed(4.7m), `npm run build` 통과(응원 화면 앱 JS 359.09 kB = index 246.09 + 공유 113.00, gzip 105.99), `npm run lint` 종료 코드 0·경고 4.
+
+## 22. 배포 때 바뀐 가사·사진 파일을 바로 받게(STEP 3-㉚)
+
+### 22.1 오류와 원인
+
+- 오류: 배포판에서 가사가 전혀 안 보이는 사용자가 있었다(지금 재생 시트에 가사 칸과 출처가 없음).
+- 원인: `/lyrics/<팀>.json`은 하루 캐시(`max-age=86400`)였다. 3-⑳ 때 받은 예전 형식 파일(행에 videoId·start, key 없음)이 브라우저에 남아, 3-㉘ 앱이 같은 주소에서 그 파일을 캐시로 읽었다. `parseLyricsFile`이 key 없는 행을 모두 버려 빈 표가 되었고, 빈 표는 「가사 없는 팀」과 구별되지 않아 다시 받지도 않았다. 배포판의 가사 자료 자체(616곡)는 문제가 없었다.
+
+### 22.2 수정
+
+- 사진·가사 묶음마다 내용 버전(FNV-1a 32비트 8자리)을 빌드 때 만들어 앱 JS에 넣고, 요청 주소에 `?v=<버전>`을 붙였다. 개발 서버도 같다.
+- `/players/*`, `/lyrics/*`는 1년 `immutable`로 바꿨다(같은 버전이면 같은 내용).
+- 형식이 틀린 가사 파일(예전 형식 포함)은 null로 보고 받지 못한 것과 같이 다음 재생 때 `cache: 'no-cache'`로 다시 받는다. 다시 보는 시점을 「팀이 바뀔 때」에서 「곡이 바뀔 때」로 넓혔다(같은 팀 다른 곡에서 다시 받지 않던 것을 TC-163이 찾음).
+
+### 22.3 확인
+
+- `npm run build:deploy` 결과: 앱 JS에 가사 버전 `49570c0d`, 사진 버전 `ed48b6cc`가 들어 있고 `dist/lyrics`(10개), `dist/players`(655장)로 다시 계산한 값과 같다. `dist/_headers`는 `public/_headers`와 같다.
+- `npx wrangler@4.162.0 dev`(build:deploy 결과)와 Playwright MCP: 노시환을 틀면 `/lyrics/hanwha.json?v=49570c0d` 한 번, 사진 26장 모두 `?v=ed48b6cc`, 버전 없는 요청 0, 가사가 보인다. 응답 헤더 `/lyrics/hanwha.json?v=…`·`/players/hanwha/50704.webp?v=…`는 `public, max-age=31536000, immutable`, `/teams/hanwha.webp`·`/favicon-32.png`는 `public, max-age=86400, must-revalidate`, `/`는 `public, max-age=0, must-revalidate`.
+- `npm run build`(사진·가사 없는 빌드)에는 버전도 `?v=`도 없고 요청하지 않는다.
+- E2E TC-162: 버전 없는 주소가 예전 형식을 돌려주는(캐시에 남은 것처럼 흉내, 같은 페이지에서 먼저 받음) 상황에서 앱은 `?v=` 주소로 받아 새 가사가 보인다. TC-163: 첫 응답이 예전 형식이면 가사 칸이 없고, 같은 팀 다음 곡에서 다시 받아(요청 2번, 앱이 넘긴 fetch 캐시 방식 `[기본, 'no-cache']`) 가사가 보인다.
+- 단위 TC-164: `mediaVersion`(순서 무관, 내용·이름·파일 수 변화 감지, 경로·내용 경계), `withVersion`, `parseLyricsFile`(구조 오류·예전 형식은 null, 곡 없는 파일은 빈 표).
+- 바꾼 기존 테스트: TC-83은 사진 주소가 `?v=<8자리>`로 끝나는지 보게 했다. 가사 단위 테스트의 「틀린 구조면 빈 표」는 「null」로 바꿨다.
+
+### 22.4 다시 실행한 테스트
+
+- `npm test` 32 files 394 passed, `npm run test:e2e` 118 passed(4.8m, 첫 실행에서 TC-83 하나가 사진 주소 비교로 실패해 위처럼 고친 뒤), `npm run build` 통과(응원 화면 앱 JS 359.10 kB = index 246.10 + 공유 113.00, gzip 106.00), `npm run lint` 종료 코드 0·경고 4.

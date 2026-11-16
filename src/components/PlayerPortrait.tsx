@@ -1,7 +1,7 @@
 //20241476-김도훈-(2026-11-16)
 import { useState } from 'react'
 import { avatarUrl, photoUrl } from '../lib/players.ts'
-import { PLAYER_PHOTOS } from '../lib/media.ts'
+import { PLAYER_PHOTOS, photoSrc } from '../lib/media.ts'
 import type { PlayerInfo, TeamId } from '../types.ts'
 
 interface Props {
@@ -15,7 +15,8 @@ interface Props {
  * 사진이 없거나 못 받아도 깨진 그림 표시 없이 아바타가 그대로 남는다
  */
 export default function PlayerPortrait({ teamId, player, size }: Props) {
-  const url = PLAYER_PHOTOS ? photoUrl(teamId, player, size === 'card' ? 'card' : 'thumb') : null
+  const path = PLAYER_PHOTOS ? photoUrl(teamId, player, size === 'card' ? 'card' : 'thumb') : null
+  const url = path && photoSrc(path)
   const [loaded, setLoaded] = useState<string | null>(null)
   const [failed, setFailed] = useState<string | null>(null)
   return (

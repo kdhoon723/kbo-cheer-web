@@ -1,21 +1,27 @@
 //20241476-김도훈-(2026-11-16)
 import { useEffect, useState } from 'react'
-import { LYRICS } from '../lib/media.ts'
+import { LYRICS, lyricsSrc } from '../lib/media.ts'
 import { findLyric, lyricsUrl, parseLyricsFile } from '../lib/lyrics.ts'
 import type { Lyric, LyricTable } from '../lib/lyrics.ts'
 import type { Song, TeamId } from '../types.ts'
 
-// 팀 파일은 한 번만 받는다. 넓은 화면 칸과 휴대폰 시트가 같은 결과를 쓴다. 실패하면 지워 다음 재생 때 다시 받는다
+// 팀 파일은 한 번만 받는다. 넓은 화면 칸과 휴대폰 시트가 같은 결과를 쓴다.
+// 받지 못했거나 형식이 맞지 않으면 지워 다음 재생 때 다시 받는다. 그때는 브라우저 캐시를 그대로 쓰지 않고 서버에 확인한다
 const cache = new Map<TeamId, Promise<LyricTable | null>>()
+const failed = new Set<TeamId>()
 
 function loadTeamLyrics(teamId: TeamId): Promise<LyricTable | null> {
   const cached = cache.get(teamId)
   if (cached) return cached
-  const loading = fetch(lyricsUrl(teamId))
+  const loading = fetch(lyricsSrc(lyricsUrl(teamId)), failed.has(teamId) ? { cache: 'no-cache' } : undefined)
     .then(async (res) => (res.ok ? parseLyricsFile(teamId, await res.json()) : null))
     .catch(() => null)
     .then((table) => {
-      if (!table) cache.delete(teamId)
+      if (table) failed.delete(teamId)
+      else {
+        cache.delete(teamId)
+        failed.add(teamId)
+      }
       return table
     })
   cache.set(teamId, loading)
@@ -28,8 +34,10 @@ function loadTeamLyrics(teamId: TeamId): Promise<LyricTable | null> {
  */
 export function useSongLyrics(song: Song | undefined, load: boolean): Lyric | null {
   const teamId = song?.teamId
+  const songId = song?.id
   const [loaded, setLoaded] = useState<{ teamId: TeamId; table: LyricTable } | null>(null)
 
+  // 곡이 바뀔 때마다 본다. 받아 둔 팀 파일은 그대로 쓰고, 지난번에 받지 못한 팀이면 이때 다시 받는다 [STEP 3-㉚]
   useEffect(() => {
     if (!LYRICS || !teamId || !load) return
     let alive = true
@@ -39,7 +47,7 @@ export function useSongLyrics(song: Song | undefined, load: boolean): Lyric | nu
     return () => {
       alive = false
     }
-  }, [teamId, load])
+  }, [teamId, songId, load])
 
   if (!song || !loaded || loaded.teamId !== song.teamId) return null
   return findLyric(loaded.table, song)

@@ -3,7 +3,7 @@ import { useState } from 'react'
 import * as m from 'motion/react-m'
 import { playerOf } from '../data/players.ts'
 import { getTeam } from '../data/teams.ts'
-import { PLAYER_PHOTOS } from '../lib/media.ts'
+import { PLAYER_PHOTOS, photoSrc } from '../lib/media.ts'
 import { cardSubtitle, cutoutUrl } from '../lib/players.ts'
 import type { Song } from '../types.ts'
 import { swap } from '../ui/motionTokens.ts'
@@ -49,7 +49,8 @@ export default function PlayerCard({ song }: Props) {
 
 function CardFigure({ song }: { song: Song }) {
   const player = playerOf(song)
-  const cutout = PLAYER_PHOTOS ? cutoutUrl(song.teamId, player) : null
+  const cutoutPath = PLAYER_PHOTOS ? cutoutUrl(song.teamId, player) : null
+  const cutout = cutoutPath && photoSrc(cutoutPath)
   const [loaded, setLoaded] = useState(false)
   const [failed, setFailed] = useState(false)
   if (song.kind !== 'player') {

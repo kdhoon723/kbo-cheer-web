@@ -10,12 +10,13 @@
   Cache-Control: public, max-age=86400, must-revalidate
 /avatars/*
   Cache-Control: public, max-age=86400, must-revalidate
-/players/*
-  Cache-Control: public, max-age=86400, must-revalidate
 
-# 팀별 가사: 이름이 고정이라 그림과 같이 하루 두고 다시 확인한다
+# 선수 사진과 팀별 가사: 앱이 묶음 내용 버전을 붙여(?v=<버전>) 요청한다. 내용이 바뀌면 주소가 바뀌므로 1년 두고 다시 확인하지 않는다.
+# 버전은 빌드 때 media-build 내용으로 만들어 이름에 해시가 붙은 앱 JS에 들어간다(vite.config.ts, src/lib/mediaVersion.ts)
+/players/*
+  Cache-Control: public, max-age=31536000, immutable
 /lyrics/*
-  Cache-Control: public, max-age=86400, must-revalidate
+  Cache-Control: public, max-age=31536000, immutable
 
 # KBO 아이콘(scripts/make-icons.mjs로 만든다): 이름이 고정이라 그림과 같이 하루 두고 다시 확인한다
 /favicon-16.png

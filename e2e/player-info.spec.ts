@@ -208,7 +208,8 @@ test.describe('12. 선수 정보와 사진 [STEP 3-⑪]', () => {
   test('TC-83 사진이 있으면 칸·검색 결과·재생 줄에 선수 사진이 나온다', async ({ page }) => {
     test.skip(!(await mediaAvailable(page)), '최적화한 사진(media-build, npm run media)이 없어 건너뜀')
     await gotoHanwha(page)
-    const url = `/players/hanwha/${playerId('hanwha', '노시환')}.webp`
+    // [STEP 3-㉚] 사진 묶음 버전이 붙는다(?v=<8자리>)
+    const url = new RegExp(`^/players/hanwha/${playerId('hanwha', '노시환')}\\.webp\\?v=[0-9a-f]{8}$`)
     await expect(cellOf(page, '노시환').locator('.portrait-photo.is-loaded')).toHaveAttribute('src', url)
 
     await page.getByRole('searchbox', { name: '곡 검색' }).fill('노시환')
