@@ -22,9 +22,9 @@ const PAGES: { name: string; path: string; ready: (page: Page) => Promise<void> 
     ready: (page) => expect(page.locator('.song-form')).toBeVisible(),
   },
   {
-    name: '가져오기',
-    path: '/team/hanwha/import',
-    ready: (page) => expect(page.getByRole('heading', { name: /^곡 가져오기/ })).toBeVisible(),
+    name: '곡 추가',
+    path: '/team/hanwha/songs/add',
+    ready: (page) => expect(page.getByRole('heading', { name: /^곡 추가/ })).toBeVisible(),
   },
   {
     name: '설정',

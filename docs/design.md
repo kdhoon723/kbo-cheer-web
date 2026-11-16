@@ -512,7 +512,8 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
           <Route index element={<MainPage />} />                  {/* 응원 화면 */}
           <Route path="songs" element={<SongListPage />} />       {/* 곡 관리 */}
           <Route path="songs/:songId/edit" element={<SongEditPage />} />
-          <Route path="import" element={<ImportPage />} />        {/* 곡 가져오기 */}
+          <Route path="songs/add" element={<ImportPage />} />     {/* 곡 추가(가져오기) [STEP 3-⑰] */}
+          <Route path="import" element={<Navigate to="../songs/add" replace />} />  {/* 예전 주소 */}
         </Route>
         <Route path="settings" element={<SettingsPage />} />     {/* 데이터 관리 */}
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -526,11 +527,13 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 | --- | --- | --- |
 | `/` | 마지막 팀이 있으면 `/team/<마지막 팀>`으로 이동, 없으면 팀 선택 화면 | FR-02, BR-28 |
 | `/team/:teamId` | 메인(응원) 화면 | FR-04~10, FR-19, FR-23~25, FR-27 |
-| `/team/:teamId/songs` | 곡 관리(목록, 수정·삭제 버튼) | FR-15, FR-16 |
+| `/team/:teamId/songs` | 곡 관리(목록, 수정·삭제 버튼, 제목 옆 「곡 추가」) | FR-15, FR-16 |
 | `/team/:teamId/songs/:songId/edit` | 곡 수정 | FR-15 |
-| `/team/:teamId/import` | 곡 가져오기(URL, YouTube 검색, 확인, 단일 등록) | FR-11~14, FR-28 |
+| `/team/:teamId/songs/add` | 곡 추가(모음 영상 URL, 영상 하나 URL, YouTube 검색, 확인 단계). 저장하거나 확인 단계·단일 등록에서 취소하면 곡 관리 목록으로 돌아간다 [STEP 3-⑰] | FR-11~14, FR-28 |
+| `/team/:teamId/import` | 예전 가져오기 주소. `<Navigate to="../songs/add" replace>`로 곡 추가로 보낸다 [STEP 3-⑰] | |
 | `/settings` | 데이터 관리(JSON 내보내기·가져오기, 처음 데이터로 되돌리기, 접속 주소) | FR-20~22, BR-44 |
 
+- [STEP 3-⑰] 곡 추가(가져오기)와 곡 관리는 둘 다 경기 밖에서 곡 목록을 손보는 일이라 곡 관리 아래 한 갈래로 묶었다. 화면 메뉴는 응원 · 곡 관리 · 설정 셋이고, 곡 추가 화면에서도 「곡 관리」가 현재 메뉴로 표시된다(NavLink가 `/songs` 아래 주소를 모두 포함). 곡 추가 화면 맨 위에 「곡 관리」로 돌아가는 링크(ArrowLeft)를 두어, 입력 단계처럼 취소 버튼이 없는 단계에서도 목록으로 돌아갈 수 있다. 곡 관리 제목 오른쪽의 「곡 추가」는 밝은 판 링크(Plus 아이콘)이고, 곡이 없는 팀은 빈 상태 안내의 「곡 추가」로 같은 화면에 간다.
 - 현재 팀을 URL에 두는 이유: 새로고침과 뒤로가기에서도 팀이 유지되고, 곡 관리·가져오기 화면이 "어느 팀의" 화면인지 분명해진다. 마지막 팀과 전 팀은 URL만으로 알 수 없으므로 TeamState에 따로 저장한다.
 - `TeamLayout`은 `useParams`로 teamId를 읽고, 10개 팀 ID가 아니면 "팀을 찾을 수 없습니다"와 처음 화면 링크를 보여 준다(수업 MenuDetail 예제와 같은 처리).
 - `TeamLayout`은 `<Outlet key={teamId} />`로 그린다. 팀이 바뀌면 아래 화면이 새로 만들어져 메인 화면의 검색어가 비워진다(BR-29). 같은 라우트에서 params만 바뀌면 React Router는 컴포넌트를 다시 만들지 않기 때문이다. [R-23]
@@ -576,7 +579,7 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 
 ```
 ┌──────────────────────────────────────────┬───────────────────────────┐
-│ [로고 한화 v] [<> 로고 전 팀]   응원 곡 관리 가져오기 설정 │ ═════ 팀 색 3px 띠 ═════ │
+│ [로고 한화 v] [<> 로고 전 팀]   응원 곡 관리 설정        │ ═════ 팀 색 3px 띠 ═════ │
 ├──────────────────────────────────────────┤ ┌───────────────────────┐ │
 │ [돋보기 초성이나 이름으로 찾기 ........ /] │ │ YouTube 플레이어       │ │ ← 360×202, 열 위쪽
 │ 선수 22 | 팀 응원가 18  [주전순][가나다][자주 튼]│ └───────────────────────┘ │
@@ -601,7 +604,7 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 
 ```
 ┌──────────────────────────────────────────────────────────────┬──────────────────────────┐
-│                                 응원 곡 관리 가져오기 설정    │ ═════ 팀 색 3px 띠 ═════ │
+│                                 응원 곡 관리 설정             │ ═════ 팀 색 3px 띠 ═════ │
 ├──────────────────────────────────────────────────────────────┤ ┌──────────────────────┐ │
 │ [돋보기 초성이나 이름으로 찾기 .................. /] [주전순][가나다][자주 튼] │ │ YouTube 플레이어 16:9  │ │ ← 열 안쪽 폭, 1280px에서 359×202, 1920px에서 446×251
 │ [로고44 한화 v]              vs  [로고44 삼성 v]                │ └──────────────────────┘ │
@@ -637,7 +640,7 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 - [디자인 개편 후속] 팀 고르기 창과 재생 도구 시트는 같은 `Sheet` 컴포넌트(아래에서 올라오는 `<dialog>`, 제목과 닫기 버튼)를 쓴다.
 - [디자인 개편] 팀 메뉴는 `<select>` 대신 머리말의 팀 버튼(로고 판 36 + 팀 이름 + 아래 화살표)과 팀 고르기 창(TeamSheet)이다. 창은 `<dialog>`를 `showModal()`로 열어 대화상자 역할, 포커스 가두기, Esc로 닫기를 브라우저가 맡는다. 열면 지금 팀 칸에 포커스를 두고, 닫으면 팀 버튼으로 포커스가 돌아간다. 창 뒤를 어둡게 덮지 않아(`::backdrop` 투명) 플레이어가 가려지지 않는다. 휴대폰은 화면 아래에서 올라오는 시트, 노트북은 왼쪽 열 위쪽의 상자다. 팀 고르기 창과 첫 실행 화면은 같은 5×2 로고 격자(TeamGrid)를 쓴다.
 - [디자인 개편] 「전 팀」 버튼은 맞바꿈 아이콘, 전 팀 로고 판 28, "전 팀" 글자다. 접근 가능한 이름은 "전 팀: 삼성"이고, 전 팀이 없으면 "전 팀"이며 비활성이다.
-- [디자인 개편] 화면 메뉴(곡 관리, 가져오기, 설정, 응원)는 휴대폰에서 더 보기 아이콘으로 열고, 머리말 아래로 펼쳐져 내용을 밀어낸다(플레이어를 덮지 않음). Esc로 닫힌다. 노트북에서는 머리말 오른쪽에 글자 링크로 늘 보인다.
+- [디자인 개편] 화면 메뉴(응원, 곡 관리, 설정. [STEP 3-⑰] 가져오기는 곡 관리 안 「곡 추가」로 옮김)는 휴대폰에서 더 보기 아이콘으로 열고, 머리말 아래로 펼쳐져 내용을 밀어낸다(플레이어를 덮지 않음). Esc로 닫힌다. 노트북에서는 머리말 오른쪽에 글자 링크로 늘 보인다.
 - [STEP 3-7] 상황 칸은 MainPage가 고르고(1~8번 단축키와 같은 배열), PlayerPanel 안의 자리(`.dock-situations`)에 `createPortal`로 그린다. 자리 요소는 AppLayout이 `SituationSlotContext`로 내려 준다.
 - [STEP 3-7] 알림(Toast)은 독 안에 두어, 휴대폰에서는 독 바로 위에 뜨고 플레이어를 덮지 않는다. 노트북에서는 왼쪽 열 아래에 뜬다. 누르면 바로 닫히고, 4초 뒤에도 닫힌다.
 - [STEP 3-7] 진행 표시는 곡 구간 기준 `경과 / 길이`(예: 00:12 / 01:01)다. 모음 영상은 30분이 넘어, 영상 기준 시각(23:45 / 24:46)으로는 곡이 얼마나 남았는지 알기 어렵다. PlayerPanel이 250ms마다 `getCurrentTime()`을 읽고, 표시하는 초가 바뀔 때만 상태를 바꾼다. 응원가 시작 지점이 구간 안에 있으면 막대에 눈금으로 표시한다.
@@ -657,8 +660,8 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 | 상대 팀 차례 | 「전 팀: 삼성」 → `/team/samsung`, 재생 중인 곡은 계속(BR-06) |
 | 검색 재생 | 검색칸 입력 → 결과(현재 팀 먼저, 다른 팀은 로고와 팀 이름) → 누름 → 재생(다른 팀이면 팀 전환) |
 | 첫 재생이 막힘(휴대폰) | 안내 "영상을 한 번 직접 눌러 재생을 허용해 주세요" → 플레이어 누름 → 그 곡이 재생되고, 다음부터는 버튼으로 재생 |
-| 모음 영상 가져오기 | 메뉴 「가져오기」 → URL 입력 → 후보 표 확인·수정 → 「저장」 → 메인 화면 |
-| YouTube 검색 등록 | 가져오기 화면 「YouTube 검색」 탭 → 검색어 → 결과 하나 선택 → 모음이면 후보 표, 아니면 단일 등록 폼 |
+| 모음 영상 가져오기 | 메뉴 「곡 관리」 → 「곡 추가」 → URL 입력 → 후보 표 확인·수정 → 「저장」 → 곡 관리 목록 [STEP 3-⑰] |
+| YouTube 검색 등록 | 곡 추가 화면 「YouTube 검색」 탭 → 검색어 → 결과 하나 선택 → 모음이면 후보 표, 아니면 단일 등록 폼 |
 | 곡 수정·삭제 | 메뉴 「곡 관리」 → 곡 줄의 「수정」 → 폼 저장 / 「삭제」 → 확인 |
 | 노트북 → 휴대폰 | 노트북 「설정」 → 내보내기 → 파일을 휴대폰으로 전달(메신저 등) → 휴대폰 「설정」 → 가져오기 → 확인 |
 
@@ -913,7 +916,7 @@ App
 | PlayerPortrait | 구단 아바타 위에 선수 사진을 덮는 사진 자리. 사진이 없거나 실패하면 아바타만. `cell` 40×50(넓은 화면 보드는 48×60), `row`·`dock` 32×40 [STEP 3-⑪], `card` 96×120(선수 카드, 누끼가 없을 때) [STEP 3-⑫] | `teamId: TeamId`, `player: PlayerInfo \| null`, `size: 'cell' \| 'row' \| 'dock' \| 'card'` | 없음 |
 | TeamSongList | 팀 응원가 목록(번호와 제목, 52px 줄) | `songs: Song[]`, `nowPlayingId: string \| null`, `onPlay(song: Song): void` | 없음 |
 | SituationGrid | 상황 칸 4×2(칸 높이 52), 상황 이름과 필요할 때만 곡 제목 줄(`situationLabel`), 빈 칸은 누를 수 없음, 노트북에서 칸마다 단축키 번호 [디자인 개편, 후속] | `cells: (Song \| null)[]`, `nowPlayingId: string \| null`, `onPlay(song: Song): void` | 없음 |
-| EmptyState | 곡 없음 문구, 가져오기 링크(EX-16). 메인과 곡 관리에서 함께 씀 | `teamId: TeamId` | 없음 |
+| EmptyState | 곡 없음 문구, 「곡 추가」 링크(EX-16, `/team/:teamId/songs/add`). 메인과 곡 관리에서 함께 씀 | `teamId: TeamId` | 없음 |
 | StatusMessage | 빈 상태·불러오는 중·오류·안내 문구 한 가지 모양 [STEP 3-7] | `tone: 'empty' \| 'loading' \| 'error' \| 'info'`, `children: ReactNode`, `action?: ReactNode` | 없음 |
 | PlayerPanel | [STEP 3-⑫] 플레이어 아래 선수 카드 자리(넓은 화면에서만 보임), 휴대폰에서 재생 줄의 사진·글자 자리를 버튼으로 감싸 지금 재생 시트(카드, 굵은 진행 막대, 경과/길이)를 엶. (재생 줄에 선수 곡은 사진, 그 밖은 로고 판) 플레이어 자리(재생 중 곡의 팀 색 띠, 휴대폰은 첫 곡 전에 접힘), 도구 줄(「지금을 응원가 시작으로」, 볼륨. 휴대폰은 더보기 버튼이 여는 재생 도구 시트), 독(진행 막대, 재생 줄, 응원가로, 정지, 더보기, 알림, 상황 칸 자리). 응원가 시작 버튼 활성 여부와 진행 시간을 250ms마다 스스로 갱신 [C-10, STEP 3-7] | `situationSlotRef(el: HTMLDivElement \| null): void` | Player, Songs, Prefs |
 | PlayerHost | 플레이어가 들어갈 DOM 자리 | 없음 | Player(`attachHost`) |
@@ -922,7 +925,7 @@ App
 | SongRow | 곡 한 줄(종류, 이름, 구간, 수정·삭제) | `song: Song`, `onEdit(id: string): void`, `onDelete(song: Song): void` | 없음 |
 | SongEditPage | songId·teamId가 모두 맞는 곡 찾기, 없으면 안내(EX-29), 저장 후 곡 관리로 이동 [C-14] | 없음 | Songs |
 | SongForm | 이름·종류·시작·끝·응원가 시작 입력과 검증(BR-19~21), 같은 제목 상황 곡 경고(BR-43) [C-08] | `initial: SongFormValues`, `videoId: string`, `videoDuration: number`, `isDuplicateSituationTitle(title: string): boolean`, `submitLabel: string`, `onSubmit(fields: SongFields): void`, `onCancel(): void` | 없음 |
-| ImportPage | 가져오기 단계 관리(입력→불러오는 중→확인/단일 등록), 요청 취소, 저장 중 표시 [C-05, R-21] | 없음 | Songs, Notice |
+| ImportPage | 곡 추가(가져오기) 단계 관리(입력→불러오는 중→확인/단일 등록), 요청 취소, 저장 중 표시, 위쪽 「곡 관리」 링크. 저장·확인 단계 취소 뒤 곡 관리로 [C-05, R-21, STEP 3-⑰] | 없음 | Songs, Notice |
 | DataApiNotice | 키 없음·LAN 접속 안내(EX-06, EX-20) | `reason: 'noKey' \| 'lanHost'` | 없음 |
 | UrlInputForm | URL 입력, 형식 검사(EX-01) | `disabled: boolean`, `onSubmit(videoId: string): void` | 없음 |
 | VideoSearchForm | YouTube 검색어 입력, 결과 목록 | `disabled: boolean`, `onPick(videoId: string): void` | 없음 |
@@ -1499,7 +1502,7 @@ useEffect(() => () => requestRef.current?.abort(), [])
 
 1. `src/data/seed-songs.json`을 곡 0개인 파일(`{ "format": "kbo-cheer-songs", "version": 1, "exportedAt": "...", "songs": [] }`)로 두고 시작한다. 처음 데이터 검사는 `allowEmpty: true`라 빈 목록도 통과한다.
 2. 노트북 `http://localhost:5173`에서 LocalStorage를 비우고 앱을 연다. 곡이 없으므로 각 팀 화면에 빈 상태(EX-16)가 나온다.
-3. 10개 팀마다 `/team/<팀>/import`에서 해당 모음 영상 URL을 넣는다.
+3. 10개 팀마다 `/team/<팀>/import`(지금은 `/team/<팀>/songs/add`)에서 해당 모음 영상 URL을 넣는다.
 
 | 팀 | 영상 |
 | --- | --- |

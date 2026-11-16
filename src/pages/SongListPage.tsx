@@ -1,5 +1,6 @@
 //20241476-김도훈-(2026-11-15)
-import { useNavigate } from 'react-router-dom'
+import { Plus } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 import EmptyState from '../components/EmptyState.tsx'
 import SongRow from '../components/SongRow.tsx'
 import { useNotice } from '../context/NoticeContext.tsx'
@@ -37,7 +38,15 @@ export default function SongListPage() {
 
   return (
     <section className="song-list-page">
-      <h2>곡 관리 · {team.fullName}</h2>
+      <div className="page-head">
+        <h2>곡 관리 · {team.fullName}</h2>
+        {teamSongs.length > 0 && (
+          <Link className="link-button" to={`/team/${teamId}/songs/add`}>
+            <Plus size={18} strokeWidth={1.75} aria-hidden="true" />
+            곡 추가
+          </Link>
+        )}
+      </div>
       {teamSongs.length === 0 ? (
         <EmptyState teamId={teamId} />
       ) : (

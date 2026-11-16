@@ -46,8 +46,8 @@ async function candidateRows(page: Page): Promise<RowView[]> {
 }
 
 async function openImport(page: Page, teamId: TeamId): Promise<void> {
-  await page.goto(`/team/${teamId}/import`)
-  await expect(page.getByRole('heading', { name: /^곡 가져오기/ })).toBeVisible()
+  await page.goto(`/team/${teamId}/songs/add`)
+  await expect(page.getByRole('heading', { name: /^곡 추가/ })).toBeVisible()
 }
 
 async function skipWithoutKey(page: Page): Promise<void> {
@@ -87,11 +87,13 @@ test.describe('5. 곡 등록', () => {
       timeout: 15_000,
     })
     await page.getByRole('button', { name: '저장', exact: true }).click()
-    await expect(page).toHaveURL(/\/team\/hanwha$/)
+    await expect(page).toHaveURL(/\/team\/hanwha\/songs$/)
     await expect(toast(page)).toHaveText(/44곡을 저장했습니다/)
     const hanwha = (await storedSongs(page)).filter((s) => s.teamId === 'hanwha')
     note(testInfo, '저장 뒤 한화 곡 수', hanwha.length)
     expect(hanwha).toHaveLength(44)
+    // 저장하면 곡 관리로 돌아오므로 응원 화면으로 가서 격자를 본다
+    await page.goto('/team/hanwha')
     await expect(page.locator('.player-grid button')).toHaveCount(22)
     await page.getByRole('tab', { name: /^팀 응원가/ }).click()
     await expect(page.locator('.team-song-list button')).toHaveCount(18)
@@ -190,12 +192,12 @@ test.describe('5. 곡 등록', () => {
     await formField(page, '끝').fill('00:20')
     await page.getByRole('button', { name: '저장', exact: true }).click()
     await expect(formFieldLabel(page, '끝')).toContainText('끝 시각은 영상 길이(00:16) 이하여야 합니다')
-    await expect(page).toHaveURL(/\/team\/hanwha\/import$/)
+    await expect(page).toHaveURL(/\/team\/hanwha\/songs\/add$/)
     expect(await storedSongs(page)).toHaveLength(507)
 
     await formField(page, '끝').fill('00:16')
     await page.getByRole('button', { name: '저장', exact: true }).click()
-    await expect(page).toHaveURL(/\/team\/hanwha$/)
+    await expect(page).toHaveURL(/\/team\/hanwha\/songs$/)
     await expect(toast(page)).toHaveText(/1곡을 저장했습니다/)
     const songs = await storedSongs(page)
     const added = songs.filter((s) => s.videoId === 'Q59hw6HP8Ns')
@@ -203,7 +205,51 @@ test.describe('5. 곡 등록', () => {
     expect(songs).toHaveLength(508)
     expect(added).toHaveLength(1)
     expect(added[0]).toMatchObject({ teamId: 'hanwha', kind: 'situation', title: '풀카운트 송', start: 0, end: 16 })
+    await page.goto('/team/hanwha')
     await expect(situationButton(page, '풀카운트 송')).toHaveCount(2)
+    reportCalls(testInfo, calls)
+  })
+})
+
+test.describe('5-1. 곡 관리 안의 곡 추가 [STEP 3-⑰]', () => {
+  test('TC-100 메뉴에 가져오기가 없고 예전 주소는 곡 추가로 간다', async ({ page }) => {
+    await page.goto('/team/hanwha')
+    const nav = page.getByRole('navigation', { name: '화면' })
+    await expect(nav.getByRole('link')).toHaveText(['응원', '곡 관리', '설정'])
+    await page.setViewportSize({ width: 360, height: 640 })
+    await page.getByRole('button', { name: '메뉴' }).click()
+    await expect(page.locator('#header-menu').getByRole('link')).toHaveText(['응원', '곡 관리', '설정'])
+
+    await page.goto('/team/hanwha/import')
+    await expect(page).toHaveURL(/\/team\/hanwha\/songs\/add$/)
+    await expect(page.getByRole('heading', { name: /^곡 추가/ })).toBeVisible()
+    await page.getByRole('link', { name: '곡 관리', exact: true }).last().click()
+    await expect(page).toHaveURL(/\/team\/hanwha\/songs$/)
+  })
+
+  test('TC-101 곡 관리에서 곡 추가 → 모음 영상 저장 → 곡 관리로 [API]', async ({ page }, testInfo) => {
+    const calls = countDataApiCalls(page)
+    await presetSongs(
+      page,
+      seedSongs().filter((s) => s.teamId !== 'hanwha'),
+    )
+    // 곡이 있는 팀은 제목 옆 「곡 추가」, 곡이 없는 팀은 빈 상태 안내의 「곡 추가」로 들어간다
+    await page.goto('/team/samsung/songs')
+    await page.getByRole('link', { name: '곡 추가' }).click()
+    await expect(page).toHaveURL(/\/team\/samsung\/songs\/add$/)
+    await page.goto('/team/hanwha/songs')
+    await expect(page.getByText('이 팀에는 곡이 없습니다')).toBeVisible()
+    await page.getByRole('link', { name: '곡 추가' }).click()
+    await expect(page).toHaveURL(/\/team\/hanwha\/songs\/add$/)
+    await skipWithoutKey(page)
+    await load(page, HANWHA_URL)
+    await expect(page.locator('.import-summary')).toHaveText('선수 22 · 상황 4 · 팀 응원가 18 / 저장 44곡', {
+      timeout: 15_000,
+    })
+    await page.getByRole('button', { name: '저장', exact: true }).click()
+    await expect(page).toHaveURL(/\/team\/hanwha\/songs$/)
+    await expect(page.getByRole('heading', { name: /^곡 관리/ })).toBeVisible()
+    await expect(page.locator('.song-row')).toHaveCount(44)
     reportCalls(testInfo, calls)
   })
 })

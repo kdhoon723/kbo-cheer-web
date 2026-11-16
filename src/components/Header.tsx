@@ -23,7 +23,6 @@ function navItems(teamId: TeamId | null): NavItem[] {
     ? [
         { to: `/team/${teamId}`, label: '응원', end: true },
         { to: `/team/${teamId}/songs`, label: '곡 관리' },
-        { to: `/team/${teamId}/import`, label: '가져오기' },
       ]
     : []
   return [...team, { to: '/settings', label: '설정' }]

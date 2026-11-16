@@ -1406,6 +1406,32 @@ kbd {
   cursor: pointer;
 }
 
+/* 곡 관리 머리: 제목과 「곡 추가」 [STEP 3-⑰] */
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.page-head .link-button {
+  gap: 4px;
+  padding: 0 12px 0 8px;
+}
+
+/* 곡 추가 화면 위 「곡 관리」로 돌아가기 */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--tap);
+  margin-bottom: 4px;
+  color: var(--text-2);
+  font-weight: 600;
+  text-decoration: none;
+}
+
 /* 가져오기 */
 .import-page .tabs {
   margin-bottom: 16px;

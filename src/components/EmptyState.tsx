@@ -8,8 +8,8 @@ export default function EmptyState({ teamId }: { teamId: TeamId }) {
     <StatusMessage
       tone="empty"
       action={
-        <Link className="link-button" to={`/team/${teamId}/import`}>
-          곡 가져오기
+        <Link className="link-button" to={`/team/${teamId}/songs/add`}>
+          곡 추가
         </Link>
       }
     >

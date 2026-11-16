@@ -33,7 +33,9 @@ export default function App() {
                       <Route index element={<MainPage />} />
                       <Route path="songs" element={<SongListPage />} />
                       <Route path="songs/:songId/edit" element={<SongEditPage />} />
-                      <Route path="import" element={<ImportPage />} />
+                      <Route path="songs/add" element={<ImportPage />} />
+                      {/* 예전 가져오기 주소는 곡 관리 아래 곡 추가로 보낸다 */}
+                      <Route path="import" element={<Navigate to="../songs/add" replace />} />
                     </Route>
                     <Route path="settings" element={<SettingsPage />} />
                     <Route path="*" element={<Navigate to="/" replace />} />

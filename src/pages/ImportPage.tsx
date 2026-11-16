@@ -1,6 +1,7 @@
 //20241476-김도훈-(2026-11-15)
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 import { dataApiAvailability, errorMessage, fetchVideo } from '../api/youtubeData.ts'
 import type { ImportError } from '../api/youtubeData.ts'
 import CandidateTable from '../components/CandidateTable.tsx'
@@ -78,6 +79,11 @@ export default function ImportPage() {
     else setPhase({ phase: 'review', video, candidates, saving: false })
   }
 
+  // 확인 단계와 영상 하나 등록에서 취소하면 곡 관리 목록으로 돌아간다. 불러오는 중의 취소는 입력 단계로만 돌아간다
+  function backToList() {
+    navigate(`/team/${team?.id}/songs`)
+  }
+
   function backToInput() {
     requestRef.current?.abort()
     requestRef.current = null
@@ -118,7 +124,7 @@ export default function ImportPage() {
       }
       const n = importSongs(drafts)
       notify(`${n}곡을 저장했습니다`)
-      navigate(`/team/${team?.id}`)
+      navigate(`/team/${team?.id}/songs`)
     }
 
     return (
@@ -137,7 +143,7 @@ export default function ImportPage() {
           <button type="button" className="primary-btn" disabled={saving.length === 0 || p.saving} onClick={save}>
             저장
           </button>
-          <button type="button" disabled={p.saving} onClick={backToInput}>
+          <button type="button" disabled={p.saving} onClick={backToList}>
             취소
           </button>
         </div>
@@ -161,7 +167,7 @@ export default function ImportPage() {
         cheerStart: fields.cheerStart,
       })
       notify('1곡을 저장했습니다')
-      navigate(`/team/${team.id}`)
+      navigate(`/team/${team.id}/songs`)
     }
     const situationTitles = new Set(
       teamSongs.filter((s) => s.kind === 'situation').map((s) => normalize(s.title)),
@@ -183,7 +189,7 @@ export default function ImportPage() {
           isDuplicateSituationTitle={(title) => situationTitles.has(normalize(title))}
           submitLabel="저장"
           onSubmit={submit}
-          onCancel={backToInput}
+          onCancel={backToList}
         />
       </>
     )
@@ -226,7 +232,11 @@ export default function ImportPage() {
 
   return (
     <section className="import-page">
-      <h2>곡 가져오기 · {team.fullName}</h2>
+      <Link className="back-link" to={`/team/${team.id}/songs`}>
+        <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" />
+        곡 관리
+      </Link>
+      <h2>곡 추가 · {team.fullName}</h2>
       {phase.phase === 'input' && renderInput(phase.error, false)}
       {phase.phase === 'loading' && renderInput(null, true)}
       {phase.phase === 'review' && renderReview(phase)}
