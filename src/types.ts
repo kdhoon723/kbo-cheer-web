@@ -60,6 +60,8 @@ export interface Settings {
   volume: number
   gridSort: GridSort
   teamSort: TeamSongSort
+  /** 팀 고르기 로고 순서. 10개 팀이 한 번씩 [STEP 3-⑳] */
+  teamOrder: TeamId[]
 }
 
 export interface VideoInfo {

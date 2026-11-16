@@ -198,6 +198,8 @@ test.describe('13. 매치업 보드와 선수 카드 [STEP 3-⑫]', () => {
     await page.getByRole('button', { name: '정지' }).click()
     await waitNotPlaying(page, 3_000)
     await expect(sheet).toBeHidden()
-    await expect(open).toBeDisabled()
+    // 멈춘 뒤에도 마지막 곡이 재생 줄에 남아 시트를 다시 열 수 있다 [STEP 3-⑳]
+    await expect(open).toBeEnabled()
+    await expect(open).toHaveAccessibleName('지금 재생 크게 보기: 노시환')
   })
 })

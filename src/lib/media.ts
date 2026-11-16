@@ -5,3 +5,6 @@
  * false면 사진 주소를 아예 요청하지 않고 구단 아바타를 바로 쓴다(사진 없는 소스로 실행할 때 404가 쌓이지 않게)
  */
 export const PLAYER_PHOTOS: boolean = __PLAYER_PHOTOS__
+
+/** 이 빌드에 가사 파일(팀별 /lyrics/<팀ID>.json)이 있는가. 사진과 같은 규칙이고, false면 가사를 요청하지 않고 가사 칸도 두지 않는다 */
+export const LYRICS: boolean = __LYRICS__

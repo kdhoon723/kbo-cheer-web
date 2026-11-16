@@ -17,6 +17,7 @@ import {
   saveTeamState,
 } from './storage.ts'
 import { SEED_REVISION } from './seedData.ts'
+import { TEAM_IDS } from '../data/teams.ts'
 import { makeSong } from './testSongs.ts'
 
 const seed = [makeSong({ id: 'seed-1' })]
@@ -125,7 +126,7 @@ describe('team state', () => {
 
 describe('settings', () => {
   it('왕복한다', () => {
-    const settings = { volume: 40, gridSort: 'name', teamSort: 'video' } as const
+    const settings = { volume: 40, gridSort: 'name', teamSort: 'video', teamOrder: [...TEAM_IDS].reverse() } as const
     saveSettings(settings)
     expect(loadSettings()).toEqual({ value: settings, status: 'ok' })
   })
@@ -145,17 +146,23 @@ describe('settings', () => {
 
   it.each([['chapter'], ['x'], [7], [null]])('알 수 없는 정렬 %j은 기본 정렬로 두고 볼륨은 지키며 ok', (gridSort) => {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({ version: 1, volume: 50, gridSort }))
-    expect(loadSettings()).toEqual({ value: { volume: 50, gridSort: 'starters', teamSort: 'popular' }, status: 'ok' })
+    expect(loadSettings()).toEqual({ value: { volume: 50, gridSort: 'starters', teamSort: 'popular', teamOrder: [...TEAM_IDS] }, status: 'ok' })
   })
 
   it('정렬이 빠진 예전 값도 볼륨을 지킨다', () => {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({ version: 1, volume: 20 }))
-    expect(loadSettings()).toEqual({ value: { volume: 20, gridSort: 'starters', teamSort: 'popular' }, status: 'ok' })
+    expect(loadSettings()).toEqual({ value: { volume: 20, gridSort: 'starters', teamSort: 'popular', teamOrder: [...TEAM_IDS] }, status: 'ok' })
+  })
+
+  it('팀 순서가 10개 팀이 아니면 처음 순서로 두고 나머지는 지킨다', () => {
+    const teamOrder = TEAM_IDS.slice(1)
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ version: 1, volume: 50, gridSort: 'name', teamSort: 'video', teamOrder }))
+    expect(loadSettings().value).toEqual({ volume: 50, gridSort: 'name', teamSort: 'video', teamOrder: [...TEAM_IDS] })
   })
 
   it.each([['rank'], [3], [null]])('알 수 없는 팀 응원가 정렬 %j은 인기순으로 두고 나머지는 지킨다', (teamSort) => {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({ version: 1, volume: 50, gridSort: 'name', teamSort }))
-    expect(loadSettings()).toEqual({ value: { volume: 50, gridSort: 'name', teamSort: 'popular' }, status: 'ok' })
+    expect(loadSettings()).toEqual({ value: { volume: 50, gridSort: 'name', teamSort: 'popular', teamOrder: [...TEAM_IDS] }, status: 'ok' })
   })
 })
 

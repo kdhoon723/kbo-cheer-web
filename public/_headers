@@ -12,5 +12,9 @@
   Cache-Control: public, max-age=86400, must-revalidate
 /players/*
   Cache-Control: public, max-age=86400, must-revalidate
+
+# 팀별 가사: 이름이 고정이라 그림과 같이 하루 두고 다시 확인한다
+/lyrics/*
+  Cache-Control: public, max-age=86400, must-revalidate
 /favicon.svg
   Cache-Control: public, max-age=86400, must-revalidate

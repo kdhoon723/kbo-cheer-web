@@ -242,6 +242,7 @@ STEP 4 뒤에 바꾼 단계마다 같은 명령을 다시 돌린 결과다. 앞 
 | 곡 관리와 가져오기 합치기(STEP 3-⑰, 2026-11-16) | 22 files, 244 passed | 73 passed(TC-100·101 추가) | 없음 | 통과 | 오류 0, 경고 4 |
 | 설정을 곡 관리에 합치기(STEP 3-⑱, 2026-11-16) | 22 files, 244 passed | 74 passed(TC-102 추가) | 없음 | 통과 | 오류 0, 경고 4 |
 | 응원가 시작 지점·눈금·팀 응원가 인기순(STEP 3-⑲, 2026-11-16) | 24 files, 270 passed(TC-107~109 추가) | 78 passed(TC-103~106 추가, TC-39 기대값을 처음 데이터의 노시환 응원가 시작 445로) | 없음 | 통과(index 390.96 kB·gzip 104.88, react 218.75 kB) | 오류 0, 경고 4 |
+| 가사·마지막 곡 유지·팀 순서 바꾸기(STEP 3-⑳, 2026-11-16) | 26 files, 299 passed(TC-118·119 추가, 순위 223곡 반영) | 1차 85 passed, 1 failed(TC-105: 폭을 줄인 직후 사라지기 전의 보드 탭을 잡음, 테스트 대기 보완), 2차 86 passed(3.0m)(TC-110~117 추가, 마지막 곡 유지로 TC-14·20·23·49·51·61·62·92 기대값 수정). 순위 223곡 반영 뒤 `cheer-rank.spec.ts` 4 passed | TC-105 3번 반복 passed | 통과(index 397.97 kB·gzip 107.10, react 218.75 kB) | 오류 0, 경고 4 |
 
 - 디자인 개편 후속에서 바뀐 TC: TC-08(상황 칸 글자: 상황 이름과 필요할 때만 곡 제목 줄), TC-24(휴대폰은 첫 곡 전에 플레이어 자리가 접히고, 재생 뒤 같은 iframe이 200×200 이상), TC-60 추가(휴대폰 재생 도구 시트).
 - 모션 단계부터 E2E는 동작 줄이기(`reducedMotion: 'reduce'`)로 돈다. 움직임 자체는 브라우저에서 프레임마다 transform·opacity를 기록해 따로 확인했다(design.md 5.4 모션).
@@ -447,3 +448,26 @@ STEP 4 뒤에 바꾼 단계마다 같은 명령을 다시 돌린 결과다. 앞 
   - `npm run build`: 통과
   - `npm run lint`: 종료 코드 0, 경고 4
   - `npm run build:deploy`: 655장 복사, `dist/players`에 webp만 있음
+
+## 12. 측정과 오류 수정(STEP 3-⑳)
+
+### 12.1 가사 전송량과 가사 없는 빌드
+
+- 조건: `npm run build:deploy`(사진·가사 포함)와 `npm run build`(없음)를 각각 `vite preview --port 4173`으로 띄워, Playwright MCP 브라우저에서 한화(전 팀 삼성) 화면을 열고 노시환을 틀었다. 같은 출처 응답의 `transferSize` 합이다. preview 서버는 압축하지 않으므로 가사는 gzip 크기도 따로 적는다. 같은 브라우저에서 이어서 쟀기 때문에 JS·CSS는 캐시에서 일부 읽었다(가사 비교에는 영향 없음).
+
+| 화면 | 첫 화면 전체 | 그중 가사 | 노시환 재생 뒤 가사 |
+| --- | --- | --- | --- |
+| 1440×900 보드 | 208,484 B(요청 71) | 0 B | 20,357 B(`/lyrics/hanwha.json` 1건, gzip 3,867 B) |
+| 360×640 휴대폰 | 67,646 B(요청 42) | 0 B | 20,357 B(같은 파일 1건) |
+
+- 한 파일로 두면 250,424 B(gzip 40,041 B)를 받아야 한다. 팀 파일은 8.0~30.7 KB(gzip 1.7~6.0 KB)다.
+- `npm run build`(가사 없음): 노시환 재생 뒤에도 `/lyrics/` 요청 0건, 넓은 화면 가사 칸 0개, 지금 재생 시트 가사 칸 0개. 빌드한 JS에 `lyrics/` 문자열이 없다(`grep -c` 0).
+- 가사 파일은 `media-build/`(gitignore)와 `dist/`(gitignore)에만 있고 `git ls-files`에 없다.
+- 캡처: 마지막 곡(`last-song-360.png`, `last-song-1440.png`)과 팀 순서(`team-order-360.png`, `team-order-1440.png`)는 `docs/screenshots/`에 있다. 가사를 펼친 화면(`lyrics-sheet-360.png`, `lyrics-open-1440.png`)은 가사 글이 보여 사진 캡처처럼 `docs/screenshots/with-lyrics/`(gitignore)에 두었다.
+
+### 12.2 고친 오류
+
+- **마우스로 끌면 끌기가 끊김**: 로고 그림(`img`)을 끌면 브라우저가 그림 끌어다 놓기를 시작해 `pointercancel`이 왔다(동작 줄이기 E2E에서 순서가 바뀌지 않음). 로고 그림에 `pointer-events: none`, `-webkit-user-drag: none`.
+- **터치로 끈 뒤 마지막 한 칸이 빠짐**: pointerup이 아직 그려지지 않은 이전 순서(상태)를 저장했다(KT를 키움 자리로 끌었는데 2번째). 끄는 순서를 ref에도 두고 그 값을 저장.
+- **길게 눌러 끈 직후 탭이 팀을 바꾸지 않음**: Chrome 터치 흉내에서 pointerdown·pointerup은 오는데 click이 만들어지지 않는 경우가 있었다(미끄러짐·대기 시간 조합 4가지 중 3가지). 터치로 짧게 누른 뒤 300ms 안에 click이 없으면 직접 고르게 했다. 4가지 모두 LG로 바뀌었다. pointerup에서 바로 고르지 않은 것은 처음 팀 선택 화면에서 화면이 바뀐 뒤 따라온 click이 새 화면의 칸을 누를 수 있어서이고, 지금 방식에서 처음 화면 탭 뒤 튼 기록이 비어 있음을 확인했다.
+

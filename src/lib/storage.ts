@@ -3,6 +3,7 @@ import { isTeamId } from '../data/teams.ts'
 import type { GridSort, PlayHistory, Settings, Song, TeamSongSort, TeamState } from '../types.ts'
 import { EMPTY_HISTORY, parseHistory } from './history.ts'
 import { SEED_REVISION, upgradeSavedSongs } from './seedData.ts'
+import { defaultTeamOrder, parseTeamOrder } from './teamOrder.ts'
 import { isRecord, isSongArray } from './songValidation.ts'
 
 export const SONGS_KEY = 'kboCheer.songs'
@@ -17,7 +18,12 @@ export interface LoadResult<T> {
   status: LoadStatus
 }
 
-export const DEFAULT_SETTINGS: Settings = { volume: 100, gridSort: 'starters', teamSort: 'popular' }
+export const DEFAULT_SETTINGS: Settings = {
+  volume: 100,
+  gridSort: 'starters',
+  teamSort: 'popular',
+  teamOrder: defaultTeamOrder(),
+}
 const DEFAULT_TEAM_STATE: TeamState = { currentTeamId: null, prevTeamId: null }
 
 type RawRead = { kind: 'ok'; raw: string } | { kind: 'missing' } | { kind: 'unavailable' }
@@ -120,7 +126,12 @@ export function loadSettings(): LoadResult<Settings> {
   if (read.kind === 'missing') return { value: DEFAULT_SETTINGS, status: 'missing' }
   const data = parseJson(read.raw)
   if (isRecord(data) && data.version === 1 && isVolume(data.volume)) {
-    const settings = { volume: data.volume, gridSort: parseGridSort(data.gridSort), teamSort: parseTeamSort(data.teamSort) }
+    const settings = {
+      volume: data.volume,
+      gridSort: parseGridSort(data.gridSort),
+      teamSort: parseTeamSort(data.teamSort),
+      teamOrder: parseTeamOrder(data.teamOrder),
+    }
     return { value: settings, status: 'ok' }
   }
   return { value: DEFAULT_SETTINGS, status: 'corrupt' }

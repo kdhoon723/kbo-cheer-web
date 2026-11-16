@@ -99,13 +99,18 @@ describe('처음 데이터(seed-songs.json)', () => {
 describe('팀 응원가 순위(team-song-ranks.json)', () => {
   const songs = loadSeed()
 
-  it('208곡 모두 처음 데이터의 팀 응원가 하나와 제목까지 맞고 읽을 때 빠지는 줄이 없다', () => {
-    expect(ranksJson).toHaveLength(208)
-    expect(TEAM_SONG_RANKS.size).toBe(208)
+  it('223곡 모두 처음 데이터의 팀 응원가 하나와 제목까지 맞고 읽을 때 빠지는 줄이 없다', () => {
+    expect(ranksJson).toHaveLength(223)
+    expect(TEAM_SONG_RANKS.size).toBe(223)
     for (const r of ranksJson) {
       const hits = songs.filter((s) => s.kind === 'team' && songKey(s) === songKey(r))
       expect(hits.map((s) => s.title), r.title).toEqual([r.title])
     }
+  })
+
+  it('순위가 없는 처음 데이터 팀 응원가는 롯데 리듬 응원 송 하나다', () => {
+    const unranked = songs.filter((s) => s.kind === 'team' && !TEAM_SONG_RANKS.has(songKey(s)))
+    expect(unranked.map((s) => `${s.teamId} ${s.title}`)).toEqual(['lotte 리듬 응원 송'])
   })
 
   it('팀 안에서 순위가 겹치지 않는다', () => {
@@ -117,7 +122,7 @@ describe('팀 응원가 순위(team-song-ranks.json)', () => {
 
   it.each([
     ['hanwha', ['내 사랑 한화 내 사랑 이글스', '행복송', '불타는 태양']],
-    ['samsung', ['언제나', '이 파도의 저 끝에서', '사랑한다 나의 삼성']],
+    ['samsung', ['승리를 위해', '엘도라도', '승리의 라이온즈']],
   ] as const)('%s 인기순 1~3위가 순위 자료와 같다', (teamId, top3) => {
     const team = songs.filter((s) => s.teamId === teamId && s.kind === 'team')
     expect(sortTeamSongs(team, 'popular', TEAM_SONG_RANKS).slice(0, 3).map((s) => s.title)).toEqual(top3)

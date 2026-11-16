@@ -9,6 +9,7 @@ import {
   gotoHanwha,
   navLink,
   note,
+  nowLabel,
   nowTitle,
   playerButton,
   presetSongs,
@@ -74,7 +75,7 @@ test.describe('4. 재생', () => {
     expect(stopped, '40초 안에 멈춰야 함').not.toBeNull()
     expect(maxTime).toBeLessThan(song.end + 1)
     expect(stopped?.time ?? Infinity).toBeLessThan(song.end + 1)
-    await expect(nowTitle(page)).toHaveText('선택한 곡 없음')
+    await expect(nowLabel(page)).toHaveText('멈춤')
     await page.waitForTimeout(3_000)
     const after = await ytSnapshot(page)
     note(testInfo, '3초 뒤 상태', after)
@@ -207,7 +208,7 @@ test.describe('4. 재생', () => {
     expect(fadeMs).not.toBeNull()
     expect(fadeMs ?? 0).toBeGreaterThanOrEqual(700)
     expect(fadeMs ?? Infinity).toBeLessThanOrEqual(1_600)
-    await expect(nowTitle(page)).toHaveText('선택한 곡 없음')
+    await expect(nowLabel(page)).toHaveText('멈춤')
     await expect.poll(async () => (await ytSnapshot(page))?.volume).toBe(startVolume)
     note(testInfo, '멈춘 뒤 볼륨', (await ytSnapshot(page))?.volume)
 
@@ -222,7 +223,7 @@ test.describe('4. 재생', () => {
     note(testInfo, '두 번째 누름부터 멈춤까지(ms, 폴링 포함)', secondMs)
     expect(stopped.state).not.toBe(PLAYING)
     expect(secondMs).toBeLessThan(700)
-    await expect(nowTitle(page)).toHaveText('선택한 곡 없음')
+    await expect(nowLabel(page)).toHaveText('멈춤')
     await expect.poll(async () => (await ytSnapshot(page))?.volume).toBe(startVolume)
   })
 
@@ -354,8 +355,10 @@ test.describe('4. 재생 오류', () => {
     const message = await toast(page).locator('.toast-text').innerText()
     note(testInfo, '오류 안내', message)
     expect(message).toMatch(/재생할 수 없습니다|재생 정보를 확인하지 못했습니다/)
-    await expect(nowTitle(page)).toHaveText('선택한 곡 없음')
-    await expect(page.locator('button.stop-btn')).toBeDisabled()
+    // 재생하지 못한 곡도 마지막으로 누른 곡이라 재생 줄에 남고, 「다시 재생」으로 다시 시도할 수 있다 [STEP 3-⑳]
+    await expect(nowLabel(page)).toHaveText('멈춤')
+    await expect(nowTitle(page)).toHaveText('오류 시험곡')
+    await expect(page.getByRole('button', { name: '다시 재생' })).toBeEnabled()
     const s = await waitPlayingInNoh(page)
     note(testInfo, '다음 곡 재생 위치', s.time.toFixed(2))
   })

@@ -7,18 +7,21 @@ import { playerMedia } from './playerMediaPlugin.ts'
 const MEDIA_OUT = 'media-build'
 
 // API 키 리퍼러 제한이 localhost:5173 기준이라 포트를 고정하고, 휴대폰 접속을 위해 LAN에도 연다
-// 사진 파일이 있는 빌드에서만 사진을 요청한다. 개발 서버는 media-build/players가 있으면, 빌드는 build:deploy가
-// KBO_PLAYER_PHOTOS=1을 줄 때만이다. 사진 없는 소스로 실행하면 요청 없이 바로 구단 아바타를 쓴다
-function playerPhotos(command: 'build' | 'serve'): boolean {
-  const forced = process.env.KBO_PLAYER_PHOTOS
+// 사진·가사 파일이 있는 빌드에서만 그것을 요청한다. 개발 서버는 media-build/players(lyrics)가 있으면, 빌드는 build:deploy가
+// KBO_PLAYER_PHOTOS=1(KBO_LYRICS=1)을 줄 때만이다. 없는 소스로 실행하면 요청 없이 구단 아바타를 쓰고 가사 칸을 두지 않는다
+function hasMedia(command: 'build' | 'serve', env: string, folder: string): boolean {
+  const forced = process.env[env]
   if (forced !== undefined) return forced === '1'
-  return command === 'serve' && existsSync(`${MEDIA_OUT}/players`)
+  return command === 'serve' && existsSync(`${MEDIA_OUT}/${folder}`)
 }
 
 export default defineConfig(({ command }) => ({
-  // 선수 사진은 원본이 아니라 npm run media가 만든 최적화 파일(media-build/players, 저장소에 올리지 않음)을 내준다
+  // 선수 사진과 가사는 원본이 아니라 npm run media가 만든 파일(media-build/players, lyrics, 저장소에 올리지 않음)을 내준다
   plugins: [react(), playerMedia(MEDIA_OUT)],
-  define: { __PLAYER_PHOTOS__: JSON.stringify(playerPhotos(command)) },
+  define: {
+    __PLAYER_PHOTOS__: JSON.stringify(hasMedia(command, 'KBO_PLAYER_PHOTOS', 'players')),
+    __LYRICS__: JSON.stringify(hasMedia(command, 'KBO_LYRICS', 'lyrics')),
+  },
   server: { port: 5173, strictPort: true, host: true },
   build: {
     rolldownOptions: {

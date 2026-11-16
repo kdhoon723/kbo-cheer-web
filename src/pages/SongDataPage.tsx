@@ -3,15 +3,18 @@ import { useRef, useState } from 'react'
 import { ArrowLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useNotice } from '../context/NoticeContext.tsx'
+import { usePrefs } from '../context/PrefsContext.tsx'
 import { useSongs } from '../context/SongsContext.tsx'
 import { useActiveTeam } from '../hooks/useActiveTeam.ts'
 import { createSongsFile, exportFileName, parseSongsFileText } from '../lib/songsFile.ts'
+import { defaultTeamOrder, isDefaultTeamOrder } from '../lib/teamOrder.ts'
 
-/** 곡 관리 안의 백업·초기화: 곡 목록 옮기기(JSON), 처음 데이터로 되돌리기, 저장 위치 안내 [STEP 3-⑱] */
+/** 곡 관리 안의 백업·초기화: 곡 목록 옮기기(JSON), 처음 데이터로 되돌리기, 팀 순서 되돌리기, 저장 위치 안내 [STEP 3-⑱] */
 export default function SongDataPage() {
   const team = useActiveTeam()
   const { songs, replaceAll, resetToSeed, seedCount } = useSongs()
   const { notify } = useNotice()
+  const { settings, setTeamOrder } = usePrefs()
   const [busy, setBusy] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -94,6 +97,21 @@ export default function SongDataPage() {
         <h3>처음 데이터</h3>
         <button type="button" disabled={busy} onClick={reset}>
           처음 데이터로 되돌리기
+        </button>
+      </div>
+
+      <div className="data-block">
+        <h3>팀 순서</h3>
+        <p>팀 고르기 창의 로고는 길게 누르거나 끌어서 순서를 바꿀 수 있습니다</p>
+        <button
+          type="button"
+          disabled={isDefaultTeamOrder(settings.teamOrder)}
+          onClick={() => {
+            setTeamOrder(defaultTeamOrder())
+            notify('팀 순서를 처음으로 되돌렸습니다')
+          }}
+        >
+          팀 순서 처음으로
         </button>
       </div>
 

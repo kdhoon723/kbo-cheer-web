@@ -16,6 +16,7 @@ interface PrefsContextValue {
   setVolume: (v: number) => void
   setGridSort: (s: GridSort) => void
   setTeamSort: (s: TeamSongSort) => void
+  setTeamOrder: (order: TeamId[]) => void
 }
 
 const PrefsContext = createContext<PrefsContextValue | null>(null)
@@ -74,9 +75,13 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
     setSettings((prev) => (prev.teamSort === teamSort ? prev : { ...prev, teamSort }))
   }, [])
 
+  const setTeamOrder = useCallback((teamOrder: TeamId[]) => {
+    setSettings((prev) => ({ ...prev, teamOrder }))
+  }, [])
+
   const value = useMemo(
-    () => ({ teamState, visitTeam, assignTeam, settings, setVolume, setGridSort, setTeamSort }),
-    [teamState, visitTeam, assignTeam, settings, setVolume, setGridSort, setTeamSort],
+    () => ({ teamState, visitTeam, assignTeam, settings, setVolume, setGridSort, setTeamSort, setTeamOrder }),
+    [teamState, visitTeam, assignTeam, settings, setVolume, setGridSort, setTeamSort, setTeamOrder],
   )
   return <PrefsContext.Provider value={value}>{children}</PrefsContext.Provider>
 }

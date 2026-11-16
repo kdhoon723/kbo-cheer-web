@@ -5,6 +5,7 @@ import {
   expectPlayerReady,
   gotoHanwha,
   note,
+  nowLabel,
   nowTitle,
   playerButton,
   presetSongs,
@@ -46,7 +47,7 @@ test.describe('8. 키보드 단축키', () => {
     await page.keyboard.press('Space')
     const stopped = await waitNotPlaying(page, 3_000)
     note(testInfo, 'Space 뒤 상태', stopped)
-    await expect(nowTitle(page)).toHaveText('선택한 곡 없음')
+    await expect(nowLabel(page)).toHaveText('멈춤')
 
     await page.keyboard.press('/')
     await expect(search).toBeFocused()
@@ -103,6 +104,6 @@ test.describe('8. 키보드 단축키', () => {
     const s = await ytSnapshot(page)
     note(testInfo, 'Space 2.5초 뒤 상태', s)
     expect(s?.state).not.toBe(PLAYING)
-    await expect(nowTitle(page)).toHaveText('선택한 곡 없음')
+    await expect(nowLabel(page)).toHaveText('멈춤')
   })
 })

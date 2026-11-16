@@ -1,22 +1,25 @@
 //20241476-김도훈-(2026-11-15)
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { ChevronsRight, EllipsisVertical, Flag, Square } from 'lucide-react'
+import { ChevronsRight, EllipsisVertical, Flag, Play, Square } from 'lucide-react'
 import { useReducedMotionConfig } from 'motion/react'
 import { useAnimate } from 'motion/react-mini'
 import * as m from 'motion/react-m'
 import { playerOf } from '../data/players.ts'
 import { getTeam } from '../data/teams.ts'
+import { useHistory } from '../context/historyState.ts'
 import { usePlayer } from '../context/PlayerContext.tsx'
 import { usePrefs } from '../context/PrefsContext.tsx'
 import { useSongs } from '../context/SongsContext.tsx'
 import { NARROW_QUERY, useMediaQuery } from '../hooks/useMediaQuery.ts'
+import { useSongLyrics } from '../hooks/useSongLyrics.ts'
 import { cheerHereSecond, cheerTarget, segmentElapsed } from '../lib/playback.ts'
 import { formatTime } from '../lib/time.ts'
 import type { NowPlaying } from '../types.ts'
 import { TapButton } from '../ui/Press.tsx'
 import { distance, ease, quick, row, rowTextDelay, swap } from '../ui/motionTokens.ts'
 import { bandStyle } from './band.ts'
+import LyricsBlock from './LyricsBlock.tsx'
 import PlayerCard from './PlayerCard.tsx'
 import PlayerHost from './PlayerHost.tsx'
 import PlayerPortrait from './PlayerPortrait.tsx'
@@ -28,6 +31,8 @@ import VolumeSlider from './VolumeSlider.tsx'
 const TICK_MS = 250
 
 type PlaybackStatus = ReturnType<typeof usePlayer>['status']
+
+const STOPPED_LABEL = '멈춤'
 
 const STATUS_LABELS: Record<PlaybackStatus, string> = {
   idle: '대기 중',
@@ -48,11 +53,14 @@ interface Props {
 }
 
 export default function PlayerPanel({ situationSlotRef }: Props) {
-  const { nowPlaying, status, playerReady, canControlVolume, stop, skipToCheer, getCurrentTime } = usePlayer()
+  const { nowPlaying, status, playerReady, canControlVolume, play, stop, skipToCheer, getCurrentTime } = usePlayer()
   const { songs, updateSong } = useSongs()
   const { settings, setVolume } = usePrefs()
+  const { history } = useHistory()
   const [tick, setTick] = useState<Tick>({ seg: null, elapsed: 0, canCheerHere: false })
+  // 이번에 연 뒤 실제로 튼 적이 있는가. 휴대폰은 그때까지 플레이어 자리를 접어 둔다
   const [hasPlayed, setHasPlayed] = useState(false)
+  const [lyricsOpen, setLyricsOpen] = useState(false)
   const [toolsOpen, setToolsOpen] = useState(false)
   const [nowOpen, setNowOpen] = useState(false)
   const narrow = useMediaQuery(NARROW_QUERY)
@@ -63,18 +71,27 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   // mini의 useAnimate는 MotionConfig를 읽지 않으므로 동작 줄이기는 여기서 직접 본다
   const reduceMotion = useReducedMotionConfig()
 
-  const song = nowPlaying ? songs.find((s) => s.id === nowPlaying.songId) : undefined
-  if (song && !hasPlayed) setHasPlayed(true)
+  const playing = nowPlaying ? songs.find((s) => s.id === nowPlaying.songId) : undefined
+  // 멈춘 뒤와 새로고침 뒤에도 마지막으로 누른 곡(최근 곡 맨 앞)을 남긴다. 그 곡을 지우면 남기지 않는다
+  const last = nowPlaying ? undefined : songs.find((s) => s.id === history.recent[0])
+  const song = playing ?? last
+  if (playing && !hasPlayed) setHasPlayed(true)
+  // 재생 줄은 곡이 처음 올라올 때 한 번 자란다. 열 때부터 마지막 곡이 있으면 자랄 일이 없다
+  const [filledAtStart] = useState(song !== undefined)
+  const [rowFilled, setRowFilled] = useState(filledAtStart)
+  if (song && !rowFilled) setRowFilled(true)
   const current = nowPlaying !== null && tick.seg === nowPlaying ? tick : null
-  const canSkip = playerReady && cheerTarget(song, nowPlaying) !== null
+  const canSkip = playerReady && cheerTarget(playing, nowPlaying) !== null
   const canCheerHere = current?.canCheerHere ?? false
+  const live = nowPlaying !== null && playing !== undefined
+  const lyric = useSongLyrics(song, live)
 
   useEffect(() => {
     if (!nowPlaying) return
     const id = setInterval(() => {
       const t = getCurrentTime()
       const elapsed = segmentElapsed(nowPlaying, t)
-      const canCheerHere = cheerHereSecond(song, t) !== null
+      const canCheerHere = cheerHereSecond(playing, t) !== null
       setTick((prev) =>
         prev.seg === nowPlaying && prev.elapsed === elapsed && prev.canCheerHere === canCheerHere
           ? prev
@@ -82,23 +99,23 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
       )
     }, TICK_MS)
     return () => clearInterval(id)
-  }, [nowPlaying, song, getCurrentTime])
+  }, [nowPlaying, playing, getCurrentTime])
 
   // 곡을 틀기 전 높이를 늘 알고 있어야 첫 곡에 자라는 시작점을 잡을 수 있다. 화면 폭이 바뀌면 높이도 바뀐다
   useLayoutEffect(() => {
     const el = rowRef.current
-    if (!el || hasPlayed) return
+    if (!el || rowFilled) return
     const observer = new ResizeObserver(() => {
       idleHeight.current = el.offsetHeight
     })
     observer.observe(el)
     return () => observer.disconnect()
-  }, [hasPlayed, rowRef])
+  }, [rowFilled, rowRef])
 
   // 재생 줄이 처음 곡에 한 번 자란다. 앱에서 높이를 움직이는 곳은 여기 하나다
   useLayoutEffect(() => {
     const el = rowRef.current
-    if (!el || !hasPlayed) return
+    if (!el || !rowFilled || filledAtStart) return
     const to = el.offsetHeight
     if (to === idleHeight.current || reduceMotion) return
     // 자라는 동안 안의 버튼이 아래 상황 칸 위로 삐져나오지 않게 한다
@@ -113,18 +130,19 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
       growth.stop()
       settle()
     }
-  }, [hasPlayed, rowRef, animate, reduceMotion])
+  }, [rowFilled, filledAtStart, rowRef, animate, reduceMotion])
 
   function onCheerHere() {
-    const sec = cheerHereSecond(song, getCurrentTime())
-    if (!song || sec === null) return
-    updateSong({ ...song, cheerStart: sec })
+    const sec = cheerHereSecond(playing, getCurrentTime())
+    if (!playing || sec === null) return
+    updateSong({ ...playing, cheerStart: sec })
   }
 
-  const live = nowPlaying !== null && song !== undefined
-  const duration = nowPlaying ? nowPlaying.end - nowPlaying.start : 0
+  // 멈춘 마지막 곡도 같은 막대·시간·눈금을 쓰게 그 곡의 구간을 재생 구간처럼 다룬다
+  const seg = nowPlaying ?? (song ? { songId: song.id, videoId: song.videoId, start: song.start, end: song.end } : null)
+  const duration = seg ? seg.end - seg.start : 0
   const elapsed = current?.elapsed ?? 0
-  const cheerAt = cheerTarget(song, nowPlaying)
+  const cheerAt = cheerTarget(song, seg)
   const ratio = (sec: number) => (duration > 0 ? sec / duration : 0)
   const panelClass = ['player-panel', live && 'is-live', hasPlayed && 'has-played'].filter(Boolean).join(' ')
 
@@ -139,8 +157,9 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
     </>
   )
 
-  const cheerOffset = live && cheerAt !== null && nowPlaying ? cheerAt - nowPlaying.start : null
-  const timeText = live ? `${formatTime(elapsed)} / ${formatTime(duration)}` : '--:-- / --:--'
+  const cheerOffset = cheerAt !== null && seg ? cheerAt - seg.start : null
+  const timeText = song ? `${formatTime(live ? elapsed : 0)} / ${formatTime(duration)}` : '--:-- / --:--'
+  const label = live ? STATUS_LABELS[status] : song ? STOPPED_LABEL : STATUS_LABELS.idle
   const progress = (
     <div className="progress" aria-hidden="true">
       <div className="progress-fill" style={{ transform: `scaleX(${live ? ratio(elapsed) : 0})` }} />
@@ -157,9 +176,9 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
           <TeamLogo teamId={song.teamId} size={36} />
         ))}
       <NowText
-        key={hasPlayed ? 'live' : 'idle'}
-        rise={hasPlayed}
-        label={live ? STATUS_LABELS[status] : STATUS_LABELS.idle}
+        key={rowFilled ? 'song' : 'idle'}
+        rise={rowFilled && !filledAtStart}
+        label={label}
         titleKey={song?.id ?? null}
         title={song ? song.title : '선택한 곡 없음'}
       >
@@ -209,16 +228,23 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
               <ChevronsRight className="wide-only" size={18} strokeWidth={1.75} aria-hidden="true" />
               응원가로
             </TapButton>
-            <TapButton
-              type="button"
-              className="stop-btn"
-              aria-label="정지"
-              disabled={status === 'idle'}
-              onClick={stop}
-            >
-              <Square size={16} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
-              <span className="wide-only">정지</span>
-            </TapButton>
+            {status === 'idle' && song ? (
+              <TapButton type="button" className="stop-btn" aria-label="다시 재생" onClick={() => play(song)}>
+                <Play size={16} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
+                <span className="wide-only">다시 재생</span>
+              </TapButton>
+            ) : (
+              <TapButton
+                type="button"
+                className="stop-btn"
+                aria-label="정지"
+                disabled={status === 'idle'}
+                onClick={stop}
+              >
+                <Square size={16} strokeWidth={1.75} fill="currentColor" aria-hidden="true" />
+                <span className="wide-only">정지</span>
+              </TapButton>
+            )}
             <TapButton
               type="button"
               className="more-btn narrow-only"
@@ -233,6 +259,11 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
         </div>
         <div className="dock-situations" ref={situationSlotRef} />
       </div>
+      {lyric && (
+        <div className="player-lyrics">
+          <LyricsBlock lyric={lyric} open={lyricsOpen} onToggle={() => setLyricsOpen((o) => !o)} />
+        </div>
+      )}
       <Sheet
         open={nowOpen}
         title="지금 재생"
@@ -246,6 +277,7 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
           <span>{timeText}</span>
           {cheerOffset !== null && <span className="now-sheet-cheer">응원가 {formatTime(cheerOffset)}</span>}
         </p>
+        {lyric && <LyricsBlock lyric={lyric} open={lyricsOpen} onToggle={() => setLyricsOpen((o) => !o)} />}
       </Sheet>
       <Sheet open={toolsOpen} title="재생 도구" titleId="tools-sheet-title" onClose={() => setToolsOpen(false)}>
         <div className="sheet-tools">{tools}</div>

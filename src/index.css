@@ -460,6 +460,34 @@ kbd {
   transform-origin: center;
 }
 
+/* 끌어서 순서를 바꾼다. 터치는 길게 누른 뒤 끌기라 격자 위에서는 화면을 밀지 않고, 길게 누를 때 뜨는 메뉴·글자 선택을 막는다 */
+.team-cell {
+  touch-action: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* 로고 그림을 끌면 브라우저가 그림 끌어다 놓기를 시작해 pointercancel이 온다. 누르기는 늘 버튼이 받는다 */
+.team-cell img {
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.team-grid-hint {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .team-cell-name {
   font-size: 15px;
   font-weight: 600;
@@ -473,6 +501,18 @@ kbd {
 .team-cell[aria-current='true'] .team-cell-name {
   color: var(--text);
   font-weight: 700;
+}
+
+/* 끌고 있는 로고는 반전으로 들고 있음을 보인다 */
+.team-cell.is-dragging,
+.team-cell.is-dragging:hover {
+  color: var(--ink);
+  background: var(--plate);
+  cursor: grabbing;
+}
+
+.team-cell.is-dragging .team-cell-name {
+  color: var(--ink);
 }
 
 .team-select-page h2 {
@@ -1114,6 +1154,54 @@ kbd {
   color: var(--text-2);
 }
 
+/* 가사 [STEP 3-⑳]. 휴대폰은 지금 재생 시트 안에만, 넓은 화면은 오른쪽 열 상황 칸 아래에 둔다 */
+.player-lyrics {
+  display: none;
+}
+
+.lyrics {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.lyrics-toggle {
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 8px;
+  padding: 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.lyrics-toggle[aria-expanded='true'] .lyrics-chevron {
+  transform: rotate(180deg);
+}
+
+.lyrics-body {
+  padding: 12px 4px 0;
+}
+
+.lyrics-text {
+  font-size: 15px;
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+.lyrics-source {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.lyrics-source a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  color: var(--text-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* 휴대폰: 곡을 틀기 전에는 플레이어 자리를 비워 격자를 더 보인다. iframe은 그대로 두고 칸만 접는다 */
 @media (max-width: 899.98px) {
   .player-panel:not(.has-played) .player-stage {
@@ -1692,12 +1780,23 @@ kbd {
   }
 
   .player-tools {
-    order: 2;
+    order: 3;
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
     padding: 0;
     border: 0;
+  }
+
+  /* 상황 칸 아래에 둔다. 펼쳐도 경기 중에 누르는 상황 칸이 밀리지 않는다 */
+  .player-lyrics {
+    display: block;
+    order: 2;
+    flex: none;
+  }
+
+  .player-lyrics .lyrics {
+    margin-top: 0;
   }
 
   .toast-region {

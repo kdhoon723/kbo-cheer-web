@@ -4,33 +4,36 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import path from 'node:path'
 import type { Plugin } from 'vite'
 
-const TYPES: Record<string, string> = { '.jpg': 'image/jpeg', '.webp': 'image/webp' }
-const PREFIX = '/players/'
+// 주소 앞부분 → mediaDir 아래 폴더와 내줄 수 있는 확장자
+const ROUTES: { prefix: string; folder: string; types: Record<string, string> }[] = [
+  { prefix: '/players/', folder: 'players', types: { '.jpg': 'image/jpeg', '.webp': 'image/webp' } },
+  { prefix: '/lyrics/', folder: 'lyrics', types: { '.json': 'application/json; charset=utf-8' } },
+]
 
 type Next = () => void
 
 /**
- * 개발 서버에서 /players/*를 최적화한 사진 폴더(mediaDir/players, npm run media가 만듦)에서 내준다.
- * 폴더가 없거나 파일이 없으면 404로 끝내, 화면은 구단 아바타로 내려간다.
- * 사진은 저장소와 public/에 넣지 않는다(배포 빌드 때만 dist/players로 복사, scripts/build-deploy.mjs)
+ * 개발 서버에서 /players/*와 /lyrics/*를 npm run media가 만든 폴더(mediaDir/players, mediaDir/lyrics)에서 내준다.
+ * 폴더가 없거나 파일이 없으면 404로 끝내, 화면은 구단 아바타로 내려가고 가사 칸은 생기지 않는다.
+ * 사진과 가사는 저장소와 public/에 넣지 않는다(배포 빌드 때만 dist/로 복사, scripts/build-deploy.mjs)
  */
 export function playerMedia(mediaDir: string | undefined): Plugin {
-  const root = mediaDir ? path.resolve(mediaDir, 'players') : null
-
   function handle(req: IncomingMessage, res: ServerResponse, next: Next) {
     const url = req.url ?? ''
-    if (!url.startsWith(PREFIX)) return next()
+    const route = ROUTES.find((r) => url.startsWith(r.prefix))
+    if (!route) return next()
+    const root = mediaDir ? path.resolve(mediaDir, route.folder) : null
     const notFound = () => {
       res.statusCode = 404
       res.end()
     }
     let relative: string
     try {
-      relative = decodeURIComponent(url.slice(PREFIX.length).split('?')[0] ?? '')
+      relative = decodeURIComponent(url.slice(route.prefix.length).split('?')[0] ?? '')
     } catch {
       return notFound()
     }
-    const type = TYPES[path.extname(relative)]
+    const type = route.types[path.extname(relative)]
     if (!root || !type) return notFound()
     const file = path.resolve(root, relative)
     if (!file.startsWith(root + path.sep)) return notFound()

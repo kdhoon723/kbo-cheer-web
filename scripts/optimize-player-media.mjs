@@ -4,10 +4,9 @@
 //   <팀>/<ID>.webp         격자·검색·재생 줄(40×50, 보드 48×60)용 120×150. 휴대폰 3배 화면의 40×50과 같다
 //   <팀>/card/<ID>.webp    선수 카드 사진(96×120)용 240×300. 2.5배
 //   <팀>/cutout/<ID>.webp  선수 카드 누끼(높이 140)용 높이 420 이하, 투명 배경 유지
-// 원본보다 크게 늘리지 않는다. 실행: npm run media (미디어 폴더는 KBO_MEDIA_DIR, 없으면 ../kbo-cheer-web-media)
+// 원본보다 크게 늘리지 않는다. 실행: npm run media(scripts/media.mjs, 미디어 폴더는 KBO_MEDIA_DIR, 없으면 ../kbo-cheer-web-media)
 import { mkdir, readdir, rm, stat } from 'node:fs/promises'
 import path from 'node:path'
-import { pathToFileURL } from 'node:url'
 import sharp from 'sharp'
 
 export const MEDIA_OUT = 'media-build'
@@ -66,15 +65,4 @@ export async function optimizePlayerMedia(mediaDir = process.env.KBO_MEDIA_DIR |
     }
   }
   return { out, totals }
-}
-
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const { out, totals } = await optimizePlayerMedia()
-  const kb = (n) => (n / 1024).toFixed(1)
-  for (const kind of ['thumb', 'card', 'cutout']) {
-    const [count, bytes] = totals[kind]
-    console.log(`${kind}: ${count}장, 합계 ${kb(bytes)} KB, 장당 평균 ${kb(bytes / Math.max(count, 1))} KB`)
-  }
-  const all = totals.thumb[1] + totals.card[1] + totals.cutout[1]
-  console.log(`최적화 파일 합계 ${kb(all)} KB (원본 합계 ${kb(totals.originalBytes)} KB) → ${out}`)
 }

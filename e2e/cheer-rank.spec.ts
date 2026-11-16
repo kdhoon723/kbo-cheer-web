@@ -133,7 +133,8 @@ test.describe('15. 응원가 시작 지점과 팀 응원가 정렬 [STEP 3-⑲]'
 
     // 휴대폰은 정렬 이름 버튼을 눌러 시트에서 고른다
     await page.setViewportSize({ width: 360, height: 640 })
-    // 넓은 화면의 열과 휴대폰의 한 열은 다른 구성이라 탭이 처음(선수)으로 돌아간다
+    // 넓은 화면의 열과 휴대폰의 한 열은 다른 구성이라 탭이 처음(선수)으로 돌아간다. 보드가 사라진 뒤에 누른다
+    await expect(page.locator('.board')).toHaveCount(0)
     await page.getByRole('tab', { name: /^팀 응원가/ }).click()
     const picker = page.getByRole('button', { name: /^팀 응원가 정렬: / })
     await expect(picker).toHaveText('가나다')

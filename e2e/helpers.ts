@@ -242,6 +242,11 @@ export function nowTitle(page: Page): Locator {
   return page.locator('.player-panel .now-title')
 }
 
+/** 재생 줄 맨 위 상태 글자(대기 중, 재생 준비 중, 지금 재생, 멈추는 중, 멈춤) */
+export function nowLabel(page: Page): Locator {
+  return page.locator('.player-panel .now-label')
+}
+
 export function nowTeam(page: Page): Locator {
   return page.locator('.player-panel .now-team')
 }

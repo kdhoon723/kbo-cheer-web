@@ -6,6 +6,7 @@ import {
   formField,
   gotoHanwha,
   note,
+  nowLabel,
   nowTitle,
   playerButton,
   presetSongs,
@@ -27,7 +28,7 @@ test.describe('11. 오류 수정 회귀', () => {
     await page.goto('/team/hanwha')
     await playerButton(page, '노시환').click()
     await expect(toast(page)).toHaveText('플레이어를 불러오지 못했습니다', { timeout: 15_000 })
-    await expect(nowTitle(page)).toHaveText('선택한 곡 없음')
+    await expect(nowLabel(page)).toHaveText('멈춤')
 
     await page.unroute('https://www.youtube.com/embed/**')
     await playerButton(page, '노시환').click()
@@ -49,7 +50,7 @@ test.describe('11. 오류 수정 회귀', () => {
     note(testInfo, '재생 확인까지(ms)', played.waitedMs)
     note(testInfo, '일시정지 시각(performance.now)', Math.round(sinceLoad))
     await expect(toast(page)).toHaveText('재생이 멈췄습니다')
-    await expect(nowTitle(page)).toHaveText('선택한 곡 없음')
+    await expect(nowLabel(page)).toHaveText('멈춤')
   })
 
   test('TC-63 설정 저장 실패 알림(K-03)', async ({ page }) => {

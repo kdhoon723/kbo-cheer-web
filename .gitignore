@@ -38,5 +38,8 @@ e2e/.auth/
 # 구단·KBO 선수 사진이 보이는 캡처는 공개 저장소에 올리지 않는다
 docs/screenshots/with-photos/
 
+# 나무위키 가사가 보이는 캡처도 공개 저장소에 올리지 않는다(가사는 저장소 밖 자료)
+docs/screenshots/with-lyrics/
+
 # 선수 사진 최적화 결과(npm run media). 구단·KBO 사진이라 저장소에 올리지 않는다
 media-build/
