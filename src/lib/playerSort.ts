@@ -1,6 +1,12 @@
 //20241476-김도훈-(2026-11-16)
 import type { GridSort, PlayerInfo, Song } from '../types.ts'
 
+export const GRID_SORTS: readonly { value: GridSort; label: string }[] = [
+  { value: 'starters', label: '주전순' },
+  { value: 'name', label: '가나다' },
+  { value: 'frequent', label: '자주 튼' },
+]
+
 export interface SortContext {
   playerOf: (song: Song) => PlayerInfo | null
   counts: Readonly<Record<string, number>>

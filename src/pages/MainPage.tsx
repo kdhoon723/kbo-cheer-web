@@ -6,6 +6,7 @@ import MatchupHeader from '../components/MatchupHeader.tsx'
 import SearchBox from '../components/SearchBox.tsx'
 import SearchResults from '../components/SearchResults.tsx'
 import SituationGrid from '../components/SituationGrid.tsx'
+import SortPicker from '../components/SortPicker.tsx'
 import SituationTeamTabs from '../components/SituationTeamTabs.tsx'
 import StatusMessage from '../components/StatusMessage.tsx'
 import TeamColumn from '../components/TeamColumn.tsx'
@@ -24,14 +25,10 @@ import type { Matchup, Slot } from '../lib/matchup.ts'
 import type { ColumnEnter } from '../lib/motion.ts'
 import type { SearchHit } from '../lib/search.ts'
 import { buildSearchIndex, searchIndex } from '../lib/search.ts'
+import { GRID_SORTS } from '../lib/playerSort.ts'
 import { situationSlots } from '../lib/situationSlots.ts'
-import type { GridSort, Song, TeamId } from '../types.ts'
+import type { Song, TeamId } from '../types.ts'
 
-const SORTS: { value: GridSort; label: string }[] = [
-  { value: 'starters', label: '주전순' },
-  { value: 'name', label: '가나다' },
-  { value: 'frequent', label: '자주 튼' },
-]
 
 const SITUATION_PANEL_ID = 'situation-panel'
 
@@ -155,7 +152,7 @@ export default function MainPage() {
 
   const sortToggle = (
     <div className="sort-toggle" role="group" aria-label="선수 정렬">
-      {SORTS.map((s) => (
+      {GRID_SORTS.map((s) => (
         <button
           key={s.value}
           type="button"
@@ -179,7 +176,14 @@ export default function MainPage() {
       counts={liveCounts}
       nowPlayingId={nowPlayingId}
       enterFrom={enterFrom}
-      sortControl={board ? undefined : sortToggle}
+      sortControl={
+        board ? undefined : (
+          <>
+            {sortToggle}
+            <SortPicker value={settings.gridSort} onChange={setGridSort} />
+          </>
+        )
+      }
       onPlay={playSong}
     />
   )

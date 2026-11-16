@@ -263,4 +263,30 @@ test.describe('12. 선수 정보와 사진 [STEP 3-⑪]', () => {
     await page.reload()
     await expect(page.getByRole('slider')).toHaveValue('35')
   })
+
+  test('TC-96 휴대폰 정렬 선택 시트', async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 640 })
+    await gotoHanwha(page)
+    // 탭과 정렬이 한 줄이라 격자가 탭 줄 바로 아래에서 시작한다
+    const tabBar = await page.locator('.tab-bar').boundingBox()
+    const firstCell = await page.locator('.player-grid button').first().boundingBox()
+    expect(tabBar?.height ?? 0).toBeLessThan(60)
+    expect((firstCell?.y ?? 0) - ((tabBar?.y ?? 0) + (tabBar?.height ?? 0))).toBeLessThan(24)
+    await expect(page.locator('.sort-toggle')).toBeHidden()
+    const picker = page.getByRole('button', { name: /^선수 정렬: / })
+    await expect(picker).toHaveText('주전순')
+    for (const name of ['가나다', '자주 튼', '주전순']) {
+      await picker.click()
+      const sheet = page.getByRole('dialog', { name: '선수 정렬' })
+      await sheet.getByRole('button', { name, exact: true }).click()
+      await expect(sheet).toBeHidden()
+      await expect(picker).toHaveText(name)
+      if (name === '가나다') {
+        const names = await playerNames(page).allTextContents()
+        expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, 'ko')))
+      }
+    }
+    await page.reload()
+    await expect(page.getByRole('button', { name: /^선수 정렬: / })).toHaveText('주전순')
+  })
 })
