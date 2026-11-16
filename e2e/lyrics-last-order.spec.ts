@@ -168,7 +168,8 @@ test.describe('17. 마지막 곡 유지 [STEP 3-⑳]', () => {
 
     await navLink(page, '곡 관리').click()
     page.once('dialog', (d) => void d.accept())
-    await songRow(page, '노시환').getByRole('button', { name: '삭제' }).click()
+    await songRow(page, '노시환').locator('.song-item-main').click()
+    await page.getByRole('button', { name: '곡 삭제' }).click()
     await navLink(page, '응원').click()
     await expect(nowTitle(page)).toHaveText('선택한 곡 없음')
     await expect(nowLabel(page)).toHaveText('대기 중')

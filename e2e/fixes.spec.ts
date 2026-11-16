@@ -77,9 +77,9 @@ test.describe('11. 오류 수정 회귀', () => {
   test('TC-64 슬래시가 든 곡 id의 수정 화면(K-04)', async ({ page }) => {
     await presetSongs(page, [{ ...NOH, id: 'a/b' }])
     await page.goto('/team/hanwha/songs')
-    await songRow(page, '노시환').getByRole('button', { name: '수정' }).click()
+    await songRow(page, '노시환').locator('.song-item-main').click()
     await expect(page).toHaveURL(/\/team\/hanwha\/songs\/a%2Fb\/edit$/)
-    await expect(page.getByRole('heading', { name: /^곡 수정/ })).toBeVisible()
+    await expect(page.getByRole('heading', { name: '노시환' })).toBeVisible()
     await expect(formField(page, '이름')).toHaveValue('노시환')
   })
 

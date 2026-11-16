@@ -10,6 +10,7 @@ import {
   presetSongs,
   presetStorage,
   seedSong,
+  deleteFromEdit,
   songRow,
   starterOrder,
   toast,
@@ -119,8 +120,7 @@ test.describe('12. 선수 정보와 사진 [STEP 3-⑪]', () => {
     await page.keyboard.press('Escape')
 
     page.once('dialog', (d) => void d.accept())
-    await page.goto('/team/hanwha/songs')
-    await songRow(page, '문현빈').getByRole('button', { name: '삭제' }).click()
+    await deleteFromEdit(page, 'hanwha', '문현빈')
     await expect(songRow(page, '문현빈')).toHaveCount(0)
     await gotoHanwha(page)
     await search.focus()

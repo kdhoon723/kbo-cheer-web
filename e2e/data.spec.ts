@@ -44,8 +44,8 @@ test.describe('7. JSON과 처음 데이터', () => {
     note(testInfo, '곡 수·선수 곡 수', { songs: songs.length, players })
     expect(songs).toHaveLength(507)
     expect(players).toBe(235)
-    await page.goto('/team/doosan/songs')
-    await expect(songRow(page, '서울 두산 승리하리라').locator('.song-row-range')).toHaveText(/^40:36 ~ /)
+    await page.goto('/team/doosan/songs?tab=team')
+    await expect(songRow(page, '서울 두산 승리하리라').locator('.song-item-meta')).toHaveText(/^40:36–42:05 · /)
   })
 
   test('TC-45 JSON 내보내기', async ({ page }, testInfo) => {

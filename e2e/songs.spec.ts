@@ -11,6 +11,7 @@ import {
   openEdit,
   playerButton,
   seedSong,
+  deleteFromEdit,
   songRow,
   storedSongs,
   waitNotPlaying,
@@ -28,9 +29,9 @@ test.describe('6. 곡 수정·삭제', () => {
     await formField(page, '끝').fill('07:30')
     await page.getByRole('button', { name: '저장', exact: true }).click()
     await expect(page).toHaveURL(/\/team\/hanwha\/songs$/)
-    await expect(songRow(page, '노시환(수정)').locator('.song-row-range')).toHaveText('07:00 ~ 07:30')
+    await expect(songRow(page, '노시환(수정)').locator('.song-item-meta')).toHaveText(/^07:00–07:30 · /)
     await page.reload()
-    await expect(songRow(page, '노시환(수정)').locator('.song-row-range')).toHaveText('07:00 ~ 07:30')
+    await expect(songRow(page, '노시환(수정)').locator('.song-item-meta')).toHaveText(/^07:00–07:30 · /)
     await expect(songRow(page, '노시환')).toHaveCount(0)
 
     await gotoHanwha(page)
@@ -63,19 +64,19 @@ test.describe('6. 곡 수정·삭제', () => {
 
   test('TC-40 종류 변경과 응원가 시작', async ({ page }, testInfo) => {
     await openEdit(page, 'hanwha', '노시환')
-    await formField(page, '응원가 시작(선수 곡만, 비워도 됩니다)').fill('07:10')
+    await formField(page, '응원가 시작').fill('07:10')
     await page.getByRole('button', { name: '저장', exact: true }).click()
     await expect(page).toHaveURL(/\/team\/hanwha\/songs$/)
     expect((await storedSongs(page)).find((s) => s.id === NOH.id)?.cheerStart).toBe(430)
 
     await openEdit(page, 'hanwha', '노시환')
-    const cheer = formField(page, '응원가 시작(선수 곡만, 비워도 됩니다)')
+    const cheer = formField(page, '응원가 시작')
     await expect(cheer).toHaveValue('07:10')
-    await formField(page, '종류').selectOption({ label: '상황' })
-    await expect(cheer).toHaveValue('')
-    await expect(cheer).toBeDisabled()
+    // [STEP 3-㉓] 종류는 버튼 셋이고, 선수 곡이 아니면 응원가 시작 칸이 비활성 대신 보이지 않는다
+    await page.getByRole('group', { name: '종류' }).getByRole('button', { name: '상황' }).click()
+    await expect(cheer).toHaveCount(0)
     await page.getByRole('button', { name: '저장', exact: true }).click()
-    await expect(page).toHaveURL(/\/team\/hanwha\/songs$/)
+    await expect(page).toHaveURL(/\/team\/hanwha\/songs\?tab=situation$/)
     const stored = (await storedSongs(page)).find((s) => s.id === NOH.id)
     note(testInfo, '저장값', stored)
     expect(stored).toMatchObject({ kind: 'situation', cheerStart: null })
@@ -93,23 +94,24 @@ test.describe('6. 곡 수정·삭제', () => {
   })
 
   test('TC-42 삭제 취소·삭제', async ({ page }) => {
-    await page.goto('/team/hanwha/songs')
+    // [STEP 3-㉓] 삭제는 목록이 아니라 수정 화면 맨 아래 「곡 삭제」에 있다. 확인 문구와 결과는 그대로다
     const messages: string[] = []
     page.once('dialog', (d) => {
       messages.push(d.message())
       void d.dismiss()
     })
-    await songRow(page, '페라자').getByRole('button', { name: '삭제' }).click()
-    await expect(songRow(page, '페라자')).toHaveCount(1)
+    await deleteFromEdit(page, 'hanwha', '페라자')
+    await expect(page).toHaveURL(/\/edit$/)
     expect(await storedSongs(page)).toHaveLength(507)
 
     page.once('dialog', (d) => {
       messages.push(d.message())
       void d.accept()
     })
-    await songRow(page, '페라자').getByRole('button', { name: '삭제' }).click()
+    await page.getByRole('button', { name: '곡 삭제' }).click()
+    await expect(page).toHaveURL(/\/team\/hanwha\/songs$/)
     await expect(songRow(page, '페라자')).toHaveCount(0)
-    await expect(page.getByRole('heading', { name: '선수 (21)' })).toBeVisible()
+    await expect(page.getByRole('tab', { name: '선수 21' })).toBeVisible()
     const songs = await storedSongs(page)
     expect(songs).toHaveLength(506)
     expect(songs.some((s) => s.title === '페라자')).toBe(false)
@@ -127,7 +129,8 @@ test.describe('6. 곡 수정·삭제', () => {
     await waitPlayingIn(page, { start: ferraz.start, end: ferraz.end, videoId: ferraz.videoId })
     await navLink(page, '곡 관리').click()
     page.once('dialog', (d) => void d.accept())
-    await songRow(page, '페라자').getByRole('button', { name: '삭제' }).click()
+    await songRow(page, '페라자').locator('.song-item-main').click()
+    await page.getByRole('button', { name: '곡 삭제' }).click()
     const s = await waitNotPlaying(page, 3_000)
     note(testInfo, '삭제 뒤 플레이어 상태', s)
     await expect(nowTitle(page)).toHaveText('선택한 곡 없음')

@@ -69,6 +69,7 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   // 지금 재생 시트는 휴대폰 배치에서만 쓴다. 넓어지면 닫아 두어 다시 좁힐 때 저절로 열리지 않게 한다
   if (nowOpen && !narrow) setNowOpen(false)
   const [rowRef, animate] = useAnimate<HTMLDivElement>()
+  const dockRef = useRef<HTMLDivElement>(null)
   const idleHeight = useRef(0)
   // mini의 useAnimate는 MotionConfig를 읽지 않으므로 동작 줄이기는 여기서 직접 본다
   const reduceMotion = useReducedMotionConfig()
@@ -113,6 +114,19 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
     observer.observe(el)
     return () => observer.disconnect()
   }, [rowFilled, rowRef])
+
+  // 휴대폰은 독이 화면 아래에 붙어 있어, 곡 수정의 고정 저장 줄이 독 위에 놓이게 독 높이를 CSS 변수로 알린다 [STEP 3-㉓]
+  useLayoutEffect(() => {
+    const el = dockRef.current
+    if (!el) return
+    const root = document.documentElement
+    const observer = new ResizeObserver(() => root.style.setProperty('--dock-h', `${el.offsetHeight}px`))
+    observer.observe(el)
+    return () => {
+      observer.disconnect()
+      root.style.removeProperty('--dock-h')
+    }
+  }, [])
 
   // 재생 줄이 처음 곡에 한 번 자란다. 앱에서 높이를 움직이는 곳은 여기 하나다
   useLayoutEffect(() => {
@@ -207,7 +221,7 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
         <PlayerCard song={song ?? null} />
       </div>
       <div className="player-tools">{tools}</div>
-      <div className="dock">
+      <div className="dock" ref={dockRef}>
         <Toast />
         {progress}
         <div className="play-row" ref={rowRef}>

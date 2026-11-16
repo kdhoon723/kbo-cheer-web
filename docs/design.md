@@ -2,7 +2,7 @@
 
 - 과목: 2026-2학기 스크립트프로그래밍 / 작성: 20241476 김도훈 / 작성일: 2026-11-15
 - 단계: STEP 2 설계 (최종판, 설계 검토 반영)
-- 기준 문서: `docs/requirements.md` (FR-01~33, NFR-01~14, BR-01~51, EX-01~31). [STEP 3-⑪] FR-29~33, BR-45~51, EX-30·31, NFR-14는 5.5절. [STEP 3-⑲] FR-37~39, BR-57·58은 3.1·5.7·11절. [STEP 3-⑳] FR-40~42, BR-59~61은 3.1·5.8절. [STEP 3-㉑] BR-62·63은 8.6절
+- 기준 문서: `docs/requirements.md` (FR-01~33, NFR-01~14, BR-01~51, EX-01~31). [STEP 3-⑪] FR-29~33, BR-45~51, EX-30·31, NFR-14는 5.5절. [STEP 3-⑲] FR-37~39, BR-57·58은 3.1·5.7·11절. [STEP 3-⑳] FR-40~42, BR-59~61은 3.1·5.8절. [STEP 3-㉑] BR-62·63은 8.6절. [STEP 3-㉓] FR-43~47은 5.9절
 - 검토 문서: `docs/reviews/design-review-claude.md`(R-01~28), `docs/reviews/design-review-codex.md`(C-01~18). 본문에서 검토 때문에 바뀐 곳에는 `[R-xx]`, `[C-xx]`를 붙였다. 전체 반영 내역은 15절.
 - 배포: `https://kbocheer.kdhoon.me`(Cloudflare Workers 정적 자산, `wrangler.jsonc`의 `assets.directory: ./dist`, `not_found_handling: single-page-application`으로 모든 경로에 index.html을 돌려준다) [공개 배포]
 - 기술 환경: React, TypeScript, Vite(포트 5173 고정, LAN 접속 허용), React Router(`react-router-dom`), YouTube IFrame Player API, YouTube Data API v3, LocalStorage, CSS
@@ -60,6 +60,8 @@ src/
     teamSongSort.ts           팀 응원가 인기순·가나다·영상 순, 순위 파일 검사 [STEP 3-⑲]
     lyrics.ts                 팀 가사 파일 검사, 곡 → 가사, 출처 글자, 라이선스 [STEP 3-⑳]
     teamOrder.ts              팀 순서 검사·옮기기, Alt+방향키 자리, 끌기 기준값 [STEP 3-⑳]
+    songList.ts               곡 관리 탭·검색·필터, 목록 둘째 줄, 목록 주소 [STEP 3-㉓]
+    songEdit.ts               ±1초, 「지금 위치로」, 바뀐 것 판정, 미리 듣기 시작점, YouTube 주소, 막대 비율 [STEP 3-㉓]
   api/
     youtubeData.ts            Data API 호출, 오류 분류
   player/
@@ -89,7 +91,8 @@ src/
     Header.tsx, TeamSheet.tsx, TeamGrid.tsx, TeamLogo.tsx, PrevTeamButton.tsx, Toast.tsx,
     PlayerPanel.tsx, PlayerHost.tsx, VolumeSlider.tsx, band.ts,
     SearchBox.tsx, SearchResults.tsx, PlayerGrid.tsx, PlayerPortrait.tsx, TeamSongList.tsx,
-    SituationGrid.tsx, EmptyState.tsx, SongForm.tsx, SongRow.tsx,
+    SituationGrid.tsx, EmptyState.tsx, SongForm.tsx(곡 추가의 영상 하나 등록),
+    SongListItem.tsx, SegmentBar.tsx, TimeField.tsx [STEP 3-㉓],
     UrlInputForm.tsx, VideoSearchForm.tsx, CandidateTable.tsx, DataApiNotice.tsx,
     StatusMessage.tsx,
     TeamColumn.tsx, MatchupHeader.tsx, SituationTeamTabs.tsx, PlayerCard.tsx [STEP 3-⑫]
@@ -518,7 +521,7 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 
 ### 5.1 라우트
 
-수업에서 배운 `BrowserRouter` + 중첩 `Route` + `Outlet` + `useParams` 구조로 만든다.
+수업에서 배운 `BrowserRouter` + 중첩 `Route` + `Outlet` + `useParams` 구조로 만들었다. [STEP 3-㉓] 곡 수정의 저장하지 않은 변경 확인(`useBlocker`)은 데이터 라우터에서만 동작해 `createBrowserRouter` + `RouterProvider`로 바꿨다. 경로 모양과 중첩은 그대로이고, `Route` 요소 대신 같은 구조의 객체 배열로 적는다. Provider들은 라우터 훅을 쓰지 않아 `RouterProvider` 바깥에 둔다. 곡 수정 경로는 곡 목록(`songs`)의 자식 라우트가 되어 넓은 화면에서 목록 옆에 그린다.
 
 ```tsx
 <BrowserRouter>
@@ -528,8 +531,9 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
         <Route index element={<HomeRedirect />} />
         <Route path="team/:teamId" element={<TeamLayout />}>     {/* teamId 검사, 팀 방문 기록 */}
           <Route index element={<MainPage />} />                  {/* 응원 화면 */}
-          <Route path="songs" element={<SongListPage />} />       {/* 곡 관리 */}
-          <Route path="songs/:songId/edit" element={<SongEditPage />} />
+          <Route path="songs" element={<SongListPage />}>         {/* 곡 관리. [STEP 3-㉓] 수정 칸을 자식으로 품는다 */}
+            <Route path=":songId/edit" element={<SongEditPage />} />
+          </Route>
           <Route path="songs/add" element={<ImportPage />} />     {/* 곡 추가(가져오기) [STEP 3-⑰] */}
           <Route path="import" element={<Navigate to="../songs/add" replace />} />  {/* 예전 주소 */}
         </Route>
@@ -546,8 +550,8 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 | --- | --- | --- |
 | `/` | 마지막 팀이 있으면 `/team/<마지막 팀>`으로 이동, 없으면 팀 선택 화면 | FR-02, BR-28 |
 | `/team/:teamId` | 메인(응원) 화면 | FR-04~10, FR-19, FR-23~25, FR-27 |
-| `/team/:teamId/songs` | 곡 관리(목록, 수정·삭제 버튼, 제목 옆 「곡 추가」) | FR-15, FR-16 |
-| `/team/:teamId/songs/:songId/edit` | 곡 수정 | FR-15 |
+| `/team/:teamId/songs` | 곡 관리(목록, 제목 옆 「곡 추가」). [STEP 3-㉓] `?tab=situation|team&q=검색어&missing=1`. 넓은 화면은 오른쪽이 「목록에서 곡을 고르면 여기서 고칩니다」 | FR-15, FR-43~45 |
+| `/team/:teamId/songs/:songId/edit` | 곡 수정(목록에서 온 `?tab=&q=&missing=`을 그대로 둔다). 넓은 화면은 목록 오른쪽 칸, 좁은 화면은 이 화면만. 맨 아래 「곡 삭제」 | FR-15, FR-16, FR-46, FR-47 |
 | `/team/:teamId/songs/add` | 곡 추가(모음 영상 URL, 영상 하나 URL, YouTube 검색, 확인 단계). 저장하거나 확인 단계·단일 등록에서 취소하면 곡 관리 목록으로 돌아간다 [STEP 3-⑰] | FR-11~14, FR-28 |
 | `/team/:teamId/import` | 예전 가져오기 주소. `<Navigate to="../songs/add" replace>`로 곡 추가로 보낸다 [STEP 3-⑰] | |
 | `/team/:teamId/songs/data` | 백업·초기화(JSON 내보내기·가져오기, 처음 데이터로 되돌리기, 저장 위치 안내). 곡 관리 제목 옆 「백업·초기화」로 들어간다 [STEP 3-⑱] | FR-20~22, BR-44 |
@@ -896,6 +900,33 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 - 끄는 로고는 반전(밝은 판, 어두운 글자)으로 들고 있음을 보인다. 크기를 바꾸거나 튀지 않고, 다른 로고는 움직임 없이 자리만 바뀐다. 로고 칸은 `touch-action: none`, `user-select: none`, `-webkit-touch-callout: none`이고, 로고 그림은 `pointer-events: none`·`-webkit-user-drag: none`이다. 마우스로 그림을 끌면 브라우저가 그림 끌어다 놓기를 시작해 pointercancel이 왔다.
 - 키보드: 로고에 포커스를 두고 Alt+←/→ 한 칸, Alt+↑/↓ 한 줄(`keyMoveTarget`, 5열). 옮긴 뒤 같은 로고에 포커스를 다시 둔다. 화면 읽기용으로 「키움을(를) 7번째로 옮겼습니다」를 `aria-live`로 알리고, 격자 아래 「길게 누르거나 끌어서 순서를 바꿉니다. 키보드는 Alt+방향키」(13px `#ABA49A`)를 각 로고의 `aria-describedby`로 잇는다. Enter·Space는 지금처럼 그 팀을 고른다.
 
+### 5.9 곡 목록·곡 수정 [STEP 3-㉓]
+
+곡 관리 화면이 입력칸 나열이라 쓰기 불편했다(390×844에서 한화 44곡이 한 페이지 3,223px, 줄마다 「수정」「삭제」 버튼 88개). 기능 규칙(BR-19~24, EX-13, EX-29)과 저장 형식은 그대로 두고 쓰는 방법만 바꿨다. 이 배치는 학생(김도훈)이 정했다.
+
+**곡 목록(FR-43, FR-44).**
+
+- 탭 「선수 N · 상황 N · 팀 응원가 N」(응원 화면과 같은 `.tabs`)으로 한 종류씩 보인다. 그 아래 검색칸(`SearchBox`를 「이 팀 곡 검색」, `/` 단축키 없이)과 선수 탭에서만 「응원가 시작 없는 곡 N」 필터(`aria-pressed`, 켜면 반전)를 둔다. 검색은 응원 화면과 같은 `buildSearchIndex`/`searchIndex`를 그 탭 곡에만 쓴다(`listSongs`).
+- 고른 탭·검색어·필터는 React 상태로 들고 주소(`?tab=&q=&missing=1`, 기본값은 적지 않음)에 따라 적는다(`listViewOf`/`listSearchOf`). 주소 값을 바로 고치면 빠르게 이어 누를 때 앞의 변경을 잃었다(탭을 누르고 바로 검색어를 지우면 탭이 되돌아감, E2E에서 발견. React Router의 함수형 갱신도 렌더 때 값을 기준으로 해서 같았다). 주소가 밖에서 바뀌면(수정 칸에서 종류를 바꿔 저장) 그 값으로 다시 맞춘다.
+- 줄(`SongListItem`): 선수는 32×40 사진(없으면 구단 아바타)·이름·포지션, 둘째 줄 「06:54–07:55 · 1:01 · 응원가 07:25」(없으면 「응원가 시작 없음」, `songMeta`). 상황·팀 응원가는 로고 판 28·이름·「시각 · 길이」. 「선수」 같은 종류 글자는 탭이 대신해 뺐다. 줄 전체가 수정 화면으로 가는 링크(키보드 Tab·Enter)이고, 오른쪽 44px 버튼 하나가 미리 듣기(그 곡이 재생 중이면 정지, Square 아이콘)다. 삭제 버튼은 목록에서 빼 수정 화면 맨 아래로 옮겼다(잘못 누르기 방지).
+- 수정 화면에서 돌아오면(저장·취소·「곡 목록」) 주소에 탭·검색어·필터가 남아 있고, `state.focusId`로 그 곡 줄을 가운데로 스크롤하고 포커스를 둔다. 저장으로 종류를 바꿨으면 바뀐 탭으로 돌아간다(`songListPath`).
+- 측정(390×844, 한화): 세로 3,223px → 1,817px(선수 탭), 버튼 88개 → 26개(탭 3, 필터 1, 미리 듣기 22). 360×640은 4,540px → 1,817px, 1280×800은 3,011px → 1,667px.
+
+**넓은 화면 나란히 두기(FR-45).** 1200px 이상(`BOARD_QUERY`)은 목록(320~400px)과 수정 칸을 두 열로 둔다. 재 보니 1200px에서 왼쪽 큰 열 안쪽이 760px, 목록 400px, 수정 칸 336px(왼쪽 여백 24를 빼면 312px)이다. 시각 칸 한 줄(입력칸 최소 64 + −1초 47 + +1초 48 + 지금 위치로 90 + 사이 12 = 261px, 1200px에서 잰 버튼 폭)이 들어가는 수정 칸 폭은 화면 폭 약 1,070px부터라, 그보다 좁은 화면(900~1,069px)은 한 열씩 보여야 한다. 1,070~1,199px도 나란히 둘 수는 있지만 새 기준 폭을 하나 더 두지 않고 매치업 보드와 같은 1200px을 쓴다(1100px에서 안쪽 660px). 오른쪽 플레이어 열은 그대로라 미리 듣기 영상이 늘 보인다(YouTube 정책). 수정 칸은 `position: sticky; top: 0`이고 자체 스크롤이라 긴 목록을 내려도 따라온다. 곡을 고르지 않았으면 오른쪽은 「왼쪽 목록에서 곡을 고르면 여기서 고칩니다」다. 라우트는 수정 경로를 곡 목록의 자식으로 두어, 좁은 화면은 수정 중이면 목록 대신 수정 칸만 그린다(목록 상태는 같은 컴포넌트라 남는다).
+
+**곡 수정(FR-46, FR-47).**
+
+- 맨 위: 곡 요약(선수는 사진 32×40, 그 밖은 로고 판 36, 이름 22/700, 「한화 · 선수 · 3루수」). 그 아래 구간 막대(`SegmentBar`): 4px 막대가 그 곡의 시작–끝, 응원가 시작에 2×12 눈금(글자색), 미리 듣는 중이면 밝은 판 색 세로선이 재생 위치다. 재생 위치는 250ms마다 요소의 `transform: translateX(%)`와 `opacity`만 고치고 React 상태는 바꾸지 않는다. 막대 아래 「06:54 · 응원가 07:25 · 07:55」. 막대는 지금 칸 값이 맞으면 그 값, 아니면 저장된 값으로 그린다.
+- 미리 듣기 「처음부터」·「응원가부터」(선수 곡이고 값이 있을 때)·「끝 5초 전부터」(`previewStart`). 지금 칸의 값으로 만든 곡을 그 시각부터 튼다(저장하지 않음). 칸 값이 틀리면 틀지 않고 오류를 보인다.
+- 칸: 이름, 종류(버튼 셋, 고른 것 반전. 선수가 아니면 응원가 시작 칸이 사라지고 값이 지워진다), 시작·응원가 시작(선수만)·끝(`TimeField`). 시각 칸은 mm:ss 직접 입력 그대로, 옆에 −1초·+1초(0~영상 길이 안, `stepTimeText`)와 「지금 위치로」(이 곡을 미리 듣는 중일 때만 활성, 일시정지 포함. 재생 위치를 내림한 정수 초, `positionText`). 응원가 시작이 비어 있으면 ±1초는 시작 시각에서 출발한다.
+- 「영상 정보」(`details`, 접힘): 영상 ID, 영상 길이, 「YouTube에서 06:54부터 열기」(새 창, `youtubeAt`).
+- 오류: 값은 입력마다 검사하고(`validateSongForm` 그대로), 칸을 벗어나거나 ±1초·「지금 위치로」를 누른 칸만 그 아래에 오류를 보인다. 저장을 누르면 모든 칸의 오류를 보인다(EX-13).
+- 저장·취소는 아래에 붙인다(`position: sticky`). 휴대폰은 화면 아래 독(재생 줄)이 있어, PlayerPanel이 독 높이를 `--dock-h`로 알리고 저장 줄은 그 위에 놓인다. 바뀐 것이 없으면(`isFormDirty`, 같은 시각의 다른 표기와 앞뒤 공백은 같은 것으로 봄) 저장이 비활성이다.
+- 저장하지 않은 변경이 있으면 다른 경로로 가는 이동을 `useBlocker`로 막고 "저장하지 않은 변경이 있습니다. 저장하지 않고 나갈까요?"를 묻는다(확인하면 이동). 같은 경로에서 주소의 `?`만 바뀌는 것은 막지 않는다. 새로고침·창 닫기는 `beforeunload`로 브라우저 경고를 띄운다. 저장·삭제는 일부러 나가는 것이라 막지 않는다.
+- 맨 아래 「곡 삭제」(1px 선으로 나눈 구역, 무엇이 사라지는지 한 줄). 확인 문구는 예전과 같은 「'노시환'을(를) 삭제합니다」이고, 지운 뒤 목록의 그 곡 탭으로 간다.
+- 좁은 화면은 수정 화면을 열면 맨 위로 올린다(목록의 스크롤 위치를 이어받지 않게).
+- 비용: 데이터 라우터로 바꾸며 앱 묶음이 커졌다. 같은 코드를 `BrowserRouter`로 빌드하면 411.04 kB(gzip 111.16)이고 `createBrowserRouter`로는 465.29 kB(gzip 128.62)라, 라우터만으로 약 54 kB(gzip 17.5 kB)다. 이 단계 전(398.94 kB, gzip 107.52)과 견주면 새 화면 코드는 약 12 kB(gzip 3.6 kB)다. 이동 막기를 React Router 기능으로 하려면 데이터 라우터가 필요해 받아들였다.
+
 ## 6. 컴포넌트 구조
 
 ### 6.1 계층
@@ -931,10 +962,8 @@ App
               │ │   │ │ ├ TeamColumn(현재 팀)
               │ │   │ │ └ TeamColumn(전 팀) 또는 「상대 팀」 빈 상태
               │ │   │ └ SituationTeamTabs(넓은 화면, 두 팀일 때), SituationGrid, 단축키 안내 (PlayerPanel의 .dock-situations에 포털로) [디자인 개편, STEP 3-⑫]
-              │ │   ├ SongListPage
-              │ │   │ └ SongRow × N
-              │ │   ├ SongEditPage
-              │ │   │ └ SongForm
+              │ │   ├ SongListPage           [STEP 3-㉓] 탭, SearchBox, 필터, SongListItem × N, (넓은 화면) 수정 칸 Outlet
+              │ │   │ └ SongEditPage → SongEditor: PlayerPortrait/TeamLogo, SegmentBar, TimeField × 2~3, 곡 삭제
               │ │   └ ImportPage
               │ │     ├ DataApiNotice
               │ │     ├ UrlInputForm / VideoSearchForm
@@ -983,7 +1012,7 @@ App
 | PlayerHost | 플레이어가 들어갈 DOM 자리 | 없음 | Player(`attachHost`) |
 | VolumeSlider | 볼륨 0~100, iOS 안내(EX-24) | `value: number`, `onChange(v: number): void`, `supported: boolean` | 없음 |
 | SongListPage | 팀 곡을 종류별로 나열 | 없음 | Songs, Player |
-| SongRow | 곡 한 줄(종류, 이름, 구간, 수정·삭제) | `song: Song`, `onEdit(id: string): void`, `onDelete(song: Song): void` | 없음 |
+| SongListItem [STEP 3-㉓] | 곡 한 줄: 사진·이름·포지션·둘째 줄(Link, 누르면 수정), 미리 듣기·정지 버튼 | `song`, `index`, `editTo`, `selected`, `playing`, `onPreview(song)` | 없음 |
 | SongEditPage | songId·teamId가 모두 맞는 곡 찾기, 없으면 안내(EX-29), 저장 후 곡 관리로 이동 [C-14] | 없음 | Songs |
 | SongForm | 이름·종류·시작·끝·응원가 시작 입력과 검증(BR-19~21), 같은 제목 상황 곡 경고(BR-43) [C-08] | `initial: SongFormValues`, `videoId: string`, `videoDuration: number`, `isDuplicateSituationTitle(title: string): boolean`, `submitLabel: string`, `onSubmit(fields: SongFields): void`, `onCancel(): void` | 없음 |
 | ImportPage | 곡 추가(가져오기) 단계 관리(입력→불러오는 중→확인/단일 등록), 요청 취소, 저장 중 표시, 위쪽 「곡 관리」 링크. 저장·확인 단계 취소 뒤 곡 관리로 [C-05, R-21, STEP 3-⑰] | 없음 | Songs, Notice |
@@ -1019,7 +1048,7 @@ interface SearchHit {
 ```
 
 - 화면 조각(SearchBox, PlayerGrid, SituationGrid 등)은 Context를 쓰지 않고 Props만 받는다. 페이지가 데이터를 골라 내려주므로 조각은 그리기만 하고, 테스트와 재사용이 쉽다.
-- SongForm은 수정(FR-15)과 단일 영상 등록(FR-13)에 함께 쓴다.
+- SongForm은 단일 영상 등록(FR-13)에 쓴다. [STEP 3-㉓] 곡 수정(FR-15)은 SongEditPage의 SongEditor로 옮겼다.
   - `isDuplicateSituationTitle`은 페이지가 "같은 팀에 normalize 제목이 같은 다른 상황 곡이 있는가"로 만들어 넘긴다. 수정 중인 곡 자신은 뺀다.
   - 결과가 true면 "같은 제목의 상황 곡이 이미 있습니다. 상황 버튼이 두 개 생깁니다" 경고를 보여 주되 저장은 막지 않는다(BR-43). [R-14, C-08]
 - 재생 버튼(PlayerGrid, SituationGrid, TeamSongList, SearchResults)은 `onMouseDown={e => e.preventDefault()}`로 마우스 클릭 때 포커스를 가져가지 않는다. 키보드 Tab으로 고를 때의 포커스 표시는 그대로 남는다(12.5). [R-06]
@@ -1633,9 +1662,9 @@ PlayerGrid 버튼 onClick
 ### 12.2 곡 수정
 
 ```
-SongListPage 「수정」 → navigate('/team/:teamId/songs/' + encodeURIComponent(songId) + '/edit')   // [STEP 4-2, K-04] 가져온 JSON의 id에 / 가 있어도 경로가 맞는다
+SongListPage 곡 줄(Link) → '/team/:teamId/songs/' + encodeURIComponent(songId) + '/edit' + 지금 ?tab=&q=&missing=   // [STEP 4-2, K-04] 가져온 JSON의 id에 / 가 있어도 경로가 맞는다
  → SongEditPage: useParams → songs에서 id와 teamId가 모두 맞는 곡 찾기(없으면 EX-29)
- → SongForm(initial) → 「저장」: 검증(BR-19~21) 통과, 같은 제목 상황 곡이면 경고만(BR-43)
+ → SongEditor(초기값) → 「저장」(바뀐 것이 있을 때만 활성): 검증(BR-19~21) 통과, 같은 제목 상황 곡이면 경고만(BR-43) [STEP 3-㉓]
  → SongsContext.updateSong({ ...song, ...fields, cheerStart: kind가 player가 아니면 null })
  → dispatch(UPDATE_SONG) → 새 state.songs → useEffect → saveSongs(LocalStorage)
  → navigate('/team/:teamId/songs')
@@ -1730,8 +1759,8 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 | FR-12 가져오기 확인·저장 | CandidateTable, evaluateCandidates, importSongs | 4.4~4.7, 10.4 |
 | FR-13 단일 영상 등록 | ImportPhase 'single', SongForm, addSong | 10.4, 6.2 |
 | FR-14 YouTube 검색 등록 | searchVideos, VideoSearchForm | 10.1 |
-| FR-15 곡 수정 | SongEditPage, SongForm, UPDATE_SONG | 7.2, 12.2 |
-| FR-16 곡 삭제 | SongRow, `window.confirm`, DELETE_SONG | 7.2 |
+| FR-15 곡 수정 | SongEditPage(SongEditor, [STEP 3-㉓]부터 SongForm 대신), UPDATE_SONG | 5.9, 7.2, 12.2 |
+| FR-16 곡 삭제 | SongEditPage 「곡 삭제」([STEP 3-㉓]부터, 전에는 SongRow), `window.confirm`, DELETE_SONG | 5.9, 7.2 |
 | FR-17 데이터 저장·유지 | `storage.ts`, Provider의 useEffect 저장 | 3 |
 | FR-18 처음 데이터 | `seed-songs.json`, loadSongs(seed), 11절 절차 | 3.2, 3.4, 11 |
 | FR-19 지금을 응원가 시작으로 | PlayerPanel onCheerHere, canCheerHere 주기 갱신 | 7.4 |
@@ -1756,6 +1785,8 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 | FR-38 응원가 시작 눈금 | PlayerPanel `.progress-cheer`, `cheerTarget` | 5.7 |
 | FR-40 가사 | `build-lyrics.mjs`, `playerMediaPlugin.ts` `/lyrics/`, `__LYRICS__`(`LYRICS`), `useSongLyrics`, `parseLyricsFile`, LyricsBlock, PlayerPanel | 5.8 |
 | FR-41 마지막 곡 유지 | PlayerPanel(`history.recent[0]`, 「멈춤」, 「다시 재생」), PlayerCard | 5.8 |
+| FR-43~45 곡 목록 | SongListPage(탭·검색·필터, 넓은 화면 Outlet), SongListItem, `songList.ts`, 라우터 자식 경로 | 5.1, 5.9 |
+| FR-46~47 곡 수정 | SongEditPage(SongEditor), SegmentBar, TimeField, `songEdit.ts`, `useBlocker`, `--dock-h` | 5.9 |
 | FR-42 팀 순서 바꾸기 | TeamGrid(pointer 끌기·길게 누르기·Alt+방향키), `teamOrder.ts`, Settings.teamOrder, SongDataPage 「팀 순서 처음으로」 | 3.1, 5.8 |
 | FR-39 팀 응원가 정렬 | `team-song-ranks.json`, `buildRankIndex`, `sortTeamSongs`, Settings.teamSort, SortToggle, SortPicker, TeamColumn | 3.1, 5.7 |
 
@@ -1816,7 +1847,7 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 | EX-04 타임스탬프 없음 | phase 'single' | 10.4 |
 | EX-05 저장 대상 0곡 | 저장 버튼 비활성 | 10.4 |
 | EX-10~12 플레이어 로드·재생 오류·자동 재생 | 8.6 표, onAutoplayBlocked | 8.6 |
-| EX-13 수정 입력 오류 | SongForm 칸별 오류 | 6.2 |
+| EX-13 수정 입력 오류 | SongEditor 칸별 오류(칸을 벗어나면 바로) | 5.9, 6.2 |
 | EX-14~15 저장 데이터 손상·쓰기 실패·저장소 사용 불가 | loadSongs status, saveSongs false | 3.2 |
 | EX-16 팀에 곡 없음 | EmptyState | 6.2 |
 | EX-17 검색 결과 없음 | SearchResults 빈 문구 | 9.2 |

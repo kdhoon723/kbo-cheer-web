@@ -292,16 +292,17 @@ export async function openSongData(page: Page): Promise<void> {
   await expect(page.getByRole('heading', { name: '백업·초기화' })).toBeVisible()
 }
 
+// 칸 묶음은 .field다. 곡 수정 화면 [STEP 3-㉓]은 label이 칸 안의 첫 요소이고, 곡 추가 폼은 label이 칸 자체다
 export function formField(page: Page, label: string): Locator {
   return page
-    .locator('label.field')
+    .locator('.field')
     .filter({ has: page.getByText(label, { exact: true }) })
     .locator('input, select')
     .first()
 }
 
 export function formFieldLabel(page: Page, label: string): Locator {
-  return page.locator('label.field').filter({ has: page.getByText(label, { exact: true }) })
+  return page.locator('.field').filter({ has: page.getByText(label, { exact: true }) })
 }
 
 export async function gotoHanwha(page: Page): Promise<void> {
@@ -313,14 +314,22 @@ export async function expectPlayerReady(page: Page): Promise<void> {
   await expect.poll(async () => (await ytSnapshot(page)) !== null, { timeout: 20_000 }).toBe(true)
 }
 
-export async function openEdit(page: Page, teamId: TeamId, title: string): Promise<void> {
-  await page.goto(`/team/${teamId}/songs`)
-  await songRow(page, title).getByRole('button', { name: '수정' }).click()
-  await expect(page).toHaveURL(/\/edit$/)
+/** 곡 관리 목록(선수 탭)에서 곡 줄을 눌러 수정 화면을 연다. 다른 탭 곡은 tab에 종류를 준다 [STEP 3-㉓] */
+export async function openEdit(page: Page, teamId: TeamId, title: string, tab: SongKind = 'player'): Promise<void> {
+  await page.goto(`/team/${teamId}/songs${tab === 'player' ? '' : `?tab=${tab}`}`)
+  await songRow(page, title).locator('.song-item-main').click()
+  await expect(page).toHaveURL(/\/edit(\?.*)?$/)
 }
 
+/** 곡 관리 목록의 한 줄. 지금 보이는 탭의 곡만 있다 */
 export function songRow(page: Page, title: string): Locator {
-  return page.locator('.song-row').filter({ has: page.locator('.song-row-title', { hasText: exactText(title) }) })
+  return page.locator('.song-item').filter({ has: page.locator('.song-item-title', { hasText: exactText(title) }) })
+}
+
+/** 곡 수정 화면 맨 아래의 「곡 삭제」. 삭제는 목록이 아니라 수정 화면에 있다 [STEP 3-㉓] */
+export async function deleteFromEdit(page: Page, teamId: TeamId, title: string): Promise<void> {
+  await openEdit(page, teamId, title)
+  await page.getByRole('button', { name: '곡 삭제' }).click()
 }
 
 export async function apiKeyMissing(page: Page): Promise<boolean> {

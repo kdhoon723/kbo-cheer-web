@@ -1,6 +1,6 @@
 //20241476-김도훈-(2026-11-15)
 import { LazyMotion, MotionConfig, domAnimation } from 'motion/react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { HistoryProvider } from './context/HistoryContext.tsx'
 import { NoticeProvider } from './context/NoticeContext.tsx'
 import { PlayerProvider } from './context/PlayerContext.tsx'
@@ -15,39 +15,48 @@ import SongDataPage from './pages/SongDataPage.tsx'
 import SongEditPage from './pages/SongEditPage.tsx'
 import SongListPage from './pages/SongListPage.tsx'
 
+// 이동 막기(useBlocker, 곡 수정의 저장하지 않은 변경)는 데이터 라우터에서만 동작해 createBrowserRouter로 만든다 [STEP 3-㉓]
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <AppLayout />,
+    children: [
+      { index: true, element: <HomeRedirect /> },
+      {
+        path: 'team/:teamId',
+        element: <TeamLayout />,
+        children: [
+          { index: true, element: <MainPage /> },
+          // 곡 목록이 수정 칸을 품는다. 넓은 화면은 목록과 수정 칸을 나란히, 좁은 화면은 하나씩 보인다
+          { path: 'songs', element: <SongListPage />, children: [{ path: ':songId/edit', element: <SongEditPage /> }] },
+          { path: 'songs/add', element: <ImportPage /> },
+          { path: 'songs/data', element: <SongDataPage /> },
+          // 예전 가져오기 주소는 곡 관리 아래 곡 추가로 보낸다
+          { path: 'import', element: <Navigate to="../songs/add" replace /> },
+        ],
+      },
+      { path: 'settings', element: <SettingsRedirect /> },
+      { path: '*', element: <Navigate to="/" replace /> },
+    ],
+  },
+])
+
 export default function App() {
   return (
     <MotionConfig reducedMotion="user">
       {/* m.* 컴포넌트는 domAnimation 기능만 싣는다. strict라 실수로 motion.*을 쓰면 바로 오류가 난다 */}
       <LazyMotion features={domAnimation} strict>
-      <BrowserRouter>
         <NoticeProvider>
           <PrefsProvider>
             <HistoryProvider>
-            <SongsProvider>
-              <PlayerProvider>
-                <Routes>
-                  <Route path="/" element={<AppLayout />}>
-                    <Route index element={<HomeRedirect />} />
-                    <Route path="team/:teamId" element={<TeamLayout />}>
-                      <Route index element={<MainPage />} />
-                      <Route path="songs" element={<SongListPage />} />
-                      <Route path="songs/:songId/edit" element={<SongEditPage />} />
-                      <Route path="songs/add" element={<ImportPage />} />
-                      <Route path="songs/data" element={<SongDataPage />} />
-                      {/* 예전 가져오기 주소는 곡 관리 아래 곡 추가로 보낸다 */}
-                      <Route path="import" element={<Navigate to="../songs/add" replace />} />
-                    </Route>
-                    <Route path="settings" element={<SettingsRedirect />} />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Route>
-                </Routes>
-              </PlayerProvider>
-            </SongsProvider>
+              <SongsProvider>
+                <PlayerProvider>
+                  <RouterProvider router={router} />
+                </PlayerProvider>
+              </SongsProvider>
             </HistoryProvider>
           </PrefsProvider>
         </NoticeProvider>
-      </BrowserRouter>
       </LazyMotion>
     </MotionConfig>
   )

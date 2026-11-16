@@ -249,7 +249,9 @@ test.describe('5-1. 곡 관리 안의 곡 추가 [STEP 3-⑰]', () => {
     await page.getByRole('button', { name: '저장', exact: true }).click()
     await expect(page).toHaveURL(/\/team\/hanwha\/songs$/)
     await expect(page.getByRole('heading', { name: /^곡 관리/ })).toBeVisible()
-    await expect(page.locator('.song-row')).toHaveCount(44)
+    // [STEP 3-㉓] 목록은 종류마다 탭이라 44줄 대신 탭 숫자와 선수 탭 줄을 본다
+    await expect(page.getByRole('tablist', { name: '곡 종류' }).getByRole('tab')).toHaveText(['선수 22', '상황 4', '팀 응원가 18'])
+    await expect(page.locator('.song-item')).toHaveCount(22)
     reportCalls(testInfo, calls)
   })
 })

@@ -14,7 +14,7 @@ const PAGES: { name: string; path: string; ready: (page: Page) => Promise<void> 
   {
     name: '곡 관리',
     path: '/team/hanwha/songs',
-    ready: (page) => expect(page.locator('.song-row').first()).toBeVisible(),
+    ready: (page) => expect(page.locator('.song-item').first()).toBeVisible(),
   },
   {
     name: '곡 수정',

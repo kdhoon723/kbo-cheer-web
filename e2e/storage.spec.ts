@@ -40,7 +40,7 @@ test.describe('9. 저장 데이터', () => {
     await expect(songRow(page, '노시환')).toHaveCount(1)
     await page.evaluate((flag) => Reflect.set(window, flag, true), FAIL_FLAG)
 
-    await songRow(page, '노시환').getByRole('button', { name: '수정' }).click()
+    await songRow(page, '노시환').locator('.song-item-main').click()
     await formField(page, '이름').fill('노시환(수정)')
     await page.getByRole('button', { name: '저장', exact: true }).click()
     await expect(toast(page)).toHaveText(/저장하지 못했습니다/)

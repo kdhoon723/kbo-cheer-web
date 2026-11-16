@@ -180,7 +180,6 @@ kbd {
 
 .count,
 .now-meta,
-.song-row-range,
 .volume-value,
 .import-summary,
 .candidate-end,
@@ -1381,58 +1380,314 @@ kbd {
   margin-top: 16px;
 }
 
-/* 곡 관리 */
-.song-group h3 {
-  margin: 24px 0 8px;
-  font-size: 16px;
-  font-weight: 700;
+/* 곡 관리 목록 [STEP 3-㉓]: 탭 하나씩, 검색·필터, 줄을 누르면 수정, 오른쪽은 미리 듣기 */
+.song-list-page .tab-bar {
+  margin-top: 8px;
 }
 
-.song-rows {
+.song-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.song-tools .search-field {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.filter-btn {
+  gap: 6px;
+  padding: 0 12px;
+  color: var(--text-2);
+  border-color: var(--line);
+}
+
+.filter-btn[aria-pressed='true'],
+.kind-toggle button[aria-pressed='true'] {
+  color: var(--ink);
+  background: var(--plate);
+  border-color: var(--plate);
+}
+
+.filter-btn[aria-pressed='true'] .count {
+  color: var(--ink);
+}
+
+.song-items {
   list-style: none;
   margin: 0;
   padding: 0;
   border-top: 1px solid var(--line);
 }
 
-.song-row {
+.song-item {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 0;
+  gap: 4px;
   border-bottom: 1px solid var(--line);
 }
 
-.song-row-info {
+.song-item-main {
   display: flex;
-  flex: 1 1 200px;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 12px;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 56px;
+  padding: 8px 4px;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.song-item-main[aria-current='true'] {
+  color: var(--ink);
+  background: var(--plate);
+}
+
+.song-item-main[aria-current='true'] .song-item-pos,
+.song-item-main[aria-current='true'] .song-item-meta {
+  color: var(--ink);
+}
+
+@media (hover: hover) {
+  .song-item-main:where(:not([aria-current='true'])):hover {
+    background: var(--pressed);
+  }
+}
+
+.song-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   min-width: 0;
 }
 
-.song-row-title {
-  font-size: 16px;
-  font-weight: 600;
+.song-item-name {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
 }
 
-.song-row-kind,
-.song-row-range,
-.song-row-cheer {
+.song-item-title {
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.song-item-pos,
+.song-item-meta {
   font-size: 13px;
   color: var(--text-2);
 }
 
-.song-row-actions {
-  display: flex;
-  gap: 8px;
+.song-item-pos {
+  flex: none;
 }
 
-.song-row-actions button {
+.song-item-meta {
+  font-variant-numeric: tabular-nums;
+}
+
+.song-item-play {
+  flex: none;
+}
+
+/* 곡 수정 [STEP 3-㉓] */
+.edit-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 16px;
+}
+
+.app-main .edit-summary h2 {
+  margin: 0;
+}
+
+.edit-sub {
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.segment {
+  margin-bottom: 12px;
+}
+
+.segment-track {
+  position: relative;
+  height: 4px;
+  background: var(--edge);
+}
+
+.segment-cheer {
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: 12px;
+  margin-left: -1px;
+  background: var(--text);
+}
+
+/* 재생 위치 선: 막대 폭만 한 상자를 transform으로 옮기고, 선은 상자 왼쪽 끝에 있다 */
+.segment-head {
+  position: absolute;
+  inset: -8px 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segment-head span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1px;
+  width: 2px;
+  background: var(--plate);
+}
+
+.segment-times {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.preview-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.field > label:first-child {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.kind-toggle {
+  display: flex;
+  gap: 4px;
+}
+
+.kind-toggle button {
+  flex: 1;
+  padding: 0 8px;
+  color: var(--text-2);
+  border-color: var(--line);
+}
+
+.time-row {
+  display: flex;
+  gap: 4px;
+}
+
+.time-row input {
+  flex: 1 1 72px;
   min-width: 64px;
+  font-variant-numeric: tabular-nums;
+}
+
+.step-btn {
+  min-width: var(--tap);
+  padding: 0 8px;
+}
+
+.now-btn {
+  padding: 0 10px;
+}
+
+.video-info {
+  margin: 8px 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.video-info summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  list-style: none;
+  min-height: var(--tap);
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+.video-info summary::-webkit-details-marker {
+  display: none;
+}
+
+.video-info[open] summary svg {
+  transform: rotate(180deg);
+}
+
+.video-info dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+
+.video-info dt {
+  color: var(--text-2);
+}
+
+.video-info dd {
+  margin: 0;
+}
+
+.video-info a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--tap);
+  color: var(--text-2);
+  text-underline-offset: 3px;
+}
+
+/* 저장·취소는 화면 아래에 붙인다. 휴대폰은 아래 독 위에 놓는다(--dock-h는 PlayerPanel이 잰다) */
+.edit-actions {
+  position: sticky;
+  bottom: var(--dock-h, 0px);
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  margin: 16px calc(-1 * var(--gutter)) 0;
+  padding: 12px var(--gutter);
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+}
+
+.edit-actions .primary-btn {
+  flex: 1;
+}
+
+.danger-zone {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.danger-zone h3 {
+  margin-bottom: 4px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.danger-zone p {
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--text-2);
 }
 
 /* 곡 관리 안 백업·초기화 [STEP 3-⑱] */
@@ -2093,6 +2348,38 @@ kbd {
 @media (min-width: 1681px) {
   .player-panel {
     border-right: 1px solid var(--line);
+  }
+}
+
+/* 곡 관리: 1200px 이상은 목록과 수정 칸을 나란히 둔다 [STEP 3-㉓] */
+@media (min-width: 900px) {
+  .edit-actions {
+    bottom: 0;
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+}
+
+@media (min-width: 1200px) {
+  .songs-split {
+    display: grid;
+    grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+
+  .songs-detail {
+    position: sticky;
+    top: 0;
+    max-height: 100dvh;
+    padding-left: 24px;
+    overflow-y: auto;
+    border-left: 1px solid var(--line);
+  }
+
+  .songs-detail-empty {
+    margin-top: 64px;
+    color: var(--text-2);
   }
 }
 
