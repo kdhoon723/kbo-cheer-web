@@ -294,6 +294,8 @@ test.describe('12. 선수 정보와 사진 [STEP 3-⑪]', () => {
     test.skip(!(await mediaAvailable(page)), '최적화한 사진(media-build, npm run media)이 없어 건너뜀')
     await page.setViewportSize({ width: 1440, height: 900 })
     await presetStorage(page, 'kboCheer.team', JSON.stringify({ version: 1, currentTeamId: 'hanwha', prevTeamId: 'samsung' }))
+    // [STEP 3-㉙] 가사를 펼쳐 두면 카드 자리에 가사가 들어가므로 접어 둔다
+    await presetStorage(page, 'kboCheer.settings', JSON.stringify({ version: 1, volume: 100, lyricsOpen: false }))
     await gotoHanwha(page)
     // 류지혁 누끼는 300×260(가로/세로 1.15)이라, 4:5로 고정하던 예전 자리에서는 가로로 눌렸다
     await page.locator('.board-column').nth(1).locator('.player-grid button', { hasText: '류지혁' }).click()

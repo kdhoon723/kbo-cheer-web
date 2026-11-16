@@ -77,7 +77,7 @@ test.describe('16. 가사 [STEP 3-⑳]', () => {
 
     await playerButton(page, '노시환').click()
     await waitPlayingIn(page, { start: NOH.start, end: NOH.end, videoId: NOH.videoId })
-    const block = page.locator('.player-lyrics')
+    const block = page.locator('.player-card-area, .player-lyrics')
     // [STEP 3-㉗] 처음부터 펼쳐져 있다(접기·펼침 기억은 TC-155)
     await expect(block.getByRole('button', { name: '가사 접기' })).toHaveAttribute('aria-expanded', 'true')
     const noh = lyricOf('hanwha', '노시환')

@@ -2379,8 +2379,8 @@ kbd {
   }
 
   /*
-   * 가사는 맨 아래, 재생 도구 밑이다 [STEP 3-㉗]. 펼치면 높이를 280px(남는 높이가 더 있으면 그만큼)로 두고 가사 칸 안에서 스크롤한다.
-   * 가사 길이만큼 열이 길어지면 끝까지 읽으려 내릴 때 「응원가로」와 상황 칸이 화면 위로 사라진다
+   * 가사 칸은 맨 아래, 재생 도구 밑이다 [STEP 3-㉗]. 1200px 이상에서 펼친 가사는 선수 카드 자리(.card-lyrics)로 가고 [STEP 3-㉙],
+   * 그보다 좁으면(선수 카드가 없음) 여기서 펼쳐 높이 280px(남는 높이가 더 있으면 그만큼) 안에서 스크롤한다
    */
   .player-lyrics {
     display: block;
@@ -2412,6 +2412,67 @@ kbd {
     padding-right: 8px;
     overflow-y: auto;
     overscroll-behavior: contain;
+  }
+
+  /*
+   * 선수 카드 자리 높이(판 140 + 이름 12·28 + 아래 줄 20). 가사를 펼쳐 카드를 머리줄로 줄여도 자리 높이가 같아
+   * 아래 「응원가로」·정지·상황 칸이 움직이지 않는다 [STEP 3-㉙]
+   */
+  .player-card-area {
+    height: 200px;
+  }
+
+  .card-lyrics {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    margin-top: 0;
+    border-top: 0;
+  }
+
+  .card-lyrics-head {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    min-height: var(--tap);
+  }
+
+  .card-lyrics-names {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .card-lyrics-name {
+    overflow: hidden;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 22px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .card-lyrics .lyrics-toggle {
+    flex: none;
+    gap: 4px;
+    width: auto;
+    margin-top: 0;
+    padding: 0 8px 0 12px;
+    font-size: 13px;
+  }
+
+  /* 15px 글자에 줄 간격 24px. 남는 152px에 여섯 줄이 들고, 나머지와 출처는 이 칸 안에서 스크롤한다 */
+  .card-lyrics .lyrics-body {
+    flex: 1;
+    min-height: 0;
+    padding: 4px 8px 0 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-top: 1px solid var(--line);
+  }
+
+  .card-lyrics .lyrics-text {
+    line-height: 24px;
   }
 
   .toast-region {

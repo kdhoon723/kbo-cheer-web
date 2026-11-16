@@ -36,10 +36,13 @@ test.describe('24. 가사 기본으로 펼치기 [STEP 3-㉗]', () => {
     test.setTimeout(90_000)
     await page.setViewportSize({ width: 1440, height: 900 })
     await playNoh(page)
-    const block = page.locator('.player-lyrics')
+    const block = page.locator('.player-card-area, .player-lyrics')
     await expectOpen(block, true)
+    // [STEP 3-㉙] 펼친 가사는 선수 카드 자리, 접으면 맨 아래 「가사 보기」로 가고 포커스도 따라간다
+    await expect(page.locator('.player-card-area .lyrics-text')).toBeVisible()
     await block.getByRole('button', { name: '가사 접기' }).click()
     await expectOpen(block, false)
+    await expect(page.locator('.player-lyrics').getByRole('button', { name: '가사 보기' })).toBeFocused()
     expect(await storedLyricsOpen(page)).toBe(false)
 
     await playTeamSong(page, '불타는 태양')
@@ -50,54 +53,65 @@ test.describe('24. 가사 기본으로 펼치기 [STEP 3-㉗]', () => {
 
     await block.getByRole('button', { name: '가사 보기' }).click()
     await expectOpen(block, true)
+    await expect(page.locator('.player-card-area').getByRole('button', { name: '가사 접기' })).toBeFocused()
     expect(await storedLyricsOpen(page)).toBe(true)
     await playNoh(page)
     await expectOpen(block, true)
   })
 
-  test('TC-156 가사가 가장 긴 곡을 틀어도 누르는 자리가 그대로이고 가사는 칸 안에서 스크롤한다 [YT]', async ({ page }, testInfo) => {
-    test.setTimeout(90_000)
-    await page.setViewportSize({ width: 1440, height: 900 })
-    await page.goto('/team/lotte')
-    await expectPlayerReady(page)
-    const places = () =>
-      page.evaluate(() => {
-        const at = (e: Element) => {
-          const r = e.getBoundingClientRect()
-          return [Math.round(r.left), Math.round(r.top)]
-        }
-        const buttons = [...document.querySelectorAll<HTMLElement>('.player-panel .dock button')].filter((b) => b.offsetParent)
-        const tools = document.querySelector('.player-tools')
-        return {
-          buttons: buttons.map((b) => [b.textContent?.trim() || b.getAttribute('aria-label'), ...at(b)]),
-          tools: tools ? at(tools) : null,
-        }
-      })
-    // 가사가 없는 곡(김민성). [STEP 3-㉘] 가사 자료가 바뀌어 LG에서 롯데로 옮겼다(오스틴에 구단 공식 사이트 가사가 생김)
-    await playerButton(page, '김민성').click()
-    await expect(nowTitle(page)).toHaveText('김민성')
-    await expect(page.locator('.player-lyrics')).toHaveCount(0)
-    const without = await places()
-    // 처음 데이터 곡 중 가사가 가장 긴 곡(58줄)
-    await playTeamSong(page, '챔피언 롯데')
-    await expect(page.locator('.player-lyrics .lyrics-text')).toBeVisible()
-    const withLyrics = await places()
-    note(testInfo, '누르는 자리(가사 없음 / 가장 긴 가사)', { without, withLyrics })
-    expect(withLyrics).toEqual(without)
-    expect(without.buttons.map((b) => b[0])).toEqual(expect.arrayContaining(['응원가로', '정지']))
+  for (const [width, height] of [
+    [1440, 900],
+    [1280, 800],
+  ] as const) {
+    test(`TC-156 ${width}×${height}: 가장 긴 가사도 스크롤 없이 여섯 줄 이상 보이고 누르는 자리는 그대로다 [YT]`, async ({ page }, testInfo) => {
+      test.setTimeout(90_000)
+      await page.setViewportSize({ width, height })
+      await page.goto('/team/lotte')
+      await expectPlayerReady(page)
+      const places = () =>
+        page.evaluate(() => {
+          const at = (e: Element) => {
+            const r = e.getBoundingClientRect()
+            return [Math.round(r.left), Math.round(r.top)]
+          }
+          const buttons = [...document.querySelectorAll<HTMLElement>('.player-panel .dock button')].filter((b) => b.offsetParent)
+          const tools = document.querySelector('.player-tools')
+          return {
+            buttons: buttons.map((b) => [b.textContent?.trim() || b.getAttribute('aria-label'), ...at(b)]),
+            tools: tools ? at(tools) : null,
+          }
+        })
+      // 가사가 없는 곡(김민성). [STEP 3-㉘] 가사 자료가 바뀌어 LG에서 롯데로 옮겼다(오스틴에 구단 공식 사이트 가사가 생김)
+      await playerButton(page, '김민성').click()
+      await expect(nowTitle(page)).toHaveText('김민성')
+      await expect(page.locator('.player-panel .lyrics')).toHaveCount(0)
+      const without = await places()
+      // 처음 데이터 곡 중 가사가 가장 긴 곡(58줄). [STEP 3-㉙] 펼친 가사는 선수 카드 자리에 있다
+      await playTeamSong(page, '챔피언 롯데')
+      await expect(page.locator('.player-card-area .lyrics-text')).toBeVisible()
+      const withLyrics = await places()
+      note(testInfo, '누르는 자리(가사 없음 / 가장 긴 가사)', { without, withLyrics })
+      expect(withLyrics).toEqual(without)
+      expect(without.buttons.map((b) => b[0])).toEqual(expect.arrayContaining(['응원가로', '정지']))
 
-    const scroll = await page.evaluate(() => {
-      const body = document.querySelector('.player-lyrics .lyrics-body')
-      const lyrics = document.querySelector('.player-lyrics')
-      return {
-        body: body ? [body.scrollHeight, body.clientHeight] : null,
-        boxHeight: lyrics ? Math.round(lyrics.getBoundingClientRect().height) : null,
-      }
+      // 스크롤하지 않은 채로 화면과 가사 칸 안에 보이는 줄 수
+      const view = await page.evaluate(() => {
+        const text = document.querySelector('.player-card-area .lyrics-text')
+        const body = document.querySelector('.player-card-area .lyrics-body')
+        const panel = document.querySelector('.player-panel')
+        if (!text || !body || !panel) return null
+        const line = parseFloat(getComputedStyle(text).lineHeight)
+        const t = text.getBoundingClientRect()
+        const b = body.getBoundingClientRect()
+        const visible = Math.min(t.bottom, b.bottom, innerHeight) - Math.max(t.top, b.top, 0)
+        return { lines: Math.floor((visible + 1) / line), scrollTop: panel.scrollTop, body: [body.scrollHeight, body.clientHeight] }
+      })
+      note(testInfo, '보이는 가사', view)
+      expect(view?.scrollTop).toBe(0)
+      expect(view?.lines).toBeGreaterThanOrEqual(6)
+      expect(view?.body[0]).toBeGreaterThan(view?.body[1] ?? Infinity)
     })
-    note(testInfo, '가사 칸', scroll)
-    expect(scroll.boxHeight).toBe(280)
-    expect(scroll.body?.[0]).toBeGreaterThan(scroll.body?.[1] ?? Infinity)
-  })
+  }
 
   test.describe('휴대폰', () => {
     test.use({ viewport: { width: 390, height: 844 } })

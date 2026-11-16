@@ -35,7 +35,7 @@ test.describe('25. 가사 출처와 이름으로 찾기 [STEP 3-㉘]', () => {
   test('TC-158 KT는 구단 공식 사이트, 한화는 나무위키 출처 [YT]', async ({ page }) => {
     test.setTimeout(90_000)
     await playTeamSong(page, 'kt', '투혼가')
-    const block = page.locator('.player-lyrics')
+    const block = page.locator('.player-card-area, .player-lyrics')
     await expect(block.locator('.lyrics-text')).toHaveText(lyricOf('kt', '투혼가').lyrics)
     const kt = block.locator('.lyrics-source')
     await expect(kt).toHaveText('출처: 구단 공식 사이트')
@@ -59,7 +59,7 @@ test.describe('25. 가사 출처와 이름으로 찾기 [STEP 3-㉘]', () => {
 
     // 처음 데이터에 없던 곡: 한화 「하나 되어 외쳐」(나무위키), 키움 「승리의 함성」(구단 공식 사이트)
     await playTeamSong(page, 'hanwha', '하나 되어 외쳐')
-    const block = page.locator('.player-lyrics')
+    const block = page.locator('.player-card-area, .player-lyrics')
     await expect(block.locator('.lyrics-text')).toHaveText(lyricOf('hanwha', '하나 되어 외쳐').lyrics)
     await expect(block.locator('.lyrics-source')).toContainText('나무위키')
     await playTeamSong(page, 'kiwoom', '승리의 함성')

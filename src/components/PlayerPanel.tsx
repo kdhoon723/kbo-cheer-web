@@ -1,5 +1,5 @@
 //20241476-김도훈-(2026-11-15)
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { ChevronsRight, EllipsisVertical, Flag, Play, Square } from 'lucide-react'
 import { useReducedMotionConfig } from 'motion/react'
@@ -11,7 +11,7 @@ import { useHistory } from '../context/historyState.ts'
 import { usePlayer } from '../context/PlayerContext.tsx'
 import { usePrefs } from '../context/PrefsContext.tsx'
 import { useSongs } from '../context/SongsContext.tsx'
-import { NARROW_QUERY, useMediaQuery } from '../hooks/useMediaQuery.ts'
+import { BOARD_QUERY, NARROW_QUERY, useMediaQuery } from '../hooks/useMediaQuery.ts'
 import { useSongLyrics } from '../hooks/useSongLyrics.ts'
 import { cheerHereSecond, cheerTarget, segmentElapsed } from '../lib/playback.ts'
 import { formatTime } from '../lib/time.ts'
@@ -19,7 +19,7 @@ import type { NowPlaying } from '../types.ts'
 import { TapButton } from '../ui/Press.tsx'
 import { distance, ease, quick, row, rowTextDelay, swap } from '../ui/motionTokens.ts'
 import { bandStyle } from './band.ts'
-import LyricsBlock from './LyricsBlock.tsx'
+import LyricsBlock, { CardLyrics } from './LyricsBlock.tsx'
 import PlayerCard from './PlayerCard.tsx'
 import PlayerHost from './PlayerHost.tsx'
 import PlayerPortrait from './PlayerPortrait.tsx'
@@ -64,8 +64,13 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   // 이번에 연 뒤 실제로 튼 적이 있는가. 휴대폰은 그때까지 플레이어 자리를 접어 둔다
   const [hasPlayed, setHasPlayed] = useState(false)
   const [toolsOpen, setToolsOpen] = useState(false)
+  // 넓은 화면은 접기·펼치기로 가사 버튼 자리가 바뀌어(카드 자리 ↔ 맨 아래) 새 버튼에 포커스를 옮긴다
+  const [lyricsFocus, setLyricsFocus] = useState(false)
+  const clearLyricsFocus = useCallback(() => setLyricsFocus(false), [])
   const [nowOpen, setNowOpen] = useState(false)
   const narrow = useMediaQuery(NARROW_QUERY)
+  // 선수 카드 자리는 1200px 이상에서만 보인다. 그 아래 넓은 화면은 펼친 가사도 맨 아래 칸에 둔다
+  const hasCardArea = useMediaQuery(BOARD_QUERY)
   // 지금 재생 시트는 휴대폰 배치에서만 쓴다. 넓어지면 닫아 두어 다시 좁힐 때 저절로 열리지 않게 한다
   if (nowOpen && !narrow) setNowOpen(false)
   const [rowRef, animate] = useAnimate<HTMLDivElement>()
@@ -88,6 +93,11 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
   const canCheerHere = current?.canCheerHere ?? false
   const live = nowPlaying !== null && playing !== undefined
   const lyric = useSongLyrics(song, live)
+
+  function toggleWideLyrics() {
+    setLyricsOpen(!settings.lyricsOpen)
+    setLyricsFocus(true)
+  }
 
   useEffect(() => {
     if (!nowPlaying) return
@@ -222,7 +232,11 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
         <PlayerHost />
       </div>
       <div className="player-card-area">
-        <PlayerCard song={song ?? null} />
+        {song && lyric && settings.lyricsOpen && hasCardArea ? (
+          <CardLyrics song={song} lyric={lyric} onClose={toggleWideLyrics} focusToggle={lyricsFocus} onFocused={clearLyricsFocus} />
+        ) : (
+          <PlayerCard song={song ?? null} />
+        )}
       </div>
       <div className="player-tools">{tools}</div>
       <div className="dock" ref={dockRef}>
@@ -293,9 +307,16 @@ export default function PlayerPanel({ situationSlotRef }: Props) {
         </div>
         <div className="dock-situations" ref={situationSlotRef} />
       </div>
-      {lyric && (
+      {/* 1200px 이상에서 접은 가사는 맨 아래 「가사 보기」 한 줄이고, 펼치면 선수 카드 자리(CardLyrics)로 간다. 휴대폰은 시트 안에만 있다 */}
+      {lyric && !narrow && !(settings.lyricsOpen && hasCardArea) && (
         <div className={settings.lyricsOpen ? 'player-lyrics is-open' : 'player-lyrics'}>
-          <LyricsBlock lyric={lyric} open={settings.lyricsOpen} onToggle={() => setLyricsOpen(!settings.lyricsOpen)} />
+          <LyricsBlock
+            lyric={lyric}
+            open={settings.lyricsOpen}
+            onToggle={toggleWideLyrics}
+            focusToggle={lyricsFocus}
+            onFocused={clearLyricsFocus}
+          />
         </div>
       )}
       <Sheet
