@@ -1,26 +1,46 @@
 //20241476-김도훈-(2026-11-16)
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Check, ChevronDown } from 'lucide-react'
-import { GRID_SORTS } from '../lib/playerSort.ts'
-import type { GridSort } from '../types.ts'
 import { TapButton } from '../ui/Press.tsx'
 import Sheet from './Sheet.tsx'
 
-interface Props {
-  value: GridSort
-  onChange: (sort: GridSort) => void
+export interface SortOption<T extends string> {
+  value: T
+  label: string
+}
+
+interface Props<T extends string> {
+  /** 「선수 정렬」처럼 무엇을 정렬하는지 */
+  label: string
+  options: readonly SortOption<T>[]
+  value: T
+  onChange: (sort: T) => void
+}
+
+/** 노트북 이상: 탭 줄 오른쪽에 정렬 이름을 모두 늘어놓는다. 휴대폰에서는 CSS가 숨긴다 */
+export function SortToggle<T extends string>({ label, options, value, onChange }: Props<T>) {
+  return (
+    <div className="sort-toggle" role="group" aria-label={label}>
+      {options.map((s) => (
+        <button key={s.value} type="button" aria-pressed={value === s.value} onClick={() => onChange(s.value)}>
+          {s.label}
+        </button>
+      ))}
+    </div>
+  )
 }
 
 /** 휴대폰 정렬: 탭 줄이 한 줄에 들어가게 지금 정렬 이름만 보이는 버튼으로 접고, 누르면 시트에서 고른다 */
-export default function SortPicker({ value, onChange }: Props) {
+export default function SortPicker<T extends string>({ label, options, value, onChange }: Props<T>) {
   const [open, setOpen] = useState(false)
-  const current = GRID_SORTS.find((s) => s.value === value) ?? GRID_SORTS[0]
+  const titleId = useId()
+  const current = options.find((s) => s.value === value) ?? options[0]
   return (
     <>
       <TapButton
         type="button"
         className="sort-picker"
-        aria-label={`선수 정렬: ${current.label}`}
+        aria-label={`${label}: ${current.label}`}
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen(true)}
@@ -30,13 +50,13 @@ export default function SortPicker({ value, onChange }: Props) {
       </TapButton>
       <Sheet
         open={open}
-        title="선수 정렬"
-        titleId="sort-sheet-title"
+        title={label}
+        titleId={titleId}
         focusSelector='[aria-pressed="true"]'
         onClose={() => setOpen(false)}
       >
-        <div className="sort-options" role="group" aria-label="선수 정렬">
-          {GRID_SORTS.map((s) => (
+        <div className="sort-options" role="group" aria-label={label}>
+          {options.map((s) => (
             <TapButton
               key={s.value}
               type="button"

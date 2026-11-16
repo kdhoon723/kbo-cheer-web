@@ -57,7 +57,7 @@ test.describe('6. 곡 수정·삭제', () => {
       await expect(formFieldLabel(page, c.errorAt).locator('.form-error'), c.name).toHaveText(c.error)
       await expect(page).toHaveURL(editUrl)
       const stored = (await storedSongs(page)).find((s) => s.id === NOH.id)
-      expect(stored, c.name).toMatchObject({ title: '노시환', start: 414, end: 475, cheerStart: null })
+      expect(stored, c.name).toMatchObject({ title: '노시환', start: 414, end: 475, cheerStart: NOH.cheerStart })
     }
   })
 

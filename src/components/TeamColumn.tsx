@@ -4,9 +4,11 @@ import type { ReactNode } from 'react'
 import * as m from 'motion/react-m'
 import { getTeam } from '../data/teams.ts'
 import { playerOf } from '../data/players.ts'
+import { TEAM_SONG_RANKS } from '../data/teamSongRanks.ts'
 import type { SwitchDirection } from '../lib/motion.ts'
 import { sortPlayerSongs } from '../lib/playerSort.ts'
-import type { GridSort, Song, TeamId } from '../types.ts'
+import { sortTeamSongs } from '../lib/teamSongSort.ts'
+import type { GridSort, Song, TeamId, TeamSongSort } from '../types.ts'
 import { distance, swap } from '../ui/motionTokens.ts'
 import EmptyState from './EmptyState.tsx'
 import PlayerGrid from './PlayerGrid.tsx'
@@ -20,6 +22,7 @@ interface Props {
   /** 탭·패널 id 앞에 붙인다. 한 화면에 열이 둘이면 겹치지 않게 한다 */
   idPrefix: string
   sort: GridSort
+  teamSort: TeamSongSort
   /** 「자주 튼」 순서를 정할 때 찍어 둔 횟수 */
   sortCounts: Readonly<Record<string, number>>
   /** 칸에 「N번」으로 보일 지금 횟수. 없으면 보이지 않는다 */
@@ -28,6 +31,8 @@ interface Props {
   enterFrom: SwitchDirection
   /** 선수 탭일 때 탭 줄 오른쪽에 놓을 정렬 버튼 */
   sortControl?: ReactNode
+  /** 팀 응원가 탭일 때 탭 줄 오른쪽에 놓을 정렬 버튼 */
+  teamSortControl: ReactNode
   onPlay: (song: Song) => void
 }
 
@@ -37,11 +42,13 @@ export default function TeamColumn({
   songs,
   idPrefix,
   sort,
+  teamSort,
   sortCounts,
   counts,
   nowPlayingId,
   enterFrom,
   sortControl,
+  teamSortControl,
   onPlay,
 }: Props) {
   const [tab, setTab] = useState<Tab>('players')
@@ -49,8 +56,9 @@ export default function TeamColumn({
     const mine = songs.filter((s) => s.teamId === teamId)
     const byOrder = (kind: Song['kind']) => mine.filter((s) => s.kind === kind).sort((a, b) => a.order - b.order)
     const players = sortPlayerSongs(byOrder('player'), sort, { playerOf, counts: sortCounts })
-    return { players, teamSongs: byOrder('team'), isEmpty: mine.length === 0 }
-  }, [songs, teamId, sort, sortCounts])
+    const teamSongs = sortTeamSongs(byOrder('team'), teamSort, TEAM_SONG_RANKS)
+    return { players, teamSongs, isEmpty: mine.length === 0 }
+  }, [songs, teamId, sort, teamSort, sortCounts])
 
   if (isEmpty) return <EmptyState teamId={teamId} />
   const id = (name: string) => idPrefix + name
@@ -79,7 +87,7 @@ export default function TeamColumn({
             팀 응원가 <span className="count">{teamSongs.length}</span>
           </button>
         </div>
-        {tab === 'players' && sortControl}
+        {tab === 'players' ? sortControl : teamSortControl}
       </div>
       <m.div
         id={id('panel-songs')}

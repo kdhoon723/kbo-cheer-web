@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import { assignTeam as assignSlot } from '../lib/matchup.ts'
 import type { Slot } from '../lib/matchup.ts'
 import { DEFAULT_SETTINGS, loadSettings, loadTeamState, saveSettings, saveTeamState } from '../lib/storage.ts'
-import type { GridSort, Settings, TeamId, TeamState } from '../types.ts'
+import type { GridSort, Settings, TeamId, TeamSongSort, TeamState } from '../types.ts'
 import { useNotice } from './NoticeContext.tsx'
 
 interface PrefsContextValue {
@@ -15,6 +15,7 @@ interface PrefsContextValue {
   settings: Settings
   setVolume: (v: number) => void
   setGridSort: (s: GridSort) => void
+  setTeamSort: (s: TeamSongSort) => void
 }
 
 const PrefsContext = createContext<PrefsContextValue | null>(null)
@@ -69,9 +70,13 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
     setSettings((prev) => (prev.gridSort === gridSort ? prev : { ...prev, gridSort }))
   }, [])
 
+  const setTeamSort = useCallback((teamSort: TeamSongSort) => {
+    setSettings((prev) => (prev.teamSort === teamSort ? prev : { ...prev, teamSort }))
+  }, [])
+
   const value = useMemo(
-    () => ({ teamState, visitTeam, assignTeam, settings, setVolume, setGridSort }),
-    [teamState, visitTeam, assignTeam, settings, setVolume, setGridSort],
+    () => ({ teamState, visitTeam, assignTeam, settings, setVolume, setGridSort, setTeamSort }),
+    [teamState, visitTeam, assignTeam, settings, setVolume, setGridSort, setTeamSort],
   )
   return <PrefsContext.Provider value={value}>{children}</PrefsContext.Provider>
 }

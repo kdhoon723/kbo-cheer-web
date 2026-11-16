@@ -3,7 +3,11 @@ import { describe, expect, it } from 'vitest'
 import { normalize } from '../lib/hangul.ts'
 import { parseSongsFile } from '../lib/songsFile.ts'
 import type { Song, SongKind, TeamId } from '../types.ts'
+import { songKey } from '../lib/seedData.ts'
+import { sortTeamSongs } from '../lib/teamSongSort.ts'
 import seedJson from './seed-songs.json'
+import ranksJson from './team-song-ranks.json'
+import { TEAM_SONG_RANKS } from './teamSongRanks.ts'
 import { TEAM_IDS } from './teams.ts'
 
 const EXPECTED: Record<TeamId, Record<SongKind, number>> = {
@@ -53,8 +57,18 @@ describe('처음 데이터(seed-songs.json)', () => {
     expect(champion && [champion.start, champion.end]).toEqual([2355, 2436])
   })
 
-  it('응원가 시작 지점은 모두 비어 있다', () => {
-    expect(loadSeed().every((s) => s.cheerStart === null)).toBe(true)
+  it('응원가 시작 지점은 선수곡 120곡에 있고 모두 시작과 끝 사이다', () => {
+    const songs = loadSeed()
+    const withCheer = songs.filter((s) => s.cheerStart !== null)
+    expect(withCheer).toHaveLength(120)
+    expect(withCheer.every((s) => s.kind === 'player')).toBe(true)
+    for (const s of withCheer) {
+      expect(s.cheerStart !== null && s.start < s.cheerStart && s.cheerStart < s.end, s.title).toBe(true)
+    }
+    const byTeam = Object.fromEntries(TEAM_IDS.map((t) => [t, withCheer.filter((s) => s.teamId === t).length]))
+    expect(byTeam).toEqual({
+      kiwoom: 18, hanwha: 10, lotte: 1, ssg: 17, doosan: 18, nc: 22, kia: 1, lg: 12, samsung: 0, kt: 21,
+    })
   })
 
   it('팀마다 같은 제목의 상황 곡이 없다', () => {
@@ -79,5 +93,33 @@ describe('처음 데이터(seed-songs.json)', () => {
     expect(kindOf('lg', '셀리오')).toEqual(['team'])
     expect(kindOf('kt', '승리하리라 KT WIZ')).toEqual(['team'])
     expect(kindOf('samsung', '환희')).toEqual(['team'])
+  })
+})
+
+describe('팀 응원가 순위(team-song-ranks.json)', () => {
+  const songs = loadSeed()
+
+  it('208곡 모두 처음 데이터의 팀 응원가 하나와 제목까지 맞고 읽을 때 빠지는 줄이 없다', () => {
+    expect(ranksJson).toHaveLength(208)
+    expect(TEAM_SONG_RANKS.size).toBe(208)
+    for (const r of ranksJson) {
+      const hits = songs.filter((s) => s.kind === 'team' && songKey(s) === songKey(r))
+      expect(hits.map((s) => s.title), r.title).toEqual([r.title])
+    }
+  })
+
+  it('팀 안에서 순위가 겹치지 않는다', () => {
+    for (const teamId of TEAM_IDS) {
+      const list = ranksJson.filter((r) => r.teamId === teamId).map((r) => r.rank)
+      expect(new Set(list).size, teamId).toBe(list.length)
+    }
+  })
+
+  it.each([
+    ['hanwha', ['내 사랑 한화 내 사랑 이글스', '행복송', '불타는 태양']],
+    ['samsung', ['언제나', '이 파도의 저 끝에서', '사랑한다 나의 삼성']],
+  ] as const)('%s 인기순 1~3위가 순위 자료와 같다', (teamId, top3) => {
+    const team = songs.filter((s) => s.teamId === teamId && s.kind === 'team')
+    expect(sortTeamSongs(team, 'popular', TEAM_SONG_RANKS).slice(0, 3).map((s) => s.title)).toEqual(top3)
   })
 })

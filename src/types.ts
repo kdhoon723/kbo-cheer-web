@@ -35,6 +35,8 @@ export type TeamState =
 
 export type GridSort = 'starters' | 'name' | 'frequent'
 
+export type TeamSongSort = 'popular' | 'name' | 'video'
+
 export type PhotoSource = 'club' | 'kbo'
 
 export interface PlayerInfo {
@@ -57,6 +59,7 @@ export interface PlayHistory {
 export interface Settings {
   volume: number
   gridSort: GridSort
+  teamSort: TeamSongSort
 }
 
 export interface VideoInfo {

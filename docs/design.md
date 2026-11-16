@@ -2,7 +2,7 @@
 
 - 과목: 2026-2학기 스크립트프로그래밍 / 작성: 20241476 김도훈 / 작성일: 2026-11-15
 - 단계: STEP 2 설계 (최종판, 설계 검토 반영)
-- 기준 문서: `docs/requirements.md` (FR-01~33, NFR-01~14, BR-01~51, EX-01~31). [STEP 3-⑪] FR-29~33, BR-45~51, EX-30·31, NFR-14는 5.5절
+- 기준 문서: `docs/requirements.md` (FR-01~33, NFR-01~14, BR-01~51, EX-01~31). [STEP 3-⑪] FR-29~33, BR-45~51, EX-30·31, NFR-14는 5.5절. [STEP 3-⑲] FR-37~39, BR-57·58은 3.1·5.7·11절
 - 검토 문서: `docs/reviews/design-review-claude.md`(R-01~28), `docs/reviews/design-review-codex.md`(C-01~18). 본문에서 검토 때문에 바뀐 곳에는 `[R-xx]`, `[C-xx]`를 붙였다. 전체 반영 내역은 15절.
 - 배포: `https://kbocheer.kdhoon.me`(Cloudflare Workers 정적 자산, `wrangler.jsonc`의 `assets.directory: ./dist`, `not_found_handling: single-page-application`으로 모든 경로에 index.html을 돌려준다) [공개 배포]
 - 기술 환경: React, TypeScript, Vite(포트 5173 고정, LAN 접속 허용), React Router(`react-router-dom`), YouTube IFrame Player API, YouTube Data API v3, LocalStorage, CSS
@@ -35,6 +35,8 @@ src/
     seed-songs.json           처음 데이터(내보내기 형식과 같음)
     players-2026.json         선수 기록(팀별 포지션·타석 수·사진 유무) [STEP 3-⑪]
     players.ts                선수 기록을 읽어 곡 → 선수 찾기(playerOf) [STEP 3-⑪]
+    team-song-ranks.json      팀 응원가 208곡의 구단 안 인기 순위 [STEP 3-⑲]
+    teamSongRanks.ts          순위 파일을 읽은 곡 열쇠 → 순위 표(TEAM_SONG_RANKS) [STEP 3-⑲]
   lib/
     time.ts                   시각 문자열 ↔ 초, ISO 8601 길이 변환
     youtubeUrl.ts             URL에서 영상 ID 뽑기
@@ -54,6 +56,8 @@ src/
     matchup.ts                매치업 보드의 두 칸, 칸 바꾸기, 상황 칸 팀 [STEP 3-⑫]
     playerSort.ts             주전순·가나다·자주 튼 정렬 [STEP 3-⑪]
     history.ts                튼 횟수·최근 곡 기록, 검사 [STEP 3-⑪]
+    seedData.ts               곡 열쇠(songKey), 처음 데이터 차례, 예전 저장 목록에 응원가 시작 채우기 [STEP 3-⑲]
+    teamSongSort.ts           팀 응원가 인기순·가나다·영상 순, 순위 파일 검사 [STEP 3-⑲]
   api/
     youtubeData.ts            Data API 호출, 오류 분류
   player/
@@ -91,6 +95,7 @@ scripts/
   optimize-logos.mjs          구단 로고 원본 → public/teams/*.webp
   optimize-avatars.mjs        기본 아바타 원본 → public/avatars/*.webp(256px) [STEP 3-⑪]
   build-deploy.mjs            npm run build:deploy: 빌드 + 사진 폴더를 dist/players로 복사 [STEP 3-⑪]
+  import-song-data.mjs        저장소 밖 data/의 응원가 시작·팀 응원가 순위 → seed-songs.json, team-song-ranks.json [STEP 3-⑲]
 assets/avatars-original/      기본 아바타 원본 PNG 512px와 README(배포물에 넣지 않음)
 public/avatars/<팀ID>.webp    기본 아바타(팀 10개, 각 5~6KB)
 ```
@@ -296,12 +301,17 @@ interface Window {
 
 | 키 | 값 형식 | 없을 때 | 깨졌을 때 |
 | --- | --- | --- | --- |
-| `kboCheer.songs` | `{ "version": 1, "songs": Song[] }` | 처음 데이터로 시작(알림 없음) | 원래 문자열을 `kboCheer.songs.broken`에 옮긴 뒤 처음 데이터로 복구, "저장 데이터가 손상되어 초기화했습니다" 1회 알림(EX-14) [R-16] |
+| `kboCheer.songs` | `{ "version": 1, "seedRevision": 1, "songs": Song[] }`(`seedRevision`은 [STEP 3-⑲]부터) | 처음 데이터로 시작(알림 없음) | 원래 문자열을 `kboCheer.songs.broken`에 옮긴 뒤 처음 데이터로 복구, "저장 데이터가 손상되어 초기화했습니다" 1회 알림(EX-14) [R-16] |
 | `kboCheer.team` | `{ "version": 1, "currentTeamId": TeamId \| null, "prevTeamId": TeamId \| null }` | 둘 다 null → 팀 선택 화면(BR-28) | 둘 다 null로 시작 |
-| `kboCheer.settings` | `{ "version": 1, "volume": number, "gridSort": GridSort }` | 기본값 `{ volume: 100, gridSort: 'starters' }` | 볼륨이 틀렸거나 version이 다르면 기본값으로 시작. 정렬만 알 수 없는 값('chapter' 포함)이면 정렬만 기본값으로 읽고 볼륨은 지킨다 [STEP 3-⑪] |
+| `kboCheer.settings` | `{ "version": 1, "volume": number, "gridSort": GridSort, "teamSort": TeamSongSort }` | 기본값 `{ volume: 100, gridSort: 'starters', teamSort: 'popular' }` | 볼륨이 틀렸거나 version이 다르면 기본값으로 시작. 정렬만 알 수 없는 값('chapter' 포함)이면 정렬만 기본값으로 읽고 볼륨은 지킨다 [STEP 3-⑪]. 팀 응원가 정렬도 같다(빠진 예전 값은 인기순) [STEP 3-⑲] |
 | `kboCheer.history` | `{ "version": 1, "counts": { [songId]: number }, "recent": string[] }` | 빈 기록 | 빈 기록으로 시작(알림 없음). 구조는 맞고 항목만 틀리면 그 항목만 버린다 [STEP 3-⑪] |
 
 - [STEP 3-⑪] 예전 정렬 값 'chapter'는 값 하나가 사라진 것이지 형식이 바뀐 것이 아니라 version을 올리지 않는다. 설정은 version 1 그대로 두고 `gridSort`를 읽을 때만 `parseGridSort(unknown)`으로 허용 값 세 가지 밖이면 기본값으로 바꾼다(처음에는 값 하나가 틀리면 설정 전체를 기본값으로 돌렸는데, 이러면 볼륨을 잃는다). 튼 기록(`kboCheer.history`)은 곡 목록과 키가 달라 JSON 가져오기·처음 데이터로 되돌리기(`kboCheer.songs`만 바꿈)가 기록을 지우지 않는다.
+- [STEP 3-⑲] 처음 데이터를 고친 차례 `seedRevision`. 처음 데이터에 응원가 시작 120곡을 넣었지만 이미 곡 목록을 저장한 브라우저는 처음 데이터를 다시 읽지 않는다. 그래서 곡 목록을 저장할 때 지금 차례(`SEED_REVISION = 1`)를 함께 적고, 읽을 때 차례가 없거나(0으로 본다) 작으면 `upgradeSavedSongs(saved, seed, 차례)`로 그 사이의 고침을 적용한다. 차례 1의 고침은 `fillCheerStarts`다: 응원가 시작이 null인 선수곡만, 처음 데이터에서 같은 열쇠(`songKey` = 팀·영상 ID·시작 시각)의 값을 찾아 그 곡의 시작 < 값 < 끝일 때 채운다. 바뀐 목록은 SongsProvider가 처음 렌더 뒤 저장하면서 차례 1이 적혀 다음부터는 채우지 않는다.
+  - 열쇠로 id를 쓰지 않은 이유: 처음 데이터를 지우고 같은 모음 영상을 다시 가져오면 id는 새로 생기지만 영상·시각은 같다. 제목은 사용자가 고칠 수 있어 쓰지 않는다.
+  - "한 번만"이 필요한 이유: 사용자는 수정 화면에서 응원가 시작을 지울 수 있다(BR-21). 읽을 때마다 null을 채우면 지운 값이 되살아난다.
+  - version을 올리지 않은 이유: 필드 하나를 더한 것이라 예전 앱이 읽어도 깨지지 않고(모르는 필드는 무시), 형식 검사(`isSongArray`)도 그대로다. version 2로 올리면 예전 앱에서는 곡 목록 전체가 깨진 데이터가 된다.
+  - JSON 가져오기(FR-21)는 차례를 보지 않고 파일 그대로 쓴다. 백업을 되돌리는 일이므로 파일과 같은 상태가 맞다.
 - 키를 넷으로 나눈 이유: 설정 값 하나가 깨져도 곡 목록까지 초기화되지 않게 하고, 자주 바뀌는 팀 상태를 저장할 때 곡 목록 전체(약 600곡)를 다시 쓰지 않기 위해서다.
 - `version`은 지금 1뿐이다. 읽은 값의 version이 1이 아니면 깨진 데이터로 본다. 나중에 형식을 바꾸면 version 2를 만들고 `migrate(v1 → v2)` 함수를 이 자리에 넣는다.
 - `kboCheer.songs.broken`은 사용자 기능이 아니라 데이터 보호용 사본이다. 한 번만 쓰고(이미 있으면 덮어쓰지 않음) 앱은 읽지 않는다. 곡 하나가 깨져 전체를 복구하더라도, 원래 값을 개발자 도구에서 되살릴 수 있게 하기 위해서다. [R-16]
@@ -333,7 +343,8 @@ loadSongs(seed):
   catch → backupBroken(raw); { value: seed, status: 'corrupt' }
   if !(isObject(data) && data.version === 1 && isSongArray(data.songs))
     → backupBroken(raw); { value: seed, status: 'corrupt' }
-  → { value: data.songs, status: 'ok' }
+  revision = typeof data.seedRevision === 'number' ? data.seedRevision : 0   // [STEP 3-⑲]
+  → { value: upgradeSavedSongs(data.songs, seed, revision), status: 'ok' }
 ```
 
 - `isSongArray`는 배열의 모든 원소가 `isSong`을 통과하고 id가 서로 겹치지 않을 때만 true다. 하나라도 틀리면 전체를 깨진 데이터로 본다(EX-14 그대로).
@@ -837,6 +848,21 @@ willSave   = selectable && (selection === 'on' || (selection === 'auto' && !exis
 **최근 곡.** 보드에서도 검색칸에 커서를 두면 두 열 자리에 「최근 튼 곡」이 나오는 지금 방식 그대로다(5.5). 왼쪽은 두 팀 열이 다 쓰고 오른쪽 열은 플레이어·카드·상황 칸으로 차 있어 고정 자리를 따로 두지 않았다. 최근 곡이 보이는 두 팀의 곡이면 재생만, 그 밖이면 그 팀으로 옮겨 간다(위 표).
 
 **플레이어 iframe.** PlayerPanel과 PlayerHost는 AppLayout에 한 번만 있고, 보드·한 팀 화면·휴대폰 배치는 CSS로만 바꾼다. 보드의 오른쪽 열 팀을 바꿔도, 휴대폰 폭으로 줄였다가 넓혀도 같은 iframe 요소인 것을 E2E(TC-89)가 iframe에 붙인 표시로 확인한다.
+
+### 5.7 응원가 시작 지점·진행 막대 눈금·팀 응원가 정렬 [STEP 3-⑲]
+
+**처음 데이터의 응원가 시작(FR-37).** 120곡의 값은 11절, 이미 저장한 브라우저에 한 번 채우는 방식은 3.1절이다.
+
+**진행 막대 눈금(FR-38).** 진행 막대(`.progress`, 재생 줄 위 2px, 지금 재생 시트 4px)는 하나의 요소를 두 자리에 그린다. 응원가 시작이 지금 재생 구간 안에 있는 선수곡이면(`cheerTarget`, BR-04와 같은 조건) 막대 위에 2×10px(시트는 4px 막대에 맞춰 위로 3px) 눈금(`.progress-cheer`, 글자색 #F1ECE3)을 `left: (응원가 시작 − 시작) ÷ (끝 − 시작)`에 둔다. 눈금은 디자인 개편 때 만들어 두었지만 처음 데이터에 응원가 시작이 없어 지금까지 보인 적이 없었다. 이번에 120곡에 값이 생겨 처음 보이게 됐고, 코드는 바꾸지 않았다. 넓은 화면의 선수 카드에는 따로 막대가 없고 카드 바로 아래 재생 줄의 막대가 그 곡의 막대다. 눈금은 transform·opacity 어느 것도 움직이지 않고, 채워지는 막대(`scaleX`)만 250ms 간격으로 바뀐다.
+
+**팀 응원가 정렬(FR-39).**
+
+- 순위 자료를 둔 곳과 모양: `src/data/team-song-ranks.json`, `{ teamId, videoId, start, title, rank }` 208줄. 곡(`Song`)에 `rank` 필드를 더하지 않았다. 순위는 곡 목록이 아니라 바깥 자료라, 곡에 넣으면 JSON 내보내기·가져오기 형식과 검사(`isSong`)가 바뀌고 사용자가 고칠 수 없는 값이 곡 수정 화면 대상이 된다. 곡과는 응원가 시작과 같은 열쇠(`songKey`)로 잇는다. 그래서 처음 데이터를 되돌리거나 같은 영상을 다시 가져와도 이어지고, 직접 추가한 곡은 순위가 없다. 대신 사용자가 시작 시각을 고친 곡은 순위가 끊겨 맨 아래로 간다(BR-58). 제목은 앱이 쓰지 않지만 사람이 파일을 읽고 확인할 수 있게, 또 단위 테스트가 처음 데이터와 제목까지 맞는지 보게 남겼다. 파일은 24 KB(들여쓰기 포함)이고 빌드에 함께 묶인다. 한 줄로 줄인 자료만 gzip으로 재면 3.6 KB다(제목을 빼면 1.5 KB). 팀 응원가 탭은 첫 화면에서 바로 열 수 있어 따로 받지 않는다.
+- 순위 파일도 바깥 입력처럼 `buildRankIndex(unknown)`이 검사한다. 팀 ID·영상 ID·정수 시작·정수 순위가 아닌 줄은 건너뛴다.
+- `sortTeamSongs(songs, sort, ranks)`: 인기순은 순위 오름차순, 순위가 없는 곡은 그 아래에 영상 순(`order`). 가나다는 `localeCompare('ko')`, 같으면 영상 순. 영상 순은 `order`.
+- 순위 파일의 순위는 구단 안 전체 곡 기준이라 처음 데이터에 없는 곡의 번호가 빠져 있다(삼성은 13위부터, 27곡 중 12곡만 순위가 있다). 줄 앞 번호는 순위가 아니라 지금 보이는 순서(1, 2, 3 …)다.
+- 화면: 팀 응원가 탭일 때 탭 줄 오른쪽에 정렬을 둔다. 선수 정렬과 같은 모양으로, 노트북 이상은 세 버튼(`SortToggle`), 휴대폰은 정렬 이름 버튼과 시트 「팀 응원가 정렬」(`SortPicker`)이다. 두 컴포넌트는 선수 정렬과 함께 쓰도록 `label`·`options`를 받게 고쳤다. 매치업 보드에서는 선수 정렬이 검색칸 옆 한 벌인 것과 달리, 팀 응원가 정렬은 열마다 탭 줄에 둔다(값은 하나라 둘 다 같이 바뀐다). 팀 응원가 탭이 열마다 따로 열리므로 그 탭을 보는 열에 버튼이 있어야 바로 보인다.
+- 저장: `Settings.teamSort`(기본 `'popular'`), `PrefsContext.setTeamSort`. 모든 팀에 공통이다(BR-35).
 
 ## 6. 컴포넌트 구조
 
@@ -1529,7 +1555,7 @@ useEffect(() => () => requestRef.current?.abort(), [])
 5. 10개 팀 저장 후 `/settings`에서 내보내기 → 받은 파일을 `src/data/seed-songs.json`으로 바꿔 넣는다.
 6. 검증: LocalStorage를 비우고 다시 열어 10개 팀 곡 수를 확인한다. 선수 수는 1.5절 조사 결과(합계 235명)와 같아야 하고, 두산 `서울 두산 승리하리라`는 40:36이어야 한다(FR-18 수용 기준). seed 파일이 `parseSongsFile`을 통과하는지 단위 테스트로도 확인한다(R-18).
 
-- 응원가 시작 지점(cheerStart)은 처음 데이터에서 모두 null이다. 235명을 다 듣고 지정하는 일은 처음 데이터 범위에 넣지 않고, 사용자가 쓰면서 FR-19로 채운다.
+- 응원가 시작 지점(cheerStart)은 처음 데이터에서 모두 null이었다. [STEP 3-⑲] 저장소 밖 `data/cheer-starts.json`(학생이 정리한 120곡: 들으며 표시 10곡, 등장곡 뒤 응원가 시작을 추정한 110곡)을 `scripts/import-song-data.mjs`로 넣었다. 스크립트는 곡을 (팀, 영상 ID, 시작 시각)으로 찾고 제목까지 맞는 선수곡이 정확히 하나가 아니면 아무것도 쓰지 않는다. 값은 초 단위로 내림한다(앱이 시각을 정수 초로만 다루고, 응원가 앞을 1초 안쪽 더 듣는 쪽이 첫 박을 놓치는 쪽보다 낫다). 나머지 115곡은 사용자가 쓰면서 FR-19로 채운다. 이미 저장한 브라우저는 3.1절의 `seedRevision`으로 한 번 채운다.
 - 이 절차는 가져오기·확인·내보내기 기능이 모두 구현된 뒤(STEP 3 후반)에 한다.
 
 ## 12. 데이터 흐름
@@ -1669,6 +1695,9 @@ MainPage → useKeyboardShortcuts(onAction)   // 키 → 동작은 lib/shortcuts
 | FR-34 매치업 보드 | `lib/matchup.ts`(`matchupOf`, `assignTeam`, `situationTeamOf`, `leavesMatchup`), MainPage, MatchupHeader, TeamColumn, SituationTeamTabs, PrefsContext `assignTeam`, TeamLayout `ColumnEnter`, `useMediaQuery` | 5.2, 5.6, 7.3, 12.3 |
 | FR-35 선수 카드 | PlayerCard, `cutoutUrl`, `cardSubtitle`, PlayerPortrait `card`, TeamLogo 88 | 5.6 |
 | FR-36 지금 재생 시트 | PlayerPanel `.now-open`, Sheet, PlayerCard | 5.2, 5.6 |
+| FR-37 처음 데이터의 응원가 시작 | `seed-songs.json`, `import-song-data.mjs`, `seedRevision`, `upgradeSavedSongs`, `fillCheerStarts` | 3.1, 3.2, 11 |
+| FR-38 응원가 시작 눈금 | PlayerPanel `.progress-cheer`, `cheerTarget` | 5.7 |
+| FR-39 팀 응원가 정렬 | `team-song-ranks.json`, `buildRankIndex`, `sortTeamSongs`, Settings.teamSort, SortToggle, SortPicker, TeamColumn | 3.1, 5.7 |
 
 ### 14.2 비기능 요구사항
 

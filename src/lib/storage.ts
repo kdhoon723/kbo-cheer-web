@@ -1,7 +1,8 @@
 //20241476-김도훈-(2026-11-15)
 import { isTeamId } from '../data/teams.ts'
-import type { GridSort, PlayHistory, Settings, Song, TeamState } from '../types.ts'
+import type { GridSort, PlayHistory, Settings, Song, TeamSongSort, TeamState } from '../types.ts'
 import { EMPTY_HISTORY, parseHistory } from './history.ts'
+import { SEED_REVISION, upgradeSavedSongs } from './seedData.ts'
 import { isRecord, isSongArray } from './songValidation.ts'
 
 export const SONGS_KEY = 'kboCheer.songs'
@@ -16,7 +17,7 @@ export interface LoadResult<T> {
   status: LoadStatus
 }
 
-export const DEFAULT_SETTINGS: Settings = { volume: 100, gridSort: 'starters' }
+export const DEFAULT_SETTINGS: Settings = { volume: 100, gridSort: 'starters', teamSort: 'popular' }
 const DEFAULT_TEAM_STATE: TeamState = { currentTeamId: null, prevTeamId: null }
 
 type RawRead = { kind: 'ok'; raw: string } | { kind: 'missing' } | { kind: 'unavailable' }
@@ -68,6 +69,10 @@ function parseGridSort(x: unknown): GridSort {
   return x === 'starters' || x === 'name' || x === 'frequent' ? x : DEFAULT_SETTINGS.gridSort
 }
 
+function parseTeamSort(x: unknown): TeamSongSort {
+  return x === 'popular' || x === 'name' || x === 'video' ? x : DEFAULT_SETTINGS.teamSort
+}
+
 function isVolume(x: unknown): x is number {
   return typeof x === 'number' && Number.isInteger(x) && x >= 0 && x <= 100
 }
@@ -78,14 +83,16 @@ export function loadSongs(seed: Song[]): LoadResult<Song[]> {
   if (read.kind === 'missing') return { value: seed, status: 'missing' }
   const data = parseJson(read.raw)
   if (isRecord(data) && data.version === 1 && isSongArray(data.songs)) {
-    return { value: data.songs, status: 'ok' }
+    // 차례가 없으면 처음 데이터를 고치기 전에 저장한 목록이다
+    const revision = typeof data.seedRevision === 'number' ? data.seedRevision : 0
+    return { value: upgradeSavedSongs(data.songs, seed, revision), status: 'ok' }
   }
   backupBroken(read.raw)
   return { value: seed, status: 'corrupt' }
 }
 
 export function saveSongs(songs: Song[]): boolean {
-  return write(SONGS_KEY, { version: 1, songs })
+  return write(SONGS_KEY, { version: 1, seedRevision: SEED_REVISION, songs })
 }
 
 export function loadTeamState(): LoadResult<TeamState> {
@@ -113,7 +120,8 @@ export function loadSettings(): LoadResult<Settings> {
   if (read.kind === 'missing') return { value: DEFAULT_SETTINGS, status: 'missing' }
   const data = parseJson(read.raw)
   if (isRecord(data) && data.version === 1 && isVolume(data.volume)) {
-    return { value: { volume: data.volume, gridSort: parseGridSort(data.gridSort) }, status: 'ok' }
+    const settings = { volume: data.volume, gridSort: parseGridSort(data.gridSort), teamSort: parseTeamSort(data.teamSort) }
+    return { value: settings, status: 'ok' }
   }
   return { value: DEFAULT_SETTINGS, status: 'corrupt' }
 }

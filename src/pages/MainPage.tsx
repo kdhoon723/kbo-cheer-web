@@ -6,7 +6,7 @@ import MatchupHeader from '../components/MatchupHeader.tsx'
 import SearchBox from '../components/SearchBox.tsx'
 import SearchResults from '../components/SearchResults.tsx'
 import SituationGrid from '../components/SituationGrid.tsx'
-import SortPicker from '../components/SortPicker.tsx'
+import SortPicker, { SortToggle } from '../components/SortPicker.tsx'
 import SituationTeamTabs from '../components/SituationTeamTabs.tsx'
 import StatusMessage from '../components/StatusMessage.tsx'
 import TeamColumn from '../components/TeamColumn.tsx'
@@ -27,8 +27,8 @@ import type { SearchHit } from '../lib/search.ts'
 import { buildSearchIndex, searchIndex } from '../lib/search.ts'
 import { GRID_SORTS } from '../lib/playerSort.ts'
 import { situationSlots } from '../lib/situationSlots.ts'
+import { TEAM_SONG_SORTS } from '../lib/teamSongSort.ts'
 import type { Song, TeamId } from '../types.ts'
-
 
 const SITUATION_PANEL_ID = 'situation-panel'
 
@@ -36,7 +36,7 @@ export default function MainPage() {
   const team = useActiveTeam()
   const navigate = useNavigate()
   const { songs } = useSongs()
-  const { settings, setGridSort, teamState, assignTeam: assignSlot } = usePrefs()
+  const { settings, setGridSort, setTeamSort, teamState, assignTeam: assignSlot } = usePrefs()
   const { history } = useHistory()
   const { nowPlaying, play, stop, skipToCheer } = usePlayer()
   const situationSlot = useSituationSlot()
@@ -150,19 +150,15 @@ export default function MainPage() {
     />
   )
 
-  const sortToggle = (
-    <div className="sort-toggle" role="group" aria-label="선수 정렬">
-      {GRID_SORTS.map((s) => (
-        <button
-          key={s.value}
-          type="button"
-          aria-pressed={settings.gridSort === s.value}
-          onClick={() => setGridSort(s.value)}
-        >
-          {s.label}
-        </button>
-      ))}
-    </div>
+  const gridSort = { label: '선수 정렬', options: GRID_SORTS, value: settings.gridSort, onChange: setGridSort }
+  const teamSort = { label: '팀 응원가 정렬', options: TEAM_SONG_SORTS, value: settings.teamSort, onChange: setTeamSort }
+  const sortToggle = <SortToggle {...gridSort} />
+  // 팀 응원가 정렬은 넓은 화면에서도 열마다 탭 줄에 둔다. 검색 줄의 정렬은 선수 정렬 하나다
+  const teamSortControl = (
+    <>
+      <SortToggle {...teamSort} />
+      <SortPicker {...teamSort} />
+    </>
   )
 
   const column = (id: TeamId, idPrefix: string, enterFrom: ColumnEnter['current']) => (
@@ -172,6 +168,7 @@ export default function MainPage() {
       songs={songs}
       idPrefix={idPrefix}
       sort={order.sort}
+      teamSort={settings.teamSort}
       sortCounts={order.counts}
       counts={liveCounts}
       nowPlayingId={nowPlayingId}
@@ -180,10 +177,11 @@ export default function MainPage() {
         board ? undefined : (
           <>
             {sortToggle}
-            <SortPicker value={settings.gridSort} onChange={setGridSort} />
+            <SortPicker {...gridSort} />
           </>
         )
       }
+      teamSortControl={teamSortControl}
       onPlay={playSong}
     />
   )

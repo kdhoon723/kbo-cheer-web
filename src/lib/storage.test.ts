@@ -16,6 +16,7 @@ import {
   saveSongs,
   saveTeamState,
 } from './storage.ts'
+import { SEED_REVISION } from './seedData.ts'
 import { makeSong } from './testSongs.ts'
 
 const seed = [makeSong({ id: 'seed-1' })]
@@ -28,6 +29,36 @@ describe('songs', () => {
     const songs = [makeSong({ id: 'a' }), makeSong({ id: 'b', kind: 'player', cheerStart: 30 })]
     expect(saveSongs(songs)).toBe(true)
     expect(loadSongs(seed)).toEqual({ value: songs, status: 'ok' })
+  })
+
+  it('처음 데이터 차례를 함께 저장한다', () => {
+    saveSongs(seed)
+    expect(JSON.parse(localStorage.getItem(SONGS_KEY) ?? '')).toMatchObject({ version: 1, seedRevision: SEED_REVISION })
+  })
+
+  describe('응원가 시작을 넣기 전에 저장한 목록', () => {
+    const seedWithCheer = [
+      makeSong({ id: 's1', kind: 'player', start: 10, end: 60, cheerStart: 30 }),
+      makeSong({ id: 's2', kind: 'player', start: 60, end: 120, cheerStart: 80 }),
+    ]
+    // 예전 목록: 처음 데이터의 두 곡 + 사용자가 s2에 직접 정한 값 + 직접 추가한 곡. 차례가 적혀 있지 않다
+    const old = [
+      makeSong({ id: 's1', kind: 'player', start: 10, end: 60 }),
+      makeSong({ id: 's2', kind: 'player', start: 60, end: 120, cheerStart: 70 }),
+      makeSong({ id: 'mine', kind: 'player', start: 200, end: 260 }),
+    ]
+
+    it('비어 있는 곡만 한 번 채우고 직접 정한 값은 그대로 둔다', () => {
+      localStorage.setItem(SONGS_KEY, JSON.stringify({ version: 1, songs: old }))
+      const { value, status } = loadSongs(seedWithCheer)
+      expect(status).toBe('ok')
+      expect(value.map((s) => s.cheerStart)).toEqual([30, 70, null])
+    })
+
+    it('지금 차례로 저장된 목록은 다시 채우지 않는다(사용자가 지운 값을 되살리지 않는다)', () => {
+      saveSongs(old)
+      expect(loadSongs(seedWithCheer).value.map((s) => s.cheerStart)).toEqual([null, 70, null])
+    })
   })
 
   it('저장된 값이 없으면 처음 데이터와 missing', () => {
@@ -94,7 +125,7 @@ describe('team state', () => {
 
 describe('settings', () => {
   it('왕복한다', () => {
-    const settings = { volume: 40, gridSort: 'name' } as const
+    const settings = { volume: 40, gridSort: 'name', teamSort: 'video' } as const
     saveSettings(settings)
     expect(loadSettings()).toEqual({ value: settings, status: 'ok' })
   })
@@ -114,12 +145,17 @@ describe('settings', () => {
 
   it.each([['chapter'], ['x'], [7], [null]])('알 수 없는 정렬 %j은 기본 정렬로 두고 볼륨은 지키며 ok', (gridSort) => {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({ version: 1, volume: 50, gridSort }))
-    expect(loadSettings()).toEqual({ value: { volume: 50, gridSort: 'starters' }, status: 'ok' })
+    expect(loadSettings()).toEqual({ value: { volume: 50, gridSort: 'starters', teamSort: 'popular' }, status: 'ok' })
   })
 
   it('정렬이 빠진 예전 값도 볼륨을 지킨다', () => {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({ version: 1, volume: 20 }))
-    expect(loadSettings()).toEqual({ value: { volume: 20, gridSort: 'starters' }, status: 'ok' })
+    expect(loadSettings()).toEqual({ value: { volume: 20, gridSort: 'starters', teamSort: 'popular' }, status: 'ok' })
+  })
+
+  it.each([['rank'], [3], [null]])('알 수 없는 팀 응원가 정렬 %j은 인기순으로 두고 나머지는 지킨다', (teamSort) => {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ version: 1, volume: 50, gridSort: 'name', teamSort }))
+    expect(loadSettings()).toEqual({ value: { volume: 50, gridSort: 'name', teamSort: 'popular' }, status: 'ok' })
   })
 })
 
